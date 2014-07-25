@@ -21,15 +21,12 @@ function expResults = runShortExperiment(direct, iniPosSt, protInds, random)
 %          presented in a random order or not. Default is random
 %
 % OUTPUT 
-% shortExpInfo  -   saves several variable that are related to the experiment
-% expResults -      data aquired for each protocol is an N X 5 matrix with N being 
-%                   the number of samples, and 5 channels which are: 
-%                   (1) membrane Current (2) membrane Voltage (3)X position (4) Y
-%                   position (5)photodiode data
-% expStruct -       The actual expStructure used to run the experiment
-% iniPosSt -        initial position structure used in the experiment
-% expProt -         experimental protocols ordered by presentation order
-%                   and with relevant initial positions filled in
+% shortExpInfo  -  saves several variable that are related to the experiment
+% expresults
+%          data aquired for each protocol is an N X 5 matrix with N being 
+%          the number of samples, and 5 channels which are: 
+%          (1) membrane Current (2) membrane Voltage (3)X position (4) Y
+%          position (5)photodiode data
 
 daqreset
 load(fullfile(direct, 'ExpStruct.mat'))
@@ -106,7 +103,6 @@ ses.Rate = 10000;
 disp(['session rate is: ', num2str(ses.Rate)])
 
 expResults = struct;
-expProts = struct;
 
 % setting up the waitbar to cancel function
 wbh = waitbar(0,'1','Name','Presenting Protocol',...

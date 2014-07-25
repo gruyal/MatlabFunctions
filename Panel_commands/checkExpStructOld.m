@@ -33,10 +33,15 @@ function checkExpStruct(expSt, direc)
 %                               when expStruct was created
 %         protocol has  PatternID - based on the pattern order
 %                       InitialPosition
+%                       Mode
+%                       Gain
 %                       PosFuncX - based on posFunc order
 %                       PosFuncY - same
+%                       FuncFreqX
+%                       FuncFreqY
 %                       Traits
 %                       Category
+%                       Duration - calculated based on length and frequency
 %                       
 %
 % direc - (optional) directory in which the report would be printed. If
@@ -47,15 +52,20 @@ if nargin < 2
 end
 
  protocolFields =              {'PatternID',...        
-                                'InitialPosition',...                     
+                                'InitialPosition',...             
+                                'Mode',...             
+                                'Gain',...         
                                 'PosFuncX',...  
-                                'PosFuncY',...             
+                                'PosFuncY',...        
+                                'FuncFreqX',...      
+                                'FuncFreqY',...         
                                 'Traits',... 
                                 'Category', ...
+                                'Duration',...     
                                 }; 
 % This list is used to evaluate whether the field has the right from
 % 1- single number; 2- 1X2 matrix; 3- 1X4 matrix  
-protocolFieldsType = [1,2,2,2,4,1];
+protocolFieldsType = [1,2,2,3,2,2,1,1,4,1,1];
 rightSize = {1; [1 2]; [1 4]};
 
 
@@ -164,12 +174,12 @@ for ii=1:numProtocols
         errors = errors+1;
     end
     
-%     checking that duration is not too short
-%     
-%     if expSt.protocol(ii).Duration < 5
-%          fprintf(fhand, '%s %4.2f%s\r\n', '!!! Duration is only', expSt.protocol(ii).Duration, 'secs !!!');
-%          errors = errors+1;
-%     end
+    % checking that duration is not too short
+    
+    if expSt.protocol(ii).Duration < 5
+         fprintf(fhand, '%s %4.2f%s\r\n', '!!! Duration is only', expSt.protocol(ii).Duration, 'secs !!!');
+         errors = errors+1;
+    end
         
     % checking that dimenstion are consistent between posFuncs and pattern
     
@@ -194,8 +204,8 @@ for ii=1:numProtocols
 end
     
 
-% totDuration = sum([expSt.protocol(:).Duration])/60;
-% fprintf(fhand, '%s %4.2f%s\r\n', 'Total experiment duration', totDuration','mins');  
+totDuration = sum([expSt.protocol(:).Duration])/60;
+fprintf(fhand, '%s %4.2f%s\r\n', 'Total experiment duration', totDuration','mins');  
 
 fclose(fhand);
 

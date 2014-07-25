@@ -66,7 +66,7 @@ if shortInds
         
     end
     
-    posTrace = vertcat(divPosTrace{:});
+    posTrace = vertcat(divPosTrace{:})-1; % -1 transforms the values to the actual ones in the position function
 end
         
         

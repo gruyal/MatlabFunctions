@@ -68,10 +68,9 @@ ses.queueOutputData(anaSig);
 stepData = ses.startForeground();
 
 % Saving the data
-timeStamp = arrayfun(@(x) ['_', num2str(fix(x))], clock, 'uniformoutput', 0);
-timeStamp = [timeStamp{:}];
+timeStamp = datestr(clock, 'yyyymmdd_HH-MM-SS');
 save(fullfile(direc, ['stepData', timeStamp,]), 'stepData')
-
+disp(['Saved: ', timeStamp]);
 
 % Plotting data
 if numSteps > 6

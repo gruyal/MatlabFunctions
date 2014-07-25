@@ -315,6 +315,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
  protocolStruct = createProtocol(protocolStruct);
  
+ protocolStruct.inputParams = default;
  
  
 end

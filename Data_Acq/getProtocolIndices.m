@@ -29,7 +29,8 @@ function finIndsCell = getProtocolIndices(expSt, traitValue, logicalOp)
 %               protocol type (indicies in {1} are from type 1, in {2} from 2 and so on)
 
 traitBaseCell = {'Obj', 'object';       'Mov', 'movement';    'Typ', 'type'; ...
-                 'Brt', 'brightness';   'Wid', 'width';       'Chg', 'change'};
+                 'Brt', 'brightness';   'Wid', 'width';       'Chg', 'change'; ...
+                 'Win', 'window';       'Bkg', 'background'};
                 
 protTraitsCell = {expSt.protocol.Traits}; % since they could be of diff lengths
 numFVpairs = size(traitValue, 1);

@@ -12,9 +12,9 @@ function expResults = runShortExperiment(direct, iniPosSt, protInds, random)
 %          fields. It is also recommended to use 'checkExpStruct' to verify
 %          that the protocols are referring to the right files. 
 % iniPosSt - Structure generated using 'generateIniPositions' that defines 
-%            initial position based on pattern type (VBars, HBars, SQ16, CrossSt, CrossVSt).  
+%            initial position based on pattern type (VBars, HBars, SQ16, CrossSt, CrossVSt, SQ08, and CrossDiagonal).  
 %            these are originally defined in createProtocolScript as [-1
-%            1], [-2 1] [-3 1], [-4, 1], and [-5 1] respectively. 
+%            1], [-2 1] [-3 1], [-4, 1], [-5 1], [-6 1] and [-7 1] respectively. 
 % protInds - (optional) vector of relevant protocol indices. if not given
 %           the function will use all protocols defined as 'short' in 'type' field.
 % random - logical (optional). Flag for whether the protocols should be 
@@ -48,10 +48,12 @@ end
 
 if nargin < 3
     protInds = getProtocolIndices(expStruct, {'type', 'eq', 3});
-    if ~protInds
+    protInds = protInds{3};
+    if isempty(protInds)
         error('No short protocols defined in ExpStruct')
     end
 end
+
 
 if nargin < 4
     random = 1;
@@ -106,7 +108,7 @@ ses.Rate = 10000;
 disp(['session rate is: ', num2str(ses.Rate)])
 
 expResults = struct;
-expProts = struct;
+expProts = expStruct.protocol(expOrder);
 
 % setting up the waitbar to cancel function
 wbh = waitbar(0,'1','Name','Presenting Protocol',...
@@ -120,7 +122,7 @@ for ii=1:nProt
     
     relInd = expOrder(ii);
     currProt = expStruct.protocol(relInd);
-    expProts(ii) = expStruct.protocol(relInd);
+    
     
     switch currProt.InitialPosition(1) % these values are define in the beginning of createProtocolScript
         case -1
@@ -133,6 +135,10 @@ for ii=1:nProt
             offset = iniPosSt.CrossSt;
         case -5
             offset = iniPosSt.CrossVSt;
+        case -6
+            offset = iniPosSt.SQ08;
+        case -7
+            offset = iniPosSt.CrossDiag;
         otherwise
             offset = currProt.InitialPosition;
     end
@@ -159,9 +165,9 @@ for ii=1:nProt
     Panel_com('send_gain_bias', currProt.Gain);
     pause(0.03)
      
-    relPat = expStruct.protocol(relInd).PatternID;
-    patName = expStruct.pattern(relPat).name;
-    fprintf('Presenting protocol %d (%d of %d): %s\n', relInd, ii, nProt, patName) 
+    protTraits = expStruct.protocol(relInd).Traits;
+    
+    fprintf('Presenting protocol %d (%d of %d): %s\n', relInd, ii, nProt, protTraits) 
     
     waitbar(ii/nProt,wbh,sprintf('%d of %d: protocol %d',ii, nProt, relInd))
     
@@ -180,12 +186,10 @@ for ii=1:nProt
     
 end
 
-timeStamp = arrayfun(@(x) ['_', num2str(fix(x))], clock, 'uniformoutput', 0);
-timeStamp = [timeStamp{:}];
-
+timeStamp = datestr(clock, 'yyyymmdd_HH-MM-SS');
 
 save(fullfile(direct, 'results', ['shortExpInfo', timeStamp,]), ...
-    'expResults', 'expStruct', 'iniPosSt', 'expProt')
+    'expResults', 'expStruct', 'iniPosSt', 'expProts')
 
 delete(fullfile(direct, 'results','tempShortResults*.mat'))
 Panel_com('all_off')

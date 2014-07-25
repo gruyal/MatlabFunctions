@@ -145,9 +145,10 @@ end
 % Remove coordinates that repeat themselves (esp. in diagonal trajectories)
 
 for ii=1:length(maskPosCell)
-    firstVal = maskPosCell{ii}(1,1);
+    relInd = find(maskPosCell{ii}(end, :) - maskPosCell{ii}(1, :), 1, 'first');
+    firstVal = maskPosCell{ii}(1,relInd);
     tempCell = unique(maskPosCell{ii}, 'rows');
-    if tempCell(1,1) == firstVal % since unique also sorts
+    if tempCell(1,relInd) == firstVal % since unique also sorts
         maskPosCell{ii} = tempCell;
     else
         maskPosCell{ii} = flipud(tempCell);
