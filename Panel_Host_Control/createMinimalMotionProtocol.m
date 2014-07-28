@@ -1,27 +1,30 @@
-function protocolStruct = createCenterSurroundProtocol(inputStruct)
+function protocolStruct = createMinimalMotionProtocol(inputStruct)
 
-% function createCenterSurroundProtocol(inputStruct)
+% function createMinimalMotionProtocol(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
-% generate center surround stimuli. It has certain assumptions and therefore requires
-% less inputs. 
+% generate minimal motion stimuli. It has certain assumptions and therefore requires
+% less inputs. The stimulus is a bar appearing and after a set amount of
+% time another identical bar appears adjecent to it (Joesch 2013)
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
 % 
 % ASSUMPTIONS
 % Since this is a grating certian parameters are assumed to be symmetrical.
-% 
-% width -           determined by maskRadius and centerProportion
+% Width -           same as the size of the mask 
 % Contrast -        each bar is uniform (no on/off gradients), and both are same
-%                   distance from mid level GS (background). 
+%                   distance from mid level GS (background). When a bar is
+%                   presented alone (bright-bright or dark-dark) the other
+%                   bar is background level
+% Position -        desired bar always start in the middle of the window. 
+% Cycles -          1 Cycles of movement (1 cycle being from first change until it
+%                   image is the same again).
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
 % Masks positions - Grid is assumed, but parameters should be given
 % grtMaskInt -      since grating width is completely dependent on mask
 %                   size, they will be read one to one. {interleave 1}
-% orientation -     meaningless for this protocol and will be disregarded
-% gratingFuncHand - Function uses the generateConcentricGratingFrame
-% gratingType -     Concentric grating type is identical to the mask type
+% gratingFuncHand - Function uses the generateGratingFrame
 %
 %
 % INPUT 
@@ -29,21 +32,29 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 % Only 2 obligatory fields are maskRadius and gridCenter
 %
 % inputStruct -     Should have the following fields
-% .centerBar -      will be fed into barAtPos to determined whether center is bright (1) or dark (0) { [0,1] }. 
-% .centerProportion-Proportion of the entire window that has same level of brightness
-%                   as center. Calculated as proportion of mask radius, not mask area. (1XP vector of 0-1) { [0.5, 1] }
-% .cenBarPropInt -  (logical) whether centerBar and centerProportion should
-%                   be interleaved { 1 }
-% .gsLevel -        gray scale level for grating frames
-% .staticFrames -   For this protocol it is the number of frames stimulus
-%                   will appear  (since there is no change)
+% .firstBar -       1XM vector (0-1). 0 - dark bar appears first
+%                   1- bright bar appears first (other bar on the
+%                   edge of the mask). if more than one value is given, they
+%                   will be applied to each gratingXmask combination. 
+%                   { [0,1] }
+% .secondBar -      1XM vector. Same as firstBar only describes the second
+%                   bar. Can be either the same length as .firstBar or
+%                   empty (if empty secondBar would be identical to first)
+%                   { []}
+% .staticFrames -   Number of frames to be added after each change (before first bar, 
+%                   duration of firstbar, duration of both bars). 
+%                   If given in fractions interpreted relative to generalFrequency 
+%                   to generate that fraction of a second (0.25 with generalFreq 20 would be 5 frames).    
 % .contrast -       1XN vector (0-1) difference between bright and dark bars relative to mid. 
 %                   contrast and number of masks should have the same length. { 1XNumMasks }
+% .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6}  
+%                   For this function orientations must come in
+%                   corresponding pairs ( |ort-ort'| == 4)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
-% .maskType -       {'circle'} or 'square'. Can also be a 1XM cell array
-% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones} { 4 }   
+% .maskType -       'circle' or {'square'}. Can also be a 1XM cell array
+% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones}    
 % .maskInt -        logical. If TRUE function will generate all the combinations
 %                   between type and radius. { 1 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
@@ -56,14 +67,14 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
 %                   will not have a position in the actual center.
-% .intFrames -      number of empty intervening frames. If not given half a
+% .intFrames -      number of empty intervening frames between stimuli. If not given half a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3} 
 % .generalFrequency-Frequency with which frames from the generated protocol
 %                   will be dumped (passed on to runDumpProtocol) in Hz. 
 % .freqCorrFlag -   Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
-%                   correction { 0 }.  
+%                   correction { 1 }.  
 %
 % OUTPUT 
 % protocolStruct with all the required fields from createProtocl. 
@@ -77,19 +88,18 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 
 baseSiz = 225; % size of single frame or mask
 arenaSize = [96, 32];
-gratingFuncHand = @generateConcentricGratingFrame;
+gratingFuncHand = @generate4BarsGratingFrame;
 
+default.maskRadius = 'UI'; 
 default.gridCenter = 'UI';
 default.generalFrequency = 'UI';
-default.centerBar = [0,1];
-default.centerProportion = [0.5,1];
-default.cenBarPropInt = 1;
-default.maskRadius = 4; 
 default.contrast = 1;
-default.orientations = 0;
+default.orientations = 0:2:6;
 default.gsLevel = 3;
-default.maskType = {'circle'};
+default.maskType = {'square'};
 default.maskInt = 1;
+default.firstBar = [0,1];
+default.secondBar = [];
 default.gridSize = [2,2];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
@@ -97,8 +107,8 @@ default.gratingMidVal = 0.49;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
-default.staticFrames = 3;
-default.freqCorrFlag = 0;
+default.staticFrames = 0.25;
+default.freqCorrFlag = 1;
 
 % combining default and input structures
 if nargin ==0
@@ -111,11 +121,11 @@ end
  %% ORIENTATIONS
  
  ort = default.orientations;
- if length(ort) > 1
-    warning('Orientation is meaningless in this protocol')
-    ort = 0;
- end
- 
+ assert(isvector(ort), 'Orientation should be 1XM vector')
+ assert(logical(prod(ismember(ort, 0:7))), 'Orientation values should be between 0 and 7')
+ ortchk = arrayfun(@(x) abs(x-ort) == 4, ort, 'uniformoutput', 0);
+ ortchk = sum(vertcat(ortchk{:}));
+ assert(logical(prod(ortchk)), 'Orientation vector must have opposing orientation values (e.g. 0 and 4)')
  protocolStruct.orientations = ort;
  
  %% MASK
@@ -176,78 +186,101 @@ end
 
  %% GRATING PARAMETERS
  
- % creating the proper parameters from centerBar and centerProportion
- cenBar = default.centerBar;
- assert(logical(prod(ismember(cenBar, [0,1]))), 'centerBar can be 0 (dark) or 1 (bright) only')
+gsLev = default.gsLevel;
+assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
+
+% Generating the correct bar combinations 
+ firstBar = default.firstBar;
+ assert(isvector(firstBar), 'firstBar should be a vector')
+ assert(logical(prod(ismember(firstBar, [0,1]))), 'firstBar values must be either 0 or 1')
  
- cenProp = default.centerProportion;
- assert(min(cenProp) >= 0 && max(cenProp) <= 1, 'centerProportion should be between 0 and 1')
- 
- if default.cenBarPropInt == 1
-     [tempCB, tempCP] = ndgrid(cenBar, cenProp);
-     cenBar = tempCB(:);
-     cenProp = tempCP(:);
- elseif default.cenBarPropInt == 0
-     assert(length(cenBar) == length(cenProp), 'If cenBarPropInt is F lengths of centerBar and centerProportion must be the same')
+ secondBar = default.secondBar;
+ if ~isempty(secondBar)
+     assert(isvector(firstBar), 'firstBar should be a vector')
+     assert(logical(prod(ismember(secondBar, [0,1]))), 'firstBar values must be either 0 or 1')
+     assert(length(firstBar) == length(secondBar), ...
+            'If secondBar is not empty it should be the same length as firstBar')
  else
-     error('cenBarPropInt should be logical')
+     secondBar = firstBar;
  end
- 
  
  cont = default.contrast;
  assert(min(cont) >=0 && max(cont) <= 1, 'Contrast should be between 0 and 1');
  assert(isvector(cont), 'Contrast should be a 1XN vector')
  
  if length(cont) > 1
-     assert(length(cont) == numMasks, 'Contrast should be the same length as number of masks')
+     assert(length(cont) == length(firstBar), ...
+            'if vector, contrast should be the same length as firstBar')
  elseif length(cont) == 1
-     cont = ones(1, numMasks) * cont;
+     cont = ones(1, length(firstBar)) * cont;
  end
  
  staticFrames  = default.staticFrames;
  assert(staticFrames >= 0, 'staticFrames should be a non-negative number')
+ assert(default.generalFrequency > 0, 'generalFrequency must be a positive number')
+ % interpert static frames relative to frequency if it is a fraction
+ if staticFrames < 1
+     staticFrames = round(default.generalFrequency * staticFrames);
+ else
+     staticFrames = round(staticFrames); % in case user input a float > 1
+ end
  
- assert(default.gratingMidVal > 0 && default.gratingMidVal < 1, 'gratingMidVal should be between 0 and 1')
+ assert(default.gratingMidVal >= 0 && default.gratingMidVal <= 1, 'gratingMidVal should be between 0 and 1')
  onVal = default.gratingMidVal + cont/2; % 0.49 is for the middle value to be rounded down (in GS3 it is 3 and not 4)
  offVal = default.gratingMidVal - cont/2.041; % so that it wont go negative
+ midVal = default.gratingMidVal;
  
- gsLev = default.gsLevel;
- assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
+ for ii=1:length(firstBar)
+     if     firstBar(ii) == 0 && secondBar(ii) == 0
+         tempVals = [midVal, midVal, offVal(ii); midVal, offVal(ii), offVal(ii)]; %tempVals is an array of temp values to be expanded to proper on off vals
+     elseif firstBar(ii) == 1 && secondBar(ii) == 0
+         tempVals = [midVal, onVal(ii), onVal(ii); midVal, midVal, offVal(ii)]; 
+     elseif firstBar(ii) == 0 && secondBar(ii) == 1
+         tempVals = [midVal, midVal, onVal(ii); midVal, offVal(ii), offVal(ii)]; 
+     elseif firstBar(ii) == 1 && secondBar(ii) == 1
+         tempVals = [midVal, onVal(ii), onVal(ii); midVal, midVal, onVal(ii)]; 
+     end
+     
+     onBase  = reshape(repmat(tempVals(1, :), staticFrames, 1), 1, []);
+     offBase = reshape(repmat(tempVals(2, :), staticFrames, 1), 1, []);
+     
+     baseGtStruct(ii).vals1St = onBase;
+     baseGtStruct(ii).vals1End = onBase;
+     baseGtStruct(ii).vals2St = offBase;
+     baseGtStruct(ii).vals2End = offBase;
+     baseGtStruct(ii).vals3St = midVal;
+     baseGtStruct(ii).vals3End = midVal;
+     baseGtStruct(ii).vals4St = midVal;
+     baseGtStruct(ii).vals4End = midVal;
+     baseGtStruct(ii).barAtPos = firstBar(ii) + 1;
+     baseGtStruct(ii).gsLevel = gsLev;
+     baseGtStruct(ii).width1 = -1; % these values are used only so that the structures could be combined in the next loop 
+     baseGtStruct(ii).width2 = -1;
+     baseGtStruct(ii).width3 = 4; % other 2 bar are used simply because the window always has an odd number of lines 
+     baseGtStruct(ii).width4 = 4;
+     baseGtStruct(ii).position = 0;
+ end
  
- count = 0;
+ % Combining masks and gratings 
+ % Grating are X+1 for each X mask
  for ii=1:numMasks
-     for jj=1:length(cenBar)
-         count = count+1;
-         gtStruct(count).valsONSt = onVal(ii);
-         gtStruct(count).valsONEnd = onVal(ii);
-         gtStruct(count).valsOFFSt = offVal(ii);
-         gtStruct(count).valsOFFEnd = offVal(ii);
-         gtStruct(count).gsLevel = gsLev;
-         if cenBar(jj) == 1 %bright bar in center
-            gtStruct(count).widthON  = ceil(maskSt(ii).radius * cenProp(jj))+1;
-            gtStruct(count).widthOFF = maskSt(ii).radius;
-         elseif cenBar(jj) == 0 %dark bar in center
-             gtStruct(count).widthON  = maskSt(ii).radius;
-             gtStruct(count).widthOFF = ceil(maskSt(ii).radius * cenProp(jj))+1;
-         end
-         gtStruct(count).position = ones(1, staticFrames) * (ceil(maskSt(ii).radius * cenProp(jj))+1);
-         gtStruct(count).barAtPos = cenBar(jj);
-         if strcmp(maskSt(ii).type, 'square')
-             gtStruct(count).type = 1;
-         elseif strcmp(maskSt(ii).type, 'circle')
-             gtStruct(count).type = 2;
-         end
+     wid = maskSt(ii).radius;
+     for jj=1:length(baseGtStruct)
+         tempInd = (ii-1)*length(baseGtStruct)+jj;
+         gtStruct(tempInd) = baseGtStruct(jj);
+         gtStruct(tempInd).width1 = wid;
+         gtStruct(tempInd).width2 = wid;
+         gtStruct(tempInd).position = -wid;
+         
+         newMaskSt(tempInd) = maskSt(ii);
+        
      end
  end
  
- % generate a maskSt that is compatible with the grating structure
- % (gtStruct). So that interleave (in createProtocol) can be equal to 1
- % (number of masks identical to number of gratings)
- 
- maskTempInd = reshape(repmat(1:numMasks, length(cenBar), 1), [], 1);
+
  
  protocolStruct.gratingStruct = gtStruct;
- protocolStruct.masksStruct = maskSt(maskTempInd);
+ protocolStruct.masksStruct = newMaskSt;
  
  %% GRID 
  
@@ -304,7 +337,7 @@ end
  protocolStruct.funcHand = gratingFuncHand;
  protocolStruct.interleave = default.grtMaskInt;
  
-intF = default.intFrames;
+ intF = default.intFrames;
  if isnan(intF)
      protocolStruct.intFrames = floor(default.generalFrequency/2);
  else % if user gave a number

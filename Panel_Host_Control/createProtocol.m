@@ -99,9 +99,19 @@ protocolStruct = checkProtocolStruct(protocolStruct);
 %Generating the grating sequences
 stimSeqCell = cell(1, length(protocolStruct.gratingStruct));
 tempFreqCorr = zeros(1, length(stimSeqCell));
+
+%finding the width field (since 4Bar uses different width fields)
+fNames = fieldnames(protocolStruct.gratingStruct);
+fnInd = cellfun(@(x) ~isempty(x), strfind(fNames, 'width'));
+widthCell = fNames(fnInd);
+if isempty(widthCell)
+    warning('No width information in gratingStructure - freqCorr is irrelevant')
+end
+
+
 for ii=1:length(protocolStruct.gratingStruct)
     stimSeqCell{ii} = generateGratingBaseSeq(protocolStruct.gratingStruct(ii), protocolStruct.funcHand);
-    tempFreqCorr(ii) = protocolStruct.gratingStruct(ii).widthON+protocolStruct.gratingStruct(ii).widthOFF;
+    tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
 end
 protocolStruct.stimSeqCell = stimSeqCell;
 

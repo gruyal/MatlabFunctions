@@ -40,7 +40,6 @@ function protocolStruct = createEdgeProtocol(inputStruct)
 % .contrast -       1XN vector (0-1) difference between bright and dark bars relative to mid. 
 %                   contrast and number of masks should have the same length. { 1XNumMasks }
 % .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6}  
-%
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
@@ -90,7 +89,7 @@ default.gsLevel = 3;
 default.maskType = {'circle'};
 default.maskInt = 1;
 default.startBar = [0,1];
-default.gridSize = [2,2];
+default.gridSize = [3,2];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;

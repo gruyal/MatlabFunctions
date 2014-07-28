@@ -21,11 +21,33 @@ baseImSize = [225, 225]; % size for original stimSeq and masks
 
 
     % FIELD 1 - gratingStruct
-relnames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'};    
+gratingNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'};    
+gratingConcenNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'; 'type'};    
+grating4BarNames = {'width1'; 'width2'; 'width3'; 'width4';'position'; 'barAtPos'; ...
+                'vals1St'; 'vals1End'; 'vals2St'; 'vals2End'; 'vals3St'; 'vals3End'; 'vals4St'; 'vals4End'};  
+funcStr = func2str(protStruct.funcHand);
+
+switch funcStr(9:11)
+    case 'Con'
+        relnames = gratingConcenNames;
+    case 'Gra'
+        relnames = gratingNames;
+    case '4Ba'
+        relnames = grating4BarNames;
+    otherwise
+        relnames = [];
+end
+        
+        
+
 if isfield(protStruct, 'gratingStruct')
     gtfnames = fieldnames(protStruct.gratingStruct);
-    fieldsPresent = cellfun(@(x) ismember(x, relnames), gtfnames);
-    assert(sum(fieldsPresent) == length(relnames), 'Missing fields in Grating structure')
+    if ~isempty(relnames)
+        fieldsPresent = cellfun(@(x) ismember(x, relnames), gtfnames);
+        assert(sum(fieldsPresent) == length(relnames), 'Missing fields in Grating structure')
+    else
+        warning('do not have names for this frame generating function: gratingStruct was not checked')
+    end
 else
     error('gratingStruct field is missing!')
 end
