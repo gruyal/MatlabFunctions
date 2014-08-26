@@ -87,7 +87,7 @@ default.orientations = 0:2:6;
 default.gsLevel = 3;
 default.maskType = {'circle'};
 default.maskInt = 1;
-default.gridSize = [2,2];
+default.gridSize = [3,2];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
@@ -204,7 +204,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
  for ii=1:numMasks
-    gtStruct(ii).valsONSt = default.gratingMidVal;
+    gtStruct(ii).valsONSt = default.gratingMidVal + 0.01; % to round up
     gtStruct(ii).valsONEnd = onVal(ii);
     gtStruct(ii).valsOFFSt = offVal(ii);
     gtStruct(ii).valsOFFEnd = default.gratingMidVal;

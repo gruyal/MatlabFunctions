@@ -47,9 +47,8 @@ function protocolStruct = createMinimalMotionProtocol(inputStruct)
 %                   to generate that fraction of a second (0.25 with generalFreq 20 would be 5 frames).    
 % .contrast -       1XN vector (0-1) difference between bright and dark bars relative to mid. 
 %                   contrast and number of masks should have the same length. { 1XNumMasks }
-% .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6}  
-%                   For this function orientations must come in
-%                   corresponding pairs ( |ort-ort'| == 4)
+% .orientation -    Vector (0-3). Orientations for the gratings. Applied on all inputs {[0, 2]}  
+%                   This function generates the corresponding pair for each given orientations ( |ort-ort'| == 4)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
@@ -83,6 +82,13 @@ function protocolStruct = createMinimalMotionProtocol(inputStruct)
 %                   NOTE! masks and gratings need not be of the same length
 %                   NOTE! grid mask positions will use only the first
 %                   maskRadius value to interpert overlap. 
+%
+%                   NOTE! corresponding orientations are generated in this
+%                   function using a mirror image of the given orientation
+%                   (without actually changing the orientation). This is
+%                   done because masks are ihenrently odd in number and it
+%                   makes sure that the same number of pixels and the same
+%                   pixels are activated only in a reverse order
 
 %% GENERAL AND DEFAULT PARAMETERS
 
@@ -94,13 +100,13 @@ default.maskRadius = 'UI';
 default.gridCenter = 'UI';
 default.generalFrequency = 'UI';
 default.contrast = 1;
-default.orientations = 0:2:6;
+default.orientations = [0, 2];
 default.gsLevel = 3;
 default.maskType = {'square'};
 default.maskInt = 1;
-default.firstBar = [0,1];
+default.firstBar = [0, 1];
 default.secondBar = [];
-default.gridSize = [2,2];
+default.gridSize = [3,2];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
@@ -122,10 +128,10 @@ end
  
  ort = default.orientations;
  assert(isvector(ort), 'Orientation should be 1XM vector')
- assert(logical(prod(ismember(ort, 0:7))), 'Orientation values should be between 0 and 7')
- ortchk = arrayfun(@(x) abs(x-ort) == 4, ort, 'uniformoutput', 0);
- ortchk = sum(vertcat(ortchk{:}));
- assert(logical(prod(ortchk)), 'Orientation vector must have opposing orientation values (e.g. 0 and 4)')
+ assert(logical(prod(ismember(ort, 0:3))), 'Orientation values should be between 0 and 3, automatically complemented to opposing values')
+%  ortchk = arrayfun(@(x) abs(x-ort) == 4, ort, 'uniformoutput', 0);
+%  ortchk = sum(vertcat(ortchk{:}));
+%  assert(logical(prod(ortchk)), 'Orientation vector must have opposing orientation values (e.g. 0 and 4)')
  protocolStruct.orientations = ort;
  
  %% MASK
@@ -230,6 +236,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  offVal = default.gratingMidVal - cont/2.041; % so that it wont go negative
  midVal = default.gratingMidVal;
  
+ counter = 0;
  for ii=1:length(firstBar)
      if     firstBar(ii) == 0 && secondBar(ii) == 0
          tempVals = [midVal, midVal, offVal(ii); midVal, offVal(ii), offVal(ii)]; %tempVals is an array of temp values to be expanded to proper on off vals
@@ -244,21 +251,32 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
      onBase  = reshape(repmat(tempVals(1, :), staticFrames, 1), 1, []);
      offBase = reshape(repmat(tempVals(2, :), staticFrames, 1), 1, []);
      
-     baseGtStruct(ii).vals1St = onBase;
-     baseGtStruct(ii).vals1End = onBase;
-     baseGtStruct(ii).vals2St = offBase;
-     baseGtStruct(ii).vals2End = offBase;
-     baseGtStruct(ii).vals3St = midVal;
-     baseGtStruct(ii).vals3End = midVal;
-     baseGtStruct(ii).vals4St = midVal;
-     baseGtStruct(ii).vals4End = midVal;
-     baseGtStruct(ii).barAtPos = firstBar(ii) + 1;
-     baseGtStruct(ii).gsLevel = gsLev;
-     baseGtStruct(ii).width1 = -1; % these values are used only so that the structures could be combined in the next loop 
-     baseGtStruct(ii).width2 = -1;
-     baseGtStruct(ii).width3 = 4; % other 2 bar are used simply because the window always has an odd number of lines 
-     baseGtStruct(ii).width4 = 4;
-     baseGtStruct(ii).position = 0;
+     for jj=1:2 % to create the other orientation
+        counter = counter+1; 
+        baseGtStruct(counter).vals1St = onBase;
+        baseGtStruct(counter).vals1End = onBase;
+        if jj==1 
+            baseGtStruct(counter).vals2St = offBase;
+            baseGtStruct(counter).vals2End = offBase;
+            baseGtStruct(counter).vals4St = midVal;
+            baseGtStruct(counter).vals4End = midVal;
+        else
+            baseGtStruct(counter).vals2St = midVal;
+            baseGtStruct(counter).vals2End = midVal;
+            baseGtStruct(counter).vals4St = offBase;
+            baseGtStruct(counter).vals4End = offBase;
+        end
+        baseGtStruct(counter).vals3St = midVal;
+        baseGtStruct(counter).vals3End = midVal;
+        
+        baseGtStruct(counter).barAtPos = firstBar(ii) + 1;
+        baseGtStruct(counter).gsLevel = gsLev;
+        baseGtStruct(counter).width1 = -1; % these values are used only so that the structures could be combined in the next loop 
+        baseGtStruct(counter).width2 = -1;
+        baseGtStruct(counter).width3 = 4; % other 2 bar are used simply because the window always has an odd number of lines 
+        baseGtStruct(counter).width4 = -1;
+        baseGtStruct(counter).position = 0;
+     end
  end
  
  % Combining masks and gratings 
@@ -269,8 +287,15 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
          tempInd = (ii-1)*length(baseGtStruct)+jj;
          gtStruct(tempInd) = baseGtStruct(jj);
          gtStruct(tempInd).width1 = wid;
-         gtStruct(tempInd).width2 = wid;
-         gtStruct(tempInd).position = -wid;
+         if mod(jj,2) == 1
+            gtStruct(tempInd).width2 = wid;
+            gtStruct(tempInd).width4 = 4; % irrelevant for this stim
+            gtStruct(tempInd).position = -wid;
+         else
+            gtStruct(tempInd).width2 = 4; % irrelevant for this stim
+            gtStruct(tempInd).width4 = wid; 
+            gtStruct(tempInd).position = 0;
+         end
          
          newMaskSt(tempInd) = maskSt(ii);
         

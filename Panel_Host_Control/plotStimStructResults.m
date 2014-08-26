@@ -36,6 +36,11 @@ numCols = length(unique(allInds(:, sepColDim)));
 goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
 axh = zeros(numFigs, numX*numY);
 
+dataInd = false(length(pStruct.stim), 1);
+for ii=1:length(pStruct.stim)
+    dataInd(ii) = ~isempty(pStruct.stim(ii).data);
+end
+
 
 for ii=1:numFigs
     figure
@@ -53,7 +58,7 @@ for ii=1:numFigs
         title(num2str(mPos(jj, :)))
         for kk=1:numCols
             thirdInds = allInds(:,sepColDim) == kk;
-            plotInds = find(firstInds+secInds+thirdInds == 3);
+            plotInds = find(firstInds+secInds+thirdInds+dataInd == 4);
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
                 dataX = pStruct.stim(plotInds(mm)).data{1}(1, :); 
