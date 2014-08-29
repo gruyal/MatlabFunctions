@@ -14,31 +14,20 @@ function xPos = extractPositionFromTDMSStruct(tdmsStruct)
 
 xPosInd = [5, 4]; % based on dump_frame in Panel_tcp_com 
 
-groupInd  = find(cellfun(@(x) strcmp(x, 'Commands Received'), tdmsStruct.groupNames));
+groupInd  = find(cellfun(@(x) strcmp(x, 'Pattern Position'), tdmsStruct.groupNames));
 
-chanInd = find(cellfun(@(x) strcmp(x, 'Data'), tdmsStruct.chanNames{groupInd}));
-nameInd = find(cellfun(@(x) strcmp(x, 'Command'), tdmsStruct.chanNames{groupInd}));
+
+nameInd = find(cellfun(@(x) strcmp(x, 'X Index'), tdmsStruct.chanNames{groupInd}));
 timeInd = find(cellfun(@(x) strcmp(x, 'Time'), tdmsStruct.chanNames{groupInd}));
-commInd = tdmsStruct.chanIndices{groupInd}(chanInd);
-commNameInd = tdmsStruct.chanIndices{groupInd}(nameInd);
+
+posNumInd = tdmsStruct.chanIndices{groupInd}(nameInd);
 timeStInd = tdmsStruct.chanIndices{groupInd}(timeInd);
 
-comms = tdmsStruct.data{commInd};
-commNames = tdmsStruct.data{commNameInd};
+
+posNum = tdmsStruct.data{posNumInd};
 timeStamp = tdmsStruct.data{timeStInd};
-xPos = nan(length(comms), 2);
+xPos = [timeStamp', double(posNum')];
 
-
-for ii=1:length(comms)
-    if strcmp(commNames{ii}, 'Dump-Frame')
-        spComm = strsplit(comms{ii}, '/');
-        xPos(ii, 1) = timeStamp(ii);
-        
-        tempHex = spComm(xPosInd);
-        padHex = cellfun(@(x) [num2str(zeros(2-numel(x)), 1), x], tempHex, 'uniformoutput', 0);
-        xPos(ii, 2) = hex2dec([padHex{:}]);
-    end 
-end
     
 
 

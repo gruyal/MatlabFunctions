@@ -243,7 +243,7 @@ switch protocolStruct.interleave
         for jj=1:maxInd
             for kk=1:numMaskPos
                 relCrds = {relRangeX(kk,:); relRangeY(kk,:)};
-                addEmpty = cat(3, emptyIntFrames(:,:,1), rotSeqs{jj}(relCrds{1}, relCrds{2}, :)); %adds one empty frame in the beginning 
+                addEmpty = cat(3, emptyIntFrames, rotSeqs{jj}(relCrds{1}, relCrds{2}, :)); %adds empty frames in the beginning 
                 tempStim{jj}{kk} = cat(3, addEmpty, emptyIntFrames); % adds intFrames empty in the end
             end
         end
@@ -302,7 +302,7 @@ switch protocolStruct.interleave
             
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
-                addEmpty = cat(3, emptyIntFrames(:,:,1), tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
                 stimWBuffer = cat(3, addEmpty, emptyIntFrames);
                 tempStimMat{jj} = stimWBuffer;
             
@@ -354,7 +354,7 @@ switch protocolStruct.interleave
         
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
-                addEmpty = cat(3, emptyIntFrames(:,:,1), tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
                 stimWBuffer = cat(3, addEmpty, emptyIntFrames);
                 tempStimMat{jj} = stimWBuffer;
             
@@ -445,7 +445,7 @@ switch protocolStruct.interleave
                     relCrds = {relRangeX{stimInds(jj,2)}(kk,:); relRangeY{stimInds(jj,2)}(kk,:)};
                     concatStim(:,:,kk) = baseStim(relCrds{1}, relCrds{2},1); %should contain only stims of length 1
                 end
-                addEmpty = cat(3, emptyIntFrames(:,:,1), concatStim);
+                addEmpty = cat(3, emptyIntFrames, concatStim);
                 stimWBuffer = cat(3, addEmpty, emptyIntFrames);
                 tempStimMat{jj} = stimWBuffer;
             end
@@ -522,7 +522,7 @@ switch protocolStruct.interleave
                     relCrds = {relRangeX{jj}(kk,:); relRangeY{jj}(kk,:)};
                     concatStim(:,:,kk) = tempStim(relCrds{1}, relCrds{2});
                 end    
-                addEmpty = cat(3, emptyIntFrames(:,:,1), concatStim);
+                addEmpty = cat(3, emptyIntFrames, concatStim);
                 stimWBuffer = cat(3, addEmpty, emptyIntFrames);
                 finSeq{ii, jj} = stimWBuffer;
             end

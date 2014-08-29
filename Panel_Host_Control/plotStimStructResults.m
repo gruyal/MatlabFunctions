@@ -6,9 +6,12 @@ function plotStimStructResults(pStruct, sepFigDim, sepColDim)
 % separated by different figures and colors based on the dimensions given
 % (dimensions refers to the relInds component of the stim structure)
 
+close all
 relChannel = 3; %since the first column in the data is timeStamp
 % Choosing colors that will make sense (be able to see progression)
-relCols = repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
+%relCols = repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
+relCols = jet;
+close(gcf)
 offset = 5;
 
 % determining how to divide each figure (by checking maskPositions)
@@ -62,6 +65,7 @@ for ii=1:numFigs
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
                 dataX = pStruct.stim(plotInds(mm)).data{1}(1, :); 
+                dataX = dataX-dataX(1); % gets rid of samples that doen't start w/ zero
                 if dataX(1) < minX
                     minX = dataX(1);
                 end

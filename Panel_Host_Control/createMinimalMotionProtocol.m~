@@ -239,17 +239,13 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  counter = 0;
  for ii=1:length(firstBar)
      if     firstBar(ii) == 0 && secondBar(ii) == 0
-         tempVals = [midVal, offVal(ii), offVal(ii), midVal, offVal(ii); ...
-                     midVal, midVal    , offVal(ii), midVal, offVal(ii)]; %tempVals is an array of temp values to be expanded to proper on/off vals
+%          tempVals = [midVal, offVal(ii), offVal(ii); midVal, midVal, offVal(ii)]; %tempVals is an array of temp values to be expanded to proper on/off vals
      elseif firstBar(ii) == 0 && secondBar(ii) == 1
-         tempVals = [midVal, offVal(ii), offVal(ii), midVal, offVal(ii); ...
-                     midVal, midVal    , onVal(ii) , midVal, onVal(ii)]; 
+         tempVals = [midVal, offVal(ii), offVal(ii); midVal, midVal, onVal(ii)]; 
      elseif firstBar(ii) == 1 && secondBar(ii) == 0
-         tempVals = [midVal, onVal(ii), onVal(ii) , midVal, onVal(ii); ... 
-                     midVal, midVal   , offVal(ii), midVal, offVal(ii)]; 
+         tempVals = [midVal, onVal(ii), onVal(ii); midVal, midVal, offVal(ii)]; 
      elseif firstBar(ii) == 1 && secondBar(ii) == 1
-         tempVals = [midVal, onVal(ii), onVal(ii), midVal, onVal(ii); ...
-                     midVal, midVal   , onVal(ii), midVal, onVal(ii)]; 
+         tempVals = [midVal, onVal(ii), onVal(ii); midVal, midVal, onVal(ii)]; 
      end
      
      firBase  = reshape(repmat(tempVals(1, :), staticFrames, 1), 1, []);
