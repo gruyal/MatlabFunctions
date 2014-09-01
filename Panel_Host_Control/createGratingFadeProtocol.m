@@ -156,11 +156,14 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  % generate values that are equivalent in length to one cycle of moving
  % gratings @ the same width
  
+ statFrames = floor(default.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
+ 
+ 
  for ii=1:length(wid)
     tempOnVals = linspace(onValMax(ii), default.gratingMidVal, wid(ii)+1);
     tempOffVals = linspace(offValMax(ii), default.gratingMidVal, wid(ii)+1);
-    OnVals{ii} = repmat([tempOnVals(1:end), tempOnVals(end-1:-1:2)], 1, default.cycles);
-    OffVals{ii} = repmat([tempOffVals(1:end), tempOffVals(end-1:-1:2)], 1, default.cycles);
+    OnVals{ii} = [ones(1, statFrames)*tempOnVals(1), repmat([tempOnVals(1:end), tempOnVals(end-1:-1:2)], 1, default.cycles)];
+    OffVals{ii} = [ones(1, statFrames)*tempOffVals(1), repmat([tempOffVals(1:end), tempOffVals(end-1:-1:2)], 1, default.cycles)];
  end
  
  chngType = default.type;
@@ -198,7 +201,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
  %% ORIENTATIONS
  
- ort = defaultOrientations;
+ ort = default.orientations;
  assert(isvector(ort), 'Orientation should be 1XM vector')
  assert(min(ort) >= 0 && max(ort) <=7, 'Orientation values should be between 0 and 7')
  

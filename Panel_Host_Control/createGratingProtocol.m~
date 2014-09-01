@@ -142,11 +142,11 @@ end
     gtStruct(ii).valsOFFEnd = offVal(ii);
  end
 
- statFrames = floor(default.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
+ stationaryFrames = floor(default.generalFrequency/2);
  
 % Grating assumptions
  for ii=1:numGrt
-    gtStruct(ii).position = [zeros(1, statFrames), 0:wid(ii)*2*default.cycles-1]; % -1 does not repeat the last position
+    gtStruct(ii).position = 0:wid(ii)*2*default.cycles-1; % -1 does not repeat the last position
     gtStruct(ii).barAtPos = 1;
  end
 
