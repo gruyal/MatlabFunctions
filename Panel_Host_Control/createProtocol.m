@@ -552,7 +552,13 @@ end
 
 totMats = [mats{:}]';
 totRelInds = vertcat(relInds{:});
-totFreqCorr = vertcat(freqCorr{:});
+if protocolStruct.freqCorrFlag == 1
+    totFreqCorr = vertcat(freqCorr{:});
+elseif protocolStruct.freqCorrFlag == 0
+    totFreqCorr = ones(1,size(totRelInds, 1));
+else
+    error('freqCorrFlag should be logical')
+end
 
 for ii=1:size(totRelInds, 1)
     protocolStruct.stim(ii).matCell = totMats{ii};

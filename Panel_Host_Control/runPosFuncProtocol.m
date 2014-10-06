@@ -116,6 +116,8 @@ Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
 
+figH = figure('position', [1450, 50, 450, 150]);
+maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 
 for ii=1:numStim
     
@@ -127,8 +129,10 @@ for ii=1:numStim
     Panel_tcp_com('set_posfunc_id', [1,ii]);
     Panel_tcp_com('set_funcx_freq', relFreq);
     stimTime = size(protocolStruct.stim(ii).patVecMat, 2)/relFreq;
+    %inStimInd = floor(size(protocolStruct.stim(ii).patVecMat, 2)*3/5);
     
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
+    plotMidFrame(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
         
     Panel_tcp_com('start')
     
@@ -175,6 +179,8 @@ save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
 
 protStruct = consolidateData(folderName);
+close(figH)
+
 
 end
 
