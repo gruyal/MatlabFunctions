@@ -23,7 +23,7 @@ patVectorMatrix = zeros(1152, size(patMat,3));
 
 
 for ii=1:size(patMat,3)
-    patVectorMatrix(:, ii) = make_frame_vector_GS3(patMat(:,:,ii), BitMapIndex);
+    patVectorMatrix(:, ii) = make_frame_vector_GS3_mex(patMat(:,:,ii), BitMapIndex);
 end
 
 end
