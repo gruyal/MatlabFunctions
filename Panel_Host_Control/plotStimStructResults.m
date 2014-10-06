@@ -87,9 +87,11 @@ for ii=1:numFigs
     set(axh(ii, :), 'xlim', [minX, maxX])
     xlab = get(axh(ii, 1), 'xticklabel');
     ylab = get(axh(ii, 1), 'yticklabel');
+    xxtick = get(axh(ii, 1), 'xtick');
+    yytick = get(axh(ii, 1), 'ytick');
     set(axh(ii, :), 'yticklabel', {}, 'xticklabel', {})
-    set(axh(ii, 1:numY:(numX*numY)), 'xticklabel', xlab)
-    set(axh(ii, 1:numY), 'yticklabel', ylab)
+    set(axh(ii, 1:numY:(numX*numY)), 'xticklabel', xlab, 'xtick', xxtick)
+    set(axh(ii, 1:numY), 'yticklabel', ylab, 'ytick', yytick)
     
     legend(axh(ii, end), handForLegend, arrayfun(@num2str, 1:numCols, 'uniformoutput', 0))
 end
