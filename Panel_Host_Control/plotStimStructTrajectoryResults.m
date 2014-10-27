@@ -1,4 +1,4 @@
-function plotStimStructTrajectoryResults(pStruct, sepColDim)
+function varargout = plotStimStructTrajectoryResults(pStruct, sepColDim)
 
 % function plotStimStructResults(pStruct, sepColDim)
 %
@@ -6,10 +6,9 @@ function plotStimStructTrajectoryResults(pStruct, sepColDim)
 % separated by different figures (one for each direction) and colors based on the dimensions given
 % (dimensions refers to the relInds component of the stim structure)
 
+close all
+
 relChannel = 3; %since the first column in the data is timeStamp
-% Choosing colors that will make sense (be able to see progression)
-relCols = repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
-offset = 5;
 
 % determining how to divide each figure (by checking maskPositions)
 mPos = pStruct.maskPositions;
@@ -43,7 +42,8 @@ assert(ismember(sepColDim, 1:3), 'Dimension by which to designate colors cannot 
 
 numFigs = numDirs;
 numCols = length(unique(allInds(:, sepColDim)));
-goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
+relCols = cbrewer('qual', 'Set1', numCols); %repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
+%goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
 axh = zeros(numFigs, numTrajPerD);
 
 
@@ -65,7 +65,7 @@ for ii=1:numFigs
         for kk=1:numCols
             secInds = allInds(:,sepColDim) == kk;
             plotInds = find(firstInds{jj}+secInds == 2);
-            plotCol = relCols(goodColsInds(kk), :);
+            plotCol = relCols(kk, :);
             for mm=1:length(plotInds)
                 dataX = pStruct.stim(plotInds(mm)).data{1}(1, :); 
                 if dataX(1) < minX
@@ -97,8 +97,12 @@ for ii=1:numFigs
 end
 
 
+%tilefigs
 
 
+if nargout > 0
+    varargout{1} = axh;
+end
 
 
 end

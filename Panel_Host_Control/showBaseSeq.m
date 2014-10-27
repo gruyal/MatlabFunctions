@@ -21,6 +21,12 @@ cmap = zeros(maxval,3);
 cmap(:,2) = linspace(0,1,maxval);
 colormap(cmap)
 
+% to mimic arena with 3 missing panels on each side
+baseSeqMatrix(1:8, [1:15, 81:96], :) = 0;
+baseSeqMatrix(8:16, [1:7, 89:96], :) = 0;
+
+
+
 imh = image('CData', baseSeqMatrix(:,:,1), 'CDataMapping', 'direct');
 % draws red lines for panels
 
