@@ -111,7 +111,8 @@ folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word '
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
-Panel_tcp_com('set_config_id', 2)
+Panel_tcp_com('set_config_id', 2) 
+
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
