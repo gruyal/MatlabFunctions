@@ -1,4 +1,4 @@
-function plotStimStructResults(pStruct, sepFigDim, sepColDim)
+function varargout = plotStimStructResults(pStruct, sepFigDim, sepColDim)
 
 % function plotStimStructResults(pStruct, sepFigDim, sepColDim)
 %
@@ -89,16 +89,16 @@ for ii=1:numFigs
     ylab = get(axh(ii, 1), 'yticklabel');
     xxtick = get(axh(ii, 1), 'xtick');
     yytick = get(axh(ii, 1), 'ytick');
-    set(axh(ii, :), 'yticklabel', {}, 'xticklabel', {})
+    set(axh(ii, :), 'xtick', xxtick, 'ytick', yytick, 'yticklabel', {}, 'xticklabel', {})
     set(axh(ii, 1:numY:(numX*numY)), 'xticklabel', xlab, 'xtick', xxtick)
     set(axh(ii, 1:numY), 'yticklabel', ylab, 'ytick', yytick)
     
     legend(axh(ii, end), handForLegend, arrayfun(@num2str, 1:numCols, 'uniformoutput', 0))
 end
 
-
-
-
+if nargout
+    varargout{1} = axh;
+end
 
 
 end

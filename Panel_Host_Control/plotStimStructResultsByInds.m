@@ -1,4 +1,4 @@
-function plotStimStructResultsByInds(pStruct, sepFigDimandInds, sepColDimandInds)
+function varargout = plotStimStructResultsByInds(pStruct, sepFigDimandInds, sepColDimandInds)
 
 % function plotStimStructResultsByInds(pStruct, sepFigDimandInds, sepColDimandInds)
 %
@@ -101,6 +101,7 @@ for ii=1:numFigs
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
                 dataX = pStruct.stim(plotInds(mm)).data{1}(1, :); 
+                dataX = dataX-dataX(1); % gets rid of samples that doen't start w/ zero
                 if dataX(1) < minX
                     minX = dataX(1);
                 end
@@ -132,7 +133,9 @@ for ii=1:numFigs
 end
 
 
-
+if nargout
+    varargout{1} = axh;
+end
 
 
 
