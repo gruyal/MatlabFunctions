@@ -30,6 +30,8 @@ function protStruct  = runPosFuncProtocol(funcHand, pStruct)
 
 % initiating parameters and tcp connection
 fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
+degPerPix = 1.875; % since my arena is 180deg and 96pix (X axis)
+
 
 % getting last file in the log file directory
 logDir = 'F:\Panel Host\Support Files\Log Files';
@@ -123,7 +125,8 @@ maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 for ii=1:numStim
     
     Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
-    relFreq = protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr;
+    corrFreq = protocolStruct.generalFrequency/degPerPix; % converts from degrees per second to Position function frequency (pixel per second);
+    relFreq = corrFreq/protocolStruct.stim(ii).freqCorr;
     
     Panel_tcp_com('set_pattern_id', ii)
     Panel_tcp_com('set_position', [1 1]);

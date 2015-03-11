@@ -19,8 +19,8 @@ modFramesMat = framesMat;
 maxVal = 2^gsLevel-1;
 
 
-modFramesMat(1, 21, 1:2:end) = 0;
-modFramesMat(1, 21, 2:2:end) = maxVal;
+modFramesMat(1, 19, 1:2:end) = 0;
+modFramesMat(1, 19, 2:2:end) = maxVal;
 
 
 
