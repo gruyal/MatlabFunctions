@@ -1,4 +1,4 @@
-function protocolStruct = createEdgeProtocol2(inputStruct)
+function protocolStruct = createEdgeProtocol(inputStruct)
 
 % function createEdgeProtocol(inputStruct)
 %
@@ -61,7 +61,7 @@ function protocolStruct = createEdgeProtocol2(inputStruct)
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3} 
 % .generalFrequency-Frequency with which frames from the generated protocol
-%                   will be dumped (passed on to runDumpProtocol) in Degrees per second. 
+%                   will be dumped (passed on to runDumpProtocol) in Hz. 
 % .freqCorrFlag -       Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
 %                   correction { 1 }.  
