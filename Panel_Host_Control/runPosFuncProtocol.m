@@ -22,6 +22,8 @@ function protStruct  = runPosFuncProtocol(funcHand, pStruct)
 %   .freqCorr -     factor by which timer period was corrected to equalize
 %                   temporal frequencies (for protocol that contain stimuli with different
 %                   spatial frequencies) (createProtocol)
+%   .dpsFreq -      degrees per second conversion (based on degrees per
+%                   pixel for the arena)
 %   .patVecMat -    vector format of matCell (created here)
 %   .fileName -     TDMS file for this stim (created here)
 %   .data -         cell array with first cell being channels recorded and second
@@ -30,6 +32,8 @@ function protStruct  = runPosFuncProtocol(funcHand, pStruct)
 
 % initiating parameters and tcp connection
 fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
+degPerPix = 2.25; % since my arena is 180deg and 96pix (X axis)
+
 
 % getting last file in the log file directory
 logDir = 'F:\Panel Host\Support Files\Log Files';
@@ -82,6 +86,10 @@ end
 assert(isfield(protocolStruct, 'stim'), 'Protocol structure is missing stim field')
 numStim = length(protocolStruct.stim);
 
+% converts from degrees per second to Position function frequency (pixel per second);
+dpsFreq = protocolStruct.generalFrequency * degPerPix;
+protocolStruct.dpsFreq = dpsFreq;
+fprintf('\n posFunc Freq of %d is %d degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
 
 for ii=1:numStim
     tempPatVec = convertPatternMatrix(protocolStruct.stim(ii).matCell);
@@ -111,7 +119,8 @@ folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word '
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
-Panel_tcp_com('set_config_id', 2)
+Panel_tcp_com('set_config_id', 2) 
+
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
@@ -122,7 +131,8 @@ maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 for ii=1:numStim
     
     Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
-    relFreq = protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr;
+   
+    relFreq = round(protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr); % to avoid weird behavior
     
     Panel_tcp_com('set_pattern_id', ii)
     Panel_tcp_com('set_position', [1 1]);

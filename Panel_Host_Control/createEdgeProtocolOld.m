@@ -1,29 +1,27 @@
-function protocolStruct = createDirectionalEdgeProtocol(inputStruct)
+function protocolStruct = createEdgeProtocol(inputStruct)
 
-% function createDirectionalEdgeProtocol(inputStruct)
+% function createEdgeProtocol(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
-% generate edges of different orientations. It has certain assumptions and therefore requires
+% generate full edge stimuli. It has certain assumptions and therefore requires
 % less inputs. 
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
 % 
 % ASSUMPTIONS
 % Since this is a grating certian parameters are assumed to be symmetrical.
-% 
-% width -           determined by maskRadius and centerProportion
+% Width -           same as the size of the mask 
 % Contrast -        each bar is uniform (no on/off gradients), and both are same
 %                   distance from mid level GS (background). 
+% Position -        desired bar always start in the right on the edge of the window. 
+% Cycles -          1 Cycles of movement (1 cycle being from first change until it
+%                   image is the same again).
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
 % Masks positions - Grid is assumed, but parameters should be given
 % grtMaskInt -      since grating width is completely dependent on mask
 %                   size, they will be read one to one. {interleave 1}
 % gratingFuncHand - Function uses the generateGratingFrame
-% barAtPos -        Since there is no movement, barAtPos is equivalent to
-%                   changing orientation. (set to 1)
-% position -        since there is no movement position is simply 0
-% 
 %
 %
 % INPUT 
@@ -31,21 +29,24 @@ function protocolStruct = createDirectionalEdgeProtocol(inputStruct)
 % Only 2 obligatory fields are maskRadius and gridCenter
 %
 % inputStruct -     Should have the following fields
-%
-% .gsLevel -        gray scale level for grating frames
-% .staticFrames -   For this protocol it is the number of frames stimulus
-%                   will appear  (since there is no change)
+% .startBar -       1XM { M <= 2 } vector (0-1). 0 - starts with mask comletely dark
+%                   1- starts with mask completely bright (other bar on the
+%                   edge of the mask). if more than one value is given, they
+%                   will be applied to each gratingXmask combination. 
+%                   { [0,1] }
+% .staticFrames -   Number of frames to be added in the begining and the
+%                   end of each stimulus (surrounding the actual edge
+%                   movement) { 3, which adds 3 frames in the begining and 3 in the end}
 % .contrast -       1XN vector (0-1) difference between bright and dark bars relative to mid. 
 %                   contrast and number of masks should have the same length. { 1XNumMasks }
+% .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6}  
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
 % .maskType -       {'circle'} or 'square'. Can also be a 1XM cell array
-% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1.
-%                   {2*width - closest value from the available ones} { UI }   
+% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones}    
 % .maskInt -        logical. If TRUE function will generate all the combinations
 %                   between type and radius. { 1 } 
-% .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6}  
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
 %                   coordinates). { [2,2] }
 % .gridPosOverlap - Overlap between different positions on mask position grid. 
@@ -60,10 +61,10 @@ function protocolStruct = createDirectionalEdgeProtocol(inputStruct)
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3} 
 % .generalFrequency-Frequency with which frames from the generated protocol
-%                   will be dumped (passed on to runDumpProtocol) in positoin function Hz. 
-% .freqCorrFlag -   Also passed on to runDumpProtocol. Logical flag to
+%                   will be dumped (passed on to runDumpProtocol) in Hz. 
+% .freqCorrFlag -       Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
-%                   correction { 0 }.  
+%                   correction { 1 }.  
 %
 % OUTPUT 
 % protocolStruct with all the required fields from createProtocl. 
@@ -79,14 +80,15 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96, 32];
 gratingFuncHand = @generateGratingFrame;
 
+default.maskRadius = 'UI'; 
 default.gridCenter = 'UI';
 default.generalFrequency = 'UI';
-default.maskRadius = 'UI'; 
 default.contrast = 1;
 default.orientations = 0:2:6;
 default.gsLevel = 3;
 default.maskType = {'circle'};
 default.maskInt = 1;
+default.startBar = [0,1];
 default.gridSize = [3,2];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
@@ -95,10 +97,7 @@ default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 default.staticFrames = 3;
-default.freqCorrFlag = 0;
-
-barAtPos = 1;
-gratingPosition = 0;
+default.freqCorrFlag = 1;
 
 % combining default and input structures
 if nargin ==0
@@ -167,8 +166,10 @@ end
      end
  end
  
+ 
+ 
+ % might change after startBar is read in 
  numMasks = length(maskSt);
- protocolStruct.masksStruct = maskSt;
 
  %% GRATING PARAMETERS
  
@@ -178,8 +179,8 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
 
  % Grating are 2X+1 for each X mask
  for ii=1:numMasks
-    gtStruct(ii).widthON = maskSt(ii).radius+1;
-    gtStruct(ii).widthOFF = maskSt(ii).radius+1;
+    gtStruct(ii).widthON = 2*maskSt(ii).radius+1;
+    gtStruct(ii).widthOFF = 2*maskSt(ii).radius+1;
     gtStruct(ii).gsLevel = gsLev;
  end
  
@@ -200,24 +201,41 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  onVal = default.gratingMidVal + cont/2; % 0.49 is for the middle value to be rounded down (in GS3 it is 3 and not 4)
  offVal = default.gratingMidVal - cont/2.041; % so that it wont go negative
  
- gsLev = default.gsLevel;
- assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
- 
  for ii=1:numMasks
-    gtStruct(ii).valsONSt = default.gratingMidVal + 0.01; % to round up
+    gtStruct(ii).valsONSt = onVal(ii);
     gtStruct(ii).valsONEnd = onVal(ii);
     gtStruct(ii).valsOFFSt = offVal(ii);
-    gtStruct(ii).valsOFFEnd = default.gratingMidVal;
-    gtStruct(ii).gsLevel = gsLev;
-    gtStruct(ii).position = ones(1, staticFrames) * -(maskSt(ii).radius+1);
-    gtStruct(ii).barAtPos = barAtPos;
+    gtStruct(ii).valsOFFEnd = offVal(ii);
+    gtStruct(ii).position = [ones(1, staticFrames)*(-maskSt(ii).radius), ...
+                            -maskSt(ii).radius:maskSt(ii).radius+1, ...
+                            ones(1, staticFrames)*(maskSt(ii).radius+1)];
  end
  
- % generate a maskSt that is compatible with the grating structure
- % (gtStruct). So that interleave (in createProtocol) can be equal to 1
- % (number of masks identical to number of gratings)
+ stBar = default.startBar;
+ assert(length(stBar) <= 2, 'Length os startBar should not exceed 2 (since all values are applied on all gratingXmask combinations)')
+ assert(logical(prod(ismember(stBar, [0,1]))), 'startBar values should be either 0 or 1')
+
+% If both type of edges are present duplicate the grating and mask
+% structure
+if length(stBar) > 1
+    gtStruct(numMasks+1:2*numMasks) = gtStruct(1:numMasks);
+    maskSt(numMasks+1:2*numMasks) = maskSt(1:numMasks);
+    for ii=1:length(gtStruct)
+        if ii < (numMasks+1)
+            gtStruct(ii).barAtPos = stBar(1);
+        else
+            gtStruct(ii).barAtPos = stBar(2);
+        end
+    end
+else
+    for ii=1:length(gtStruct)
+        gtStruct(ii).barAtPos = stBar;
+    end
+end
+
  
  protocolStruct.gratingStruct = gtStruct;
+ protocolStruct.masksStruct = maskSt;
  
  %% GRID 
  
@@ -274,7 +292,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  protocolStruct.funcHand = gratingFuncHand;
  protocolStruct.interleave = default.grtMaskInt;
  
-intF = default.intFrames;
+ intF = default.intFrames;
  if isnan(intF)
      protocolStruct.intFrames = floor(default.generalFrequency/2);
  else % if user gave a number

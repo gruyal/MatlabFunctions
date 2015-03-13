@@ -80,7 +80,9 @@ for ii=1:numFigs
         hold off
     end
     allY = get(axh(ii, :), 'ylim');
-    allY = [allY{:}];
+    if iscell(allY)
+        allY = [allY{:}];
+    end
     maxY = max(allY);
     minY = min(allY);
     set(axh(ii, :), 'ylim', [minY, maxY])
