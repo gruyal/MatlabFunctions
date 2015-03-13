@@ -87,6 +87,7 @@ function protocolStruct = createGratingFadeProtocol(inputStruct)
 %% GENERAL AND DEFAULT PARAMETERS
 
 baseSiz = 225; % size of single frame or mask
+arenaSize = [96,32];
 gratingFuncHand = @generateGratingFrame;
 
 default.width = 'UI';
