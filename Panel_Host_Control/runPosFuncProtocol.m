@@ -87,17 +87,16 @@ assert(isfield(protocolStruct, 'stim'), 'Protocol structure is missing stim fiel
 numStim = length(protocolStruct.stim);
 
 % converts from degrees per second to Position function frequency (pixel per second);
+assert(isfield(protocolStruct, 'generalFrequency'), 'Missing field: generalFrequency')
 dpsFreq = protocolStruct.generalFrequency * degPerPix;
 protocolStruct.dpsFreq = dpsFreq;
-fprintf('\n posFunc Freq of %d is %d degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
+fprintf('\n posFunc Freq of %.2f is %d degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
 
 for ii=1:numStim
     tempPatVec = convertPatternMatrix(protocolStruct.stim(ii).matCell);
     protocolStruct.stim(ii).patVecMat = tempPatVec; 
 end
 fprintf('converted stimuli to serial vectors \n')
-
-assert(isfield(protocolStruct, 'generalFrequency'), 'Missing field: generalFrequency')
 
 
 statPat = make_vSDpattern_image(protocolStruct);

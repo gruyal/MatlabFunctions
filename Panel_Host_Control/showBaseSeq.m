@@ -12,10 +12,10 @@ end
 maxval = 2^gsLevel-1;
 
 % can change if needed
-times = 3; % how many times to repeat the whole sequnce
-freq = 20; % at what freqeuncy
+times = 1; % how many times to repeat the whole sequnce
+freq = 60; % at what freqeuncy
 
-figure
+clf
 set(gcf, 'position', [ 540   600   970   300])
 cmap = zeros(maxval,3);
 cmap(:,2) = linspace(0,1,maxval);
