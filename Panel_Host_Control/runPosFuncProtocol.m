@@ -90,7 +90,7 @@ numStim = length(protocolStruct.stim);
 assert(isfield(protocolStruct, 'generalFrequency'), 'Missing field: generalFrequency')
 dpsFreq = protocolStruct.generalFrequency * degPerPix;
 protocolStruct.dpsFreq = dpsFreq;
-fprintf('\n posFunc Freq of %.2f is %d degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
+fprintf('\n posFunc Freq of %d is %.2f degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
 
 for ii=1:numStim
     tempPatVec = convertPatternMatrix(protocolStruct.stim(ii).matCell);
@@ -118,7 +118,11 @@ folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word '
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
-Panel_tcp_com('set_config_id', 2) 
+
+% Config 2 block a third of the arena to speed up performance
+% Since T4s respond to middle of arena it should be avoided
+
+% Panel_tcp_com('set_config_id', 2) 
 
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);

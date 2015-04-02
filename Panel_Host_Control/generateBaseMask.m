@@ -18,14 +18,14 @@ function maskIm = generateBaseMask(maskType, maskSize)
 
 % these reduce or eliminate asymmetries in 45 degree rotations (radius,
 % linspacesteps)
-circleComb = [2, 11; 3, 15; 4, 41; 5, 29; 7, 45; 9, 77; 10, 131; 12, 101; 15, 133]; 
+circleComb = [2, 11; 3, 15; 4, 41; 5, 29; 7, 45; 9, 77; 10, 131; 12, 101; 15, 133; 17, 141]; 
 
 matSiz = 225;
 cen=ceil(matSiz/2); 
 maskIm = zeros(cen*2-1);
 
 assert(maskSize > 0, 'maskSize must be positive')
-assert(maskSize < 16,'MaskSize cannot exceed 15')
+assert(maskSize < 18,'MaskSize cannot exceed 17')
 
 
 if strcmpi(maskType, 'square')

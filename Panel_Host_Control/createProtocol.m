@@ -98,7 +98,11 @@ protocolStruct = checkProtocolStruct(protocolStruct);
 
 %Generating the grating sequences
 stimSeqCell = cell(1, length(protocolStruct.gratingStruct));
-tempFreqCorr = zeros(1, length(stimSeqCell));
+if protocolStruct.freqCorrFlag
+    tempFreqCorr = zeros(1, length(stimSeqCell));
+else
+    tempFreqCorr = [];
+end
 
 %finding the width field (since 4Bar uses different width fields)
 fNames = fieldnames(protocolStruct.gratingStruct);
@@ -111,14 +115,18 @@ end
 
 for ii=1:length(protocolStruct.gratingStruct)
     stimSeqCell{ii} = generateGratingBaseSeq(protocolStruct.gratingStruct(ii), protocolStruct.funcHand);
-    tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
+    if tempFreqCorr
+        tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
+    end
 end
 protocolStruct.stimSeqCell = stimSeqCell;
 
 % This can be used to correct for temporal freqeuncy changes associated
 % with spatial freqency changes (e.g. slow down narrower grating frames by
 % this amount
-tempFreqCorr = max(tempFreqCorr)./tempFreqCorr;
+if tempFreqCorr
+    tempFreqCorr = max(tempFreqCorr)./tempFreqCorr;
+end
 
 
 numSeqs = length(protocolStruct.gratingStruct);
@@ -215,9 +223,10 @@ switch protocolStruct.interleave
              orI=1:numOrt;
         end
         
+        numMax = sum([numSeqs, numMasks, numOrt] == maxInd);
         numOnes = sum([numSeqs, numMasks, numOrt] == 1);
-        assert(numOnes == 2 || sum(diff([numSeqs, numMasks, numOrt])) == 0, ...
-                'For interleave 0, either gratingSeqs, masks and orientations are of same length, or 2 of 3 are of length 1')
+        assert(numMax + numOnes == 3 || numOnes == 3, ...
+                'For interleave 0, either gratingSeqs, masks and orientations are of same length, or of length 1')
      
      
         % combining gratingSeq with masks and orientations
@@ -258,7 +267,9 @@ switch protocolStruct.interleave
             tempStimCell = arrayfun(@(x) tempStim{stimInds(x,1)}{stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);       
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimCell, 'uniformoutput', 0);
             relInds{ii} = [ssI(stimInds(:,1))', mkI(stimInds(:,1))', orI(stimInds(:,1))', stimInds(:,2)];
-            freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
+            if tempFreqCorr
+                freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
+            end
             %reshape makes sure lengths and freqCorr are same shape even
             %when there are multiple inputs
             
@@ -314,7 +325,9 @@ switch protocolStruct.interleave
             
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            if tempFreqCorr
+                freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            end
             %reshape makes sure lengths and freqCorr are same shape even
             %when there are multiple inputs
         end
@@ -366,7 +379,9 @@ switch protocolStruct.interleave
         
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            if tempFreqCorr
+                freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            end
             %reshape makes sure lengths and freqCorr are same shape even
             %when there are multiple inputs
         
@@ -456,7 +471,9 @@ switch protocolStruct.interleave
         
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            if tempFreqCorr
+                freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            end
             %reshape makes sure lengths and freqCorr are same shape even
             %when there are multiple inputs
         
@@ -544,7 +561,9 @@ switch protocolStruct.interleave
             tempStimCell = arrayfun(@(x) finSeq{stimInds(x,1),stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);       
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimCell, 'uniformoutput', 0);
             relInds{ii} = [ssI(stimInds(:,1))', mkI(stimInds(:,1))', orI(stimInds(:,1))', stimInds(:,2)];
-            freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
+            if tempFreqCorr
+                freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
+            end
             %reshape makes sure lengths and freqCorr are same shape even
             %when there are multiple inputs
             
@@ -562,10 +581,18 @@ else
     error('freqCorrFlag should be logical')
 end
 
+stimPresEst = zeros(1, size(totRelInds, 1));
 for ii=1:size(totRelInds, 1)
     protocolStruct.stim(ii).matCell = totMats{ii};
     protocolStruct.stim(ii).relInds = totRelInds(ii,:);
     protocolStruct.stim(ii).freqCorr = totFreqCorr(ii);
+    stimPresEst(ii) = size(totMats{ii},3) * (1/totFreqCorr(ii));
+end
+
+% Estimating time for protocol presentation
+if isfield(protocolStruct, 'generalFrequency')
+    totTime = sum(stimPresEst) / protocolStruct.generalFrequency;
+    fprintf('\nTotal protocol time is %.2f min \n', totTime/60)
 end
 
 

@@ -18,7 +18,9 @@ function stepData = injectSteps(maxCurr, numSteps, reps)
 %           and the number of repeats. 
 % Data is atomatically saved in the working directory. 
 
-
+% due to syn clock problems with the NIDAQ board
+daq.reset
+daq.HardwareInfo.getInstance('DisableReferenceClockSynchronization',true);
 
 % Defining core variables
 sampRate = 10000;
