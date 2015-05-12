@@ -30,10 +30,10 @@ baseSeqMatrix(8:16, [1:7, 89:96], :) = 0;
 imh = image('CData', baseSeqMatrix(:,:,1), 'CDataMapping', 'direct');
 % draws red lines for panels
 
-set(gca, 'drawmode', 'fast','xtick', [], 'ytick', [], 'clim', [0,1], ...
+set(gca, 'SortMethod', 'childorder','xtick', [], 'ytick', [], 'clim', [0,1], ...
     'xlim', [0, 97], 'ylim', [0, 33], 'color', 'none', ...
     'position', [0.05, 0.1, 0.9, 0.8])
-set(imh, 'erasemode', 'none')
+%set(imh, 'erasemode', 'none')
 axis equal off
 
 for kk=1:times
@@ -44,6 +44,6 @@ for kk=1:times
     end
 end
 
-
+close gcf
 
 end

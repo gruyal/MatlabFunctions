@@ -75,7 +75,9 @@ for ii=1:numFigs
                 dataY = pStruct.stim(plotInds(mm)).data{1}(relChannel, :)*10; % to convert to mV
                 lh = plot(axh(ii, jj), dataX, dataY, 'linewidth', 1, 'color', plotCol);
             end
-            handForLegend(kk) = lh;
+            if ~isempty(plotInds)
+                handForLegend(kk) = lh;
+            end
         end
         hold off
     end
