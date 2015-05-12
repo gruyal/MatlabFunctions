@@ -1,10 +1,11 @@
-function protocolStruct = createEdgeProtocol(inputStruct)
+function protocolStruct = createAdaptingEdgeProtocol(inputStruct)
 
 % function createEdgeProtocol(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate full edge stimuli. It has certain assumptions and therefore requires
-% less inputs. 
+% less inputs. The function opens a window a slides an edge through it
+% several times in increasing speeds. 
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
 % 
@@ -14,8 +15,6 @@ function protocolStruct = createEdgeProtocol(inputStruct)
 % Contrast -        each bar is uniform (no on/off gradients), and both are same
 %                   distance from mid level GS (background). 
 % Position -        desired bar always start in the right on the edge of the window. 
-% Cycles -          1 Cycles of movement (1 cycle being from first change until it
-%                   image is the same again).
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
 % Masks positions - Grid is assumed, but parameters should be given
@@ -57,12 +56,23 @@ function protocolStruct = createEdgeProtocol(inputStruct)
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
 %                   will not have a position in the actual center.
-% .intFrames -      number of empty intervening frames. If not given quarter a
+% .intFrames -      number of empty intervening frames. If not given half a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3} 
-% .generalFrequency-Frequency with which frames from the generated protocol
-%                   will be dumped (passed on to runDumpProtocol) in Hz. 
-% .freqCorrFlag -       Also passed on to runDumpProtocol. Logical flag to
+% .cycles -         Number of times an edge will pass through the same
+%                   window before switching to the next stim. { 5 }
+% .numFreqSteps -   number of different frequency steps that will be
+%                   presented in succession. { 4 } 
+% .maxFrequency-    maximum frequency with which frames from the generated protocol
+%                   will be presented (posFunc X freq). { 60 }
+%                   Will be fed into createProtocol as generalFrequecy
+%
+%   NOTE!   Actuqal frequencies will be determined be dividing the max freq
+%   in 2 for the given number of steps. This is done since the stimulus is
+%   presented in the max freq but the number of frames simply doubles for
+%   each additional step
+%
+% .freqCorrFlag -   Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
 %                   correction { 1 }.  
 %
@@ -80,21 +90,22 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96, 32];
 gratingFuncHand = @generateGratingFrame;
 
-default.maskRadius = 5; 
+default.maskRadius = 4; 
 default.gridCenter = 'UI';
-default.generalFrequency = 15;
 default.stimBar = 1;
-default.orientations = [0,2];
+default.orientations = 0:2:6;
 default.gsLevel = 3;
-default.maskType = {'square'};
+default.maskType = {'circle'};
 default.maskInt = 1;
 default.startBar = 0.49;
-default.gridSize = [3,2];
+default.gridSize = [1,1];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
-%default.gratingMidVal = 0.49;
 default.intFrames = nan;
 default.repeats = 3;
+default.cycles = 5;
+default.numFreqSteps = 4;
+default.maxFrequency = 60;
 default.randomize = 1;
 default.staticFrames = 3;
 default.freqCorrFlag = 0;
@@ -185,6 +196,29 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  assert(min(startB) >=0 && max(startB) <= 1, 'startBar should be between 0 and 1');
  assert(isvector(startB), 'startBar should be a 1XN vector')
  
+ numCyc = default.cycles;
+ assert(isvector(numCyc) && length(numCyc) == 1, 'cycles should be a single positive number')
+ assert(numCyc > 0, 'cycles should be a positive number')
+ 
+ numFreq = default.numFreqSteps;
+ assert(isvector(numFreq) && length(numFreq) == 1, 'numFreqSteps should be a single positive number')
+ assert(numFreq > 0, 'numFreqSteps should be a positive number')
+ 
+ maxFreq = default.maxFrequency;
+ assert(isvector(maxFreq) && length(maxFreq) == 1, 'maxFrequency should be a single positive number')
+ assert(maxFreq > 0, 'maxFrequency should be a positive number')
+ 
+ relFreq = zeros(1, numFreq);
+ relFreq(end) = maxFreq;
+ fprintf('\nStim will be presented in the following frequencies: \n')
+ for ii=1:numFreq-1
+     relFreq(end - ii) = relFreq(end-ii+1)/2;
+ end
+ fprintf('%.2f Hz \n', relFreq)
+ fprintf('\n')
+ 
+ default.relFreqeuncy  = relFreq;
+ 
  if length(startB) > 1
      assert(length(startB) == length(stimB), 'StartBar should either have the same length as stimBar or length 1');
  else
@@ -217,8 +251,16 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
             error('stim and start bar are equal - no edge will be generated')
         end
         
+        tempBaseSeq =  -maskSt(ii).radius:maskSt(ii).radius+1;
+        accuSeq = tempBaseSeq;
+        doubSeq = tempBaseSeq;
+        for kk=1:numFreq-1
+            doubSeq = reshape(repmat(doubSeq, 2, 1), 1, []);
+            accuSeq = [doubSeq, accuSeq];
+        end
+        finSeq = repmat(accuSeq, 1, numCyc);
         gtStruct(count).position = [ones(1, staticFrames)*(-maskSt(ii).radius), ...
-                                    -maskSt(ii).radius:maskSt(ii).radius+1, ...
+                                    finSeq, ...
                                     ones(1, staticFrames)*(maskSt(ii).radius+1)];
         newMaskSt(count) = maskSt(ii);
         % Grating are 2X+1 for each X mask
@@ -282,7 +324,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  end
  
  %% Misc parameters
- protocolStruct.generalFrequency = default.generalFrequency;
+ protocolStruct.generalFrequency = default.maxFrequency;
  protocolStruct.freqCorrFlag = default.freqCorrFlag;
  
  protocolStruct.funcHand = gratingFuncHand;
@@ -290,7 +332,7 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(default.generalFrequency/4);
+     protocolStruct.intFrames = floor(default.maxFrequency/2);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;

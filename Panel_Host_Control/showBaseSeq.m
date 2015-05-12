@@ -12,10 +12,11 @@ end
 maxval = 2^gsLevel-1;
 
 % can change if needed
-times = 3; % how many times to repeat the whole sequnce
-freq = 20; % at what freqeuncy
+times = 1; % how many times to repeat the whole sequnce
+freq = 60; % at what freqeuncy
 
-figure
+clf
+figure(gcf)
 set(gcf, 'position', [ 540   600   970   300])
 cmap = zeros(maxval,3);
 cmap(:,2) = linspace(0,1,maxval);
@@ -30,7 +31,7 @@ baseSeqMatrix(8:16, [1:7, 89:96], :) = 0;
 imh = image('CData', baseSeqMatrix(:,:,1), 'CDataMapping', 'direct');
 % draws red lines for panels
 
-set(gca, 'SortMethod', 'childorder','xtick', [], 'ytick', [], 'clim', [0,1], ...
+set(gca,'xtick', [], 'ytick', [], 'clim', [0,1], ...
     'xlim', [0, 97], 'ylim', [0, 33], 'color', 'none', ...
     'position', [0.05, 0.1, 0.9, 0.8])
 %set(imh, 'erasemode', 'none')
@@ -44,6 +45,6 @@ for kk=1:times
     end
 end
 
-close gcf
+
 
 end

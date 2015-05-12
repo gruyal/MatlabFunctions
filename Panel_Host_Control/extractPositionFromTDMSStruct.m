@@ -12,8 +12,6 @@ function xPos = extractPositionFromTDMSStruct(tdmsStruct)
 % OUTPUT
 % xPos -        X position as reported by dump frame
 
-xPosInd = [5, 4]; % based on dump_frame in Panel_tcp_com 
-
 groupInd  = find(cellfun(@(x) strcmp(x, 'Pattern Position'), tdmsStruct.groupNames));
 
 

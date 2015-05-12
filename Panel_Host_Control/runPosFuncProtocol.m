@@ -87,17 +87,16 @@ assert(isfield(protocolStruct, 'stim'), 'Protocol structure is missing stim fiel
 numStim = length(protocolStruct.stim);
 
 % converts from degrees per second to Position function frequency (pixel per second);
+assert(isfield(protocolStruct, 'generalFrequency'), 'Missing field: generalFrequency')
 dpsFreq = protocolStruct.generalFrequency * degPerPix;
 protocolStruct.dpsFreq = dpsFreq;
-fprintf('\n posFunc Freq of %d is %d degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
+fprintf('\n posFunc Freq of %d is %.2f degPerSec \n', protocolStruct.generalFrequency, dpsFreq);
 
 for ii=1:numStim
     tempPatVec = convertPatternMatrix(protocolStruct.stim(ii).matCell);
     protocolStruct.stim(ii).patVecMat = tempPatVec; 
 end
 fprintf('converted stimuli to serial vectors \n')
-
-assert(isfield(protocolStruct, 'generalFrequency'), 'Missing field: generalFrequency')
 
 
 statPat = make_vSDpattern_image(protocolStruct);
@@ -119,7 +118,11 @@ folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word '
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
-Panel_tcp_com('set_config_id', 2) 
+
+% Config 2 block a third of the arena to speed up performance
+% Since T4s respond to middle of arena it should be avoided
+
+Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getting the Ack Error)  
 
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
@@ -127,11 +130,13 @@ Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
 figH = figure('position', [1450, 50, 450, 150]);
 maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
+pause(0.02)
 
 for ii=1:numStim
     
     Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
-   
+    
+    pause(0.05)
     relFreq = round(protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr); % to avoid weird behavior
     
     Panel_tcp_com('set_pattern_id', ii)
@@ -149,9 +154,10 @@ for ii=1:numStim
     pause(stimTime + fudgeT)
     
     Panel_tcp_com('stop')
+    pause(0.05)
     Panel_tcp_com('stop_log')
   
-    
+    pause(0.05) % seperates start from stop log
     if getappdata(wbh,'canceling')
         break
     end
