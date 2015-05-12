@@ -115,7 +115,7 @@ end
 
 for ii=1:length(protocolStruct.gratingStruct)
     stimSeqCell{ii} = generateGratingBaseSeq(protocolStruct.gratingStruct(ii), protocolStruct.funcHand);
-    if tempFreqCorr
+    if ~isempty(tempFreqCorr)
         tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
     end
 end
@@ -124,7 +124,7 @@ protocolStruct.stimSeqCell = stimSeqCell;
 % This can be used to correct for temporal freqeuncy changes associated
 % with spatial freqency changes (e.g. slow down narrower grating frames by
 % this amount
-if tempFreqCorr
+if ~isempty(tempFreqCorr)
     tempFreqCorr = max(tempFreqCorr)./tempFreqCorr;
 end
 
@@ -267,7 +267,7 @@ switch protocolStruct.interleave
             tempStimCell = arrayfun(@(x) tempStim{stimInds(x,1)}{stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);       
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimCell, 'uniformoutput', 0);
             relInds{ii} = [ssI(stimInds(:,1))', mkI(stimInds(:,1))', orI(stimInds(:,1))', stimInds(:,2)];
-            if tempFreqCorr
+            if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
             end
             %reshape makes sure lengths and freqCorr are same shape even
@@ -325,7 +325,7 @@ switch protocolStruct.interleave
             
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            if tempFreqCorr
+            if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
             end
             %reshape makes sure lengths and freqCorr are same shape even
@@ -379,7 +379,7 @@ switch protocolStruct.interleave
         
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            if tempFreqCorr
+            if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
             end
             %reshape makes sure lengths and freqCorr are same shape even
@@ -471,7 +471,7 @@ switch protocolStruct.interleave
         
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
             relInds{ii} = presentedInd;
-            if tempFreqCorr
+            if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
             end
             %reshape makes sure lengths and freqCorr are same shape even
@@ -561,7 +561,7 @@ switch protocolStruct.interleave
             tempStimCell = arrayfun(@(x) finSeq{stimInds(x,1),stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);       
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimCell, 'uniformoutput', 0);
             relInds{ii} = [ssI(stimInds(:,1))', mkI(stimInds(:,1))', orI(stimInds(:,1))', stimInds(:,2)];
-            if tempFreqCorr
+            if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(ssI(stimInds(:,1))), [],1);
             end
             %reshape makes sure lengths and freqCorr are same shape even
