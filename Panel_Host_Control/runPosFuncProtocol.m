@@ -30,13 +30,13 @@ function protStruct  = runPosFuncProtocol(funcHand, pStruct)
 %                   xPosition (timer updated based on rows in rows in patVecMat)
 %
 
-% initiating parameters and tcp connection
+%% initiating parameters
 fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
 degPerPix = 2.25; % since my arena is 180deg and 96pix (X axis)
 
 
 % getting last file in the log file directory
-logDir = 'F:\Panel Host\Support Files\Log Files';
+load logDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
 oldFileSt = dir(fullfile(logDir, '*.tdms'));
 [~, oldInd] = max([oldFileSt.datenum]);
 if ~isempty(oldInd)
@@ -49,8 +49,7 @@ if nargin < 1
     funcHand = listCreateProtocolFunctions;
 end
 
-
-% Establish panel host connection 
+%% Establish panel host connection 
 [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
 
 while ~strcmpi(res(2:6), 'Panel')
@@ -75,8 +74,7 @@ end
 Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_7')
 
-
-% run the desired function to generate the 32X96XN matrix to be presented
+%% run the desired function to generate the 32X96XN matrix to be presented
 if nargin < 2
     protocolStruct = feval(funcHand);
 else
@@ -118,7 +116,7 @@ folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word '
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
-
+%% Starts the experiment
 % Config 2 block a third of the arena to speed up performance
 % Since T4s respond to middle of arena it should be avoided
 
@@ -129,14 +127,14 @@ Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
 
 figH = figure('position', [1450, 50, 450, 150]);
+figH.MenuBar = 'none';
 maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
-pause(0.02)
 
 for ii=1:numStim
     
     Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
     
-    pause(0.05)
+    pause(0.1)
     relFreq = round(protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr); % to avoid weird behavior
     
     Panel_tcp_com('set_pattern_id', ii)
@@ -148,16 +146,18 @@ for ii=1:numStim
     
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
     plotMidFrame(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
-        
+    tH = title(num2str(protocolStruct.stim(ii).relInds));
+    tH.VerticalAlignment = 'top';
+    
     Panel_tcp_com('start')
     
     pause(stimTime + fudgeT)
     
     Panel_tcp_com('stop')
-    pause(0.05)
+    pause(0.02)
     Panel_tcp_com('stop_log')
   
-    pause(0.05) % seperates start from stop log
+    
     if getappdata(wbh,'canceling')
         break
     end
@@ -167,6 +167,7 @@ end
 
 totStimNum = ii;
 
+%% clean up after exp is done
 delete(wbh)
 Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_7')

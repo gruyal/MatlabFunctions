@@ -182,16 +182,14 @@ end
  end
  
  % User able to input maskRadius directly
- if nargin ==1  && isfield(default, 'maskRadius')
-     if ~isnan(default.maskRadius)
-         maskR = round(default.maskRadius);
-         assert(isvector(maskR), 'maskRadius should be a 1XM vector')
-     else
-        maskR = default.mask2WidthFactor*wid;
-     end
+ 
+ if ~isnan(default.maskRadius)
+     maskR = round(default.maskRadius);
+     assert(isvector(maskR), 'maskRadius should be a 1XM vector')
  else
-     maskR = default.mask2WidthFactor*wid;
- end
+    maskR = default.mask2WidthFactor*wid;
+end
+
  
  maskInt = default.maskInt;
  

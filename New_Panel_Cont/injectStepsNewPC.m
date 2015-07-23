@@ -1,4 +1,4 @@
-function stepData = injectStepsNewPC(maxCurr, numSteps, reps)
+function protocolStructAO = injectStepsNewPC(maxCurr, numSteps, reps)
 
 % function data = injectSteps(maxCurr, reps, injectRate)
 %
@@ -20,18 +20,38 @@ function stepData = injectStepsNewPC(maxCurr, numSteps, reps)
 
 
 
-% Defining core variables
-sampRate = 100;
+%% Defining core variables
+sampRate = 1000;
 interStepInt = sampRate/2; % 0.5 sec between steps
 direc = pwd;
+relCh = 1; % AO channel by panel host definition
+chInBin = dec2bin(relCh, 4);
 
+protocolStructAO = struct;
 
 if nargin < 3
     reps = 5;
 end
 
+% getting last file in the log file directory
+load logDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
+
+oldFileSt = dir(fullfile(logDir, '*.tdms'));
+[~, oldInd] = max([oldFileSt.datenum]);
+if ~isempty(oldInd)
+    newestOldFileName = oldFileSt(oldInd).name;
+else
+    newestOldFileName = [];
+end
+
+protocolStructAO.signalPar.maxCurr = maxCurr; 
+protocolStructAO.signalPar.numSteps = numSteps;
+protocolStructAO.signalPar.repeats = reps;
+
+%% Generating the signal
 conversionRatio = 400/1; % 400pA/V
-maxVol = maxCurr/conversionRatio * 5; % conversion ratio from a velfunc to voltage
+maxVol = maxCurr/conversionRatio; % conversion ratio from a velfunc to voltage
+assert(maxVol >= -10 && maxVol <= 10, 'current cannot exceed -10 to 10 when converted to V')
 
 stepLength = sampRate/2; % 500ms
 stepVals = linspace(0, maxVol, numSteps+1);
@@ -51,19 +71,42 @@ end
 
 
 anaSig = vertcat(zeros(interStepInt, 1), reshape(sigMat, [], 1), zeros(interStepInt, 1));
-make_velocityfunction_image(anaSig);
+stat = make_vSDAO_image_forVec(anaSig);
+assert(stat == 0, 'Problem creating AO file')
 
-tempVarNames = who('global');
-connChk = sum(cellfun(@(x) strcmp(x, 'tcpHandle'), tempVarNames)); 
+protocolStructAO.signal = anaSig;
 
-if ~logical(connChk)
-    error('No tcp connection detected - run "runPanelHost"')
+%% Establish panel host connection 
+[~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
+
+while ~strcmpi(res(2:6), 'Panel')
+    warnh = warndlg('Panel Host is not open; Open and press OK', 'Panel Host Warning', 'modal');
+    uiwait(warnh)
+    [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
+end
+
+establishtcp = questdlg('Would you like to establish TCP connection?', ...
+                        'TCP Comm', 'Yes', 'No', 'No');
+switch establishtcp
+    case 'Yes'
+        init_tcp;
+        fprintf('TCP initiated \n')
+    case 'No'
+        fprintf('Verify TCP is initiated \n')
 end
 
 
-Panel_tcp_com('set_mode', [0, 5]);
-Panel_tcp_com('set_funcy_freq' , sampRate);
-Panel_tcp_com('set_velfunc_id', [2, 1]);
+% Sets arena to mid GS level and switches half off (with the second config
+% file
+Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('g_level_0')
+
+%% Running the experiment
+
+% Panel_tcp_com('set_mode', [4, 0]);
+% Panel_tcp_com('send_gain_bias', [0 0 0 0]);
+Panel_tcp_com('set_active_analog_channel', chInBin)
+Panel_tcp_com('set_analog_output_function', [relCh-1, 1]) % since counting starts at zero
 
 Panel_tcp_com('start_log')
 Panel_tcp_com('start')
@@ -71,6 +114,36 @@ Panel_tcp_com('start')
 pause(length(anaSig)/sampRate)
 Panel_tcp_com('stop')
 Panel_tcp_com('stop_log')
+
+%% Cleaning up after the experiment is done
+
+pause(1)
+
+% getting all the new file names
+fileSt = dir(fullfile(logDir, '*.tdms'));
+if ~isempty(newestOldFileName) % gets rid of old files in the directory
+    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+    fileSt = fileSt(oldFilesInd+1:end);
+end
+
+% just one file should be generated for this experiment
+assert(length(fileSt) == 1, 'Generated TDMS files do not match number of stimuli presented')
+
+protocolStructAO.stim(1).fileName = fileSt(1).name;
+protocolStructAO.type = 'currentInj';
+
+timeStamp = datestr(now, 'yyyymmdd_HH-MM');
+folderName = fullfile(pwd, ['stepData', timeStamp]);
+[stat, mess] = mkdir(folderName);
+assert(stat==1, 'error creating folder: %s', mess)
+
+fileNameCell = arrayfun(@(x) protocolStructAO.stim(x).fileName, 1, 'uniformoutput', 0)';
+copyLogFiletoCurrDir(fileNameCell, folderName) 
+save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
+
+
+protocolStructAO = consolidateData(folderName);
+
 
 
 % % Plotting data
