@@ -10,15 +10,21 @@ function totStat = make_vSDpattern_image(pStruct)
 
 block_size = 512; % all data must be in units of block size
 num_panels = 48;
-panelContConfigFile = 'F:\Panel Host\Support Files\HHMI Panels Configuration.ini';
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
 
-gs_val = pStruct.gratingStruct(1).gsLevel; % assumes they all have the same gsLevel 
+if isfield(pStruct, 'gsLevel')
+    gs_val = pStruct.gsLevel; % deals with protocolStructComb
+elseif isfield(pStruct, 'gratingStruct')
+    gs_val = pStruct.gratingStruct(1).gsLevel; % assumes they all have the same gsLevel 
+else
+    error('Missing gsLevel field')
+end
 num_patterns = length(pStruct.stim);
 Header_block = zeros(1, block_size);
 %SD.num_patterns = num_patterns;
 
 %clean the temp folder
-pConfig = fileread(panelContConfigFile);
+pConfig = fileread(panelContConfigFileDir);
 pConfigFormatted = textscan(pConfig, '%s');
 pathInd = find(cellfun(@(x) strcmp(x, '[Pattern]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
 temp_path = pConfigFormatted{1}{pathInd};

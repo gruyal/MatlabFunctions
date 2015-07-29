@@ -9,14 +9,14 @@ function totStat = make_vSDposfunction_image(pStruct)
 
 frameBuffer = 1000; % number of frames to add in the end of the function (so that stimulus wont go back to beginning
 block_size = 512; % all data must be in units of block size
-panelContConfigFile = 'F:\Panel Host\Support Files\HHMI Panels Configuration.ini';
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
 
 num_functions = length(pStruct.stim);
 Header_block = zeros(1, block_size);
 %SD.numfunc = num_functions;
 
 %clean the temp folder
-pConfig = fileread(panelContConfigFile);
+pConfig = fileread(panelContConfigFileDir);
 pConfigFormatted = textscan(pConfig, '%s');
 pathInd = find(cellfun(@(x) strcmp(x, '[Function]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
 temp_path = pConfigFormatted{1}{pathInd};

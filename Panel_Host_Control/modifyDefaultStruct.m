@@ -15,6 +15,8 @@ function modStruct = modifyDefaultStruct(defaultStruct, inputStruct)
 % modStruct -       structure with the modified field required for the particular
 %                   function
 
+
+%%
 fnames = fieldnames(defaultStruct);
 skipMaskInp = 0; % This variable allows the function to skip variable related to mask position generation if mask position itself is given
 skipFieldsNames = {'gridCenter', 'gridSize'}; % if maskPositions is given these fields will be skipped even if UI is written next to them
@@ -28,7 +30,8 @@ if nargin == 2
         elseif strcmp(inputNames{ii}, 'maskPositions')
             skipMaskInp = 1;
         else
-            warning('Field %s does not exist in default structure and is ignored', inputNames{ii})
+            warning('Field %s does not exist in default structure and was added', inputNames{ii})
+            defaultStruct = setfield(defaultStruct, inputNames{ii}, tempFieldV);
         end
     end
 end

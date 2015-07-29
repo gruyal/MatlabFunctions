@@ -12,7 +12,7 @@ function fullProtStruct = consolidateData(direct)
 % way runDumpProtocol saves it)
 %
 % OUTPUT
-% fuuProtStruct - after the protocol structure is loaded it is saved with
+% fullProtStruct - after the protocol structure is loaded it is saved with
 % the relevant data (Analog inputs, and x Position).
 
 % confirm that there is only one protocolStruct in the folder
@@ -22,6 +22,16 @@ assert(length(pTest) == 1, 'More than one protocol structure in directory')
 
 
 load(fullfile(direct, pTest.name));
+if strcmp(pTest.name(15:18), 'Comb')
+    protFlag = 1;
+    protocolStruct = protocolStructComb;
+elseif strcmp(pTest.name(15:16), 'AO')
+    protFlag = 2;
+    protocolStruct = protocolStructAO;
+else
+    protFlag = 0;
+end
+
 
 for ii=1:length(protocolStruct.stim)
     
@@ -31,17 +41,28 @@ for ii=1:length(protocolStruct.stim)
         continue
     end
     tdmsSt = TDMS_readTDMSFile(fullfile(direct, fname));
-    inputChDat = extractADCDataFromTDMSStruct(tdmsSt);
+    inputChDat = extractAnaDataFromTDMSStruct(tdmsSt, 'ADC');
     xPosDat = extractPositionFromTDMSStruct(tdmsSt);
     protocolStruct.stim(ii).data{1} = inputChDat;
     protocolStruct.stim(ii).data{2} = xPosDat;
+    if protFlag == 2
+        outputChDat = extractAnaDataFromTDMSStruct(tdmsSt, 'AO');
+        protocolStruct.stim(ii).data{3} = outputChDat;
+    end
     clear tdmsSt 
     fprintf('Exctraced data from stim %d of %d\n', ii, length(protocolStruct.stim))
     
 end
 
-save(fullfile(direct, pTest.name), 'protocolStruct')
-fprintf('ProtocolStruct was saved with input data consolidated \n')
+if protFlag == 1
+    save(fullfile(direct, pTest.name), 'protocolStructComb')
+elseif protFlag == 2
+    save(fullfile(direct, pTest.name), 'protocolStructAO')
+else
+    save(fullfile(direct, pTest.name), 'protocolStruct')
+end
+
+fprintf('Structure was saved with input data consolidated \n')
 fullProtStruct = protocolStruct;    
 
 
