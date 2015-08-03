@@ -21,7 +21,8 @@ function tilefigs(figs)
 
 if ~nargin				% If no input arguments...
    figs = findobj('Type', 'figure');	% ...find all figures.
-   figs	= sort(figs);
+   [~, tempO] = sort([figs.Number]);
+   figs = figs(tempO);
 end
 
 if isempty(figs)

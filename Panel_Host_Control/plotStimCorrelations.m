@@ -1,5 +1,5 @@
 
-function axh = plotStimCorrelations(pStruct)
+function varargout = plotStimCorrelations(pStruct)
 
 % function plotStimCorrelations(pStruct)
 %
@@ -41,6 +41,12 @@ figure
 imagesc(corrResMat, [-1, 1])
 protFreq = num2str(pStruct.generalFrequency);
 title(['genFreq - ', protFreq])
+
 axh = gca;
+
+if nargout ==1
+    varargout{1} = axh;
+end
+
 
 end
