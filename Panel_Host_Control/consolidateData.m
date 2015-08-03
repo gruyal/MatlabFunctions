@@ -55,8 +55,10 @@ for ii=1:length(protocolStruct.stim)
 end
 
 if protFlag == 1
+    protocolStructComb = protocolStruct;
     save(fullfile(direct, pTest.name), 'protocolStructComb')
 elseif protFlag == 2
+    protocolStructAO = protocolStruct;
     save(fullfile(direct, pTest.name), 'protocolStructAO')
 else
     save(fullfile(direct, pTest.name), 'protocolStruct')

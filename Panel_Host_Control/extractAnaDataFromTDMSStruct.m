@@ -31,7 +31,7 @@ groupInd = groupInd(ord);
 % assumes equal sampling rate on all channels 
 baseInd = tdmsStruct.chanIndices{groupInd(1)}(1); % just to get the size of the group (does matter which member)
 numSamp = tdmsStruct.numberDataPointsRaw(baseInd);
-inputDat = zeros(length(groupInd)+1, numSamp);
+inputDat = zeros(numSamp, length(groupInd)+1);
 
 for ii=1:length(groupInd)
     
@@ -39,13 +39,13 @@ for ii=1:length(groupInd)
         timeInd = find(cellfun(@(x) strcmp(x, 'Time'), tdmsStruct.chanNames{groupInd(ii)}));
         timeStInd = tdmsStruct.chanIndices{groupInd(ii)}(timeInd);
         timeStamp = tdmsStruct.data{timeStInd};
-        inputDat(ii, :) = timeStamp;
+        inputDat(:, ii) = timeStamp;
     end
     
     chanInd = find(cellfun(@(x) strcmp(x, 'Voltage'), tdmsStruct.chanNames{groupInd(ii)}));
     dataInd = tdmsStruct.chanIndices{groupInd(ii)}(chanInd);
     vData = tdmsStruct.data{dataInd};
-    inputDat(ii+1, :) = vData;
+    inputDat(:, ii+1) = vData;
     
 
 end

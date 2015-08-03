@@ -52,6 +52,7 @@ function protocolStructAO  = runPosFuncProtocolwAO(inpStructAO, funcHand, pStruc
 %       Note! the function adds empty patterns and empty aoVec for the
 %       presentation of just pattern/aoVec
 %   
+
 %% initiating parameters
 fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
 degPerPix = 2.25; % since my arena is 180deg and 96pix (X axis)
