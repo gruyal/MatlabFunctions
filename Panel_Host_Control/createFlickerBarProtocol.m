@@ -33,8 +33,8 @@ function protocolStruct = createFlickerBarProtocol(inputStruct)
 % .barWidth  -      Width of the flickering bar. For now can only be length
 %                   1.  { 2 }
 % .gsLevel -        gray scale level for grating frames
-% .numFlicksPerSec- number of flickers per second in each position { 5 }.
-% .flickerDuraion - How long bar will flicker in each position (in secs { 1 }.
+% .numFlicksPerSec- number of flickers per second in each position { 10 }.
+% .flickerDuraion - How long bar will flicker in each position (in secs { 0.5 }.
 %
 %                   To generate the proper movie generalFrequency is divided by 
 %                   numFlicksPerSec (and rounded) to determine how many frames should each flicker last. 
@@ -92,8 +92,8 @@ default.generalFrequency = 30;
 default.barWidth = 2;
 default.maskRadius = 17; 
 default.contrast = 1;
-default.numFlicksPerSec = 5;
-default.flickerDuraion = 1;
+default.numFlicksPerSec = 10;
+default.flickerDuraion = 0.5;
 default.orientations = [0, 2];
 default.gsLevel = 3;
 default.maskType = {'square'};

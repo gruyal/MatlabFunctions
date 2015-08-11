@@ -1,13 +1,16 @@
-function protocolStruct = createCenterSurroundProtocol(inputStruct)
+function protocolStruct = createCenterSurroundProtocol2(inputStruct)
 
-% function createCenterSurroundProtocol(inputStruct)
+% function createCenterSurroundProtocol2(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate center surround stimuli. It has certain assumptions and therefore requires
 % less inputs. 
 % If function is called with no inputStruct, it prompt the user for
-% relevant input and allows to change the default
-% 
+% relevant input and allows to change the default. 
+% This function differs from createCenterSurround by using an annulus mask
+% that has 2 radi instead of 1, and therefore maskRadius is split into inner and outer. 
+% Also, because of that this function doesn't have the centerProportion field (set to 1). 
+%
 % ASSUMPTIONS
 % Since this is a grating certian parameters are assumed to be symmetrical.
 % 
@@ -22,6 +25,10 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 % orientation -     meaningless for this protocol and will be disregarded
 % gratingFuncHand - Function uses the generateConcentricGratingFrame
 % gratingType -     Concentric grating type is identical to the mask type
+% maskType -        dependent on maskRadiusInner and maskRadiusOuter combination.
+%                   If they are equal it would be a circle and if they are different it is an
+%                   annulus.
+% centerProportion- Set to 1. 
 %
 %
 % INPUT 
@@ -30,10 +37,6 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 %
 % inputStruct -     Should have the following fields
 % .centerBar -      will be fed into barAtPos to determined whether center is bright (1) or dark (0) { [0,1] }. 
-% .centerProportion-Proportion of the entire window that has same level of brightness
-%                   as center. Calculated as proportion of mask radius, not mask area. (1XP vector of 0-1) { [0.5, 1] }
-% .cenBarPropInt -  (logical) whether centerBar and centerProportion should
-%                   be interleaved { 1 }
 % .gsLevel -        gray scale level for grating frames
 % .staticFrames -   For this protocol it is the number of frames stimulus
 %                   will appear  (since there is no change)
@@ -42,12 +45,12 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
-% .maskType -       {'circle'} or 'square'. Can also be a 1XM cell array
-% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones} { 4 }   
+% .maskRadiusInner- 1XP vector in pixels. 
+% .maskRadiusOuter- 1XP vector in pixels.
 % .maskInt -        logical. If TRUE function will generate all the combinations
-%                   between type and radius. { 1 } 
+%                   between inner and outer. Meaning will generate inner with all outer masks (if equal generates circle). { 1 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
-%                   coordinates). { [2,2] }
+%                   coordinates). { [1,1] }
 % .gridPosOverlap - Overlap between different positions on mask position grid. 
 %                   Units s are normalized maskSizes so that 0 means no overlap and no gap, 
 %                   1 means complete overlap (meaningless), and -1 means a gap of one mask
@@ -82,13 +85,11 @@ gratingFuncHand = @generateConcentricGratingFrame;
 default.gridCenter = 'UI';
 default.generalFrequency = 20;
 default.centerBar = [0,1];
-default.centerProportion = 1;
-default.cenBarPropInt = 1;
-default.maskRadius = 2; 
+default.maskRadiusInner = [2, 3]; 
+default.maskRadiusOuter = [2, 3, 4, 5]; 
 default.contrast = 1;
 default.orientations = 0;
 default.gsLevel = 3;
-default.maskType = {'circle'};
 default.maskInt = 1;
 default.gridSize = [1,1];
 default.gridOverlap = 0;
@@ -120,55 +121,72 @@ end
  
  %% MASK
  
- maskT = default.maskType;
- 
- if ischar(maskT)
-    numT = 1;
-    assert(ismember(maskT, {'circle'; 'square'}), 'mask type should be either a circle or a square')
-    maskT = {maskT};
- elseif iscell(maskT)
-    assert(logical(prod(cellfun(@ischar, maskT))), 'masks type should be a string or a cell array of strings')
-    numT = length(maskT);
-    assert(logical(prod(ismember(maskT, {'circle', 'square'}))), 'mask type should be either a circle or a square')
- end
- 
- maskR = default.maskRadius;
- assert(isvector(maskR), 'maskRadius should be a 1XM vector')
- 
- if default.maskInt
-     
-     count=0;
-     for ii=1:numT
-         for jj=1:length(maskR)
-             count=count+1;
-             maskSt(count).type = maskT{ii};
-             maskSt(count).radius = maskR(jj);
-         end
-     end
- else
-     assert(numT == length(maskR), 'If maskInt is F, type and radius should have the same length')
-     masksMat = zeros(baseSiz, baseSiz, numT);
-     for ii=1:numT
-         maskSt(ii).type = maskT{ii};
-         maskSt(ii).radius = maskR(ii);
-     end
- end
+ maskRI = default.maskRadiusInner;
+ maskRO = default.maskRadiusOuter;
+ assert(isvector(maskRI), 'maskRadiusInner should be a 1XM vector')
+ assert(isvector(maskRO), 'maskRadiusOuter should be a 1XP vector')
  
  % Making sure that circle masks are of adequate size
  % LIST TAKEN FROM GenerateBaseMask and is a result of circle that are
  % symmetrycal to rotations  
  relRad = [2,3,4,5,7,9,10,12,15];
  
- for ii=1:length(maskSt)
-     if strcmp(maskSt(ii).type, 'circle')
-         tempI = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskSt(ii).radius);
-         if maskSt(ii).radius ~= relRad(tempI)
-             warning('Mask %d radius was changed from %d to %d', ii, maskSt(ii).radius, relRad(tempI))
-             maskSt(ii).radius = relRad(tempI);
-         end
-     end
+ tempI = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskRI);
+ tempO = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskRO);
+ 
+ corrMaskRI = relRad(tempI);
+ corrMaskRO = relRad(tempO);
+ 
+ chInnerInd = find(corrMaskRI ~= maskRI);
+ 
+ for ii=1:length(chInnerInd)
+     tInd = chInnerInd(ii);
+     warning('Inner mask %d radius was changed from %d to %d', tInd, maskRI(tInd), corrMaskRI(tInd))
  end
  
+ chOuterInd = find(corrMaskRO ~= maskRO);
+ 
+ for ii=1:length(chOuterInd)
+     tInd = chOuterInd(ii);
+     warning('Outer mask %d radius was changed from %d to %d', tInd, maskRO(tInd), corrMaskRO(tInd))
+ end
+ 
+ if default.maskInt
+     
+     count=0;
+     for ii=1:length(corrMaskRI)
+         for jj=1:length(corrMaskRO)
+             if corrMaskRI(ii) < corrMaskRO(jj)
+                 count=count+1;
+                 maskSt(count).type = 'annulus';
+                 maskSt(count).radius = [corrMaskRI(ii), corrMaskRO(jj)];
+             elseif corrMaskRI(ii) == corrMaskRO(jj)
+                 count=count+1;
+                 maskSt(count).type = 'circle';
+                 maskSt(count).radius = corrMaskRI(ii);
+             else
+                 fprintf('combination inner %d and outer %d was skipped \n', corrMaskRI(ii), corrMaskRO(jj))
+             end
+         end
+     end
+ else
+     assert(length(maskRI) == length(maskRO), 'If maskInt is F, inner radius should have the same length as outer')
+     count = 0;
+     for ii=1:length(maskRI)
+         if corrMaskRI(ii) < corrMaskRO(ii)
+             count=count+1;
+             maskSt(count).type = 'annulus';
+             maskSt(count).radius = [corrMaskRI(ii), corrMaskRO(ii)];
+         elseif corrMaskRI(ii) == corrMaskRO(ii)
+             count=count+1;
+             maskSt(count).type = 'circle';
+             maskSt(count).radius = corrMaskRO(ii);
+         else
+             fprintf('combination inner %d and outer %d was skipped \n', corrMaskRI(ii), corrMaskRO(ii))
+         end
+     end
+         
+ end 
  
  
  % might change after startBar is read in 
@@ -180,18 +198,11 @@ end
  cenBar = default.centerBar;
  assert(logical(prod(ismember(cenBar, [0,1]))), 'centerBar can be 0 (dark) or 1 (bright) only')
  
- cenProp = default.centerProportion;
- assert(min(cenProp) >= 0 && max(cenProp) <= 1, 'centerProportion should be between 0 and 1')
+ cenProp = 1;
  
- if default.cenBarPropInt == 1
-     [tempCB, tempCP] = ndgrid(cenBar, cenProp);
-     cenBar = tempCB(:);
-     cenProp = tempCP(:);
- elseif default.cenBarPropInt == 0
-     assert(length(cenBar) == length(cenProp), 'If cenBarPropInt is F lengths of centerBar and centerProportion must be the same')
- else
-     error('cenBarPropInt should be logical')
- end
+ [tempCB, tempCP] = ndgrid(cenBar, cenProp);
+ cenBar = tempCB(:);
+ cenProp = tempCP(:);
  
  
  cont = default.contrast;
@@ -224,17 +235,17 @@ end
          gtStruct(count).valsOFFEnd = offVal(ii);
          gtStruct(count).gsLevel = gsLev;
          if cenBar(jj) == 1 %bright bar in center
-            gtStruct(count).widthON  = ceil(maskSt(ii).radius * cenProp(jj))+1;
-            gtStruct(count).widthOFF = maskSt(ii).radius;
+            gtStruct(count).widthON  = ceil(maskSt(ii).radius(end) * cenProp(jj))+1;
+            gtStruct(count).widthOFF = maskSt(ii).radius(end);
          elseif cenBar(jj) == 0 %dark bar in center
-             gtStruct(count).widthON  = maskSt(ii).radius;
-             gtStruct(count).widthOFF = ceil(maskSt(ii).radius * cenProp(jj))+1;
+             gtStruct(count).widthON  = maskSt(ii).radius(end);
+             gtStruct(count).widthOFF = ceil(maskSt(ii).radius(end) * cenProp(jj))+1;
          end
-         gtStruct(count).position = ones(1, staticFrames) * (ceil(maskSt(ii).radius * cenProp(jj))+1);
+         gtStruct(count).position = ones(1, staticFrames) * (ceil(maskSt(ii).radius(end) * cenProp(jj))+1);
          gtStruct(count).barAtPos = cenBar(jj);
          if strcmp(maskSt(ii).type, 'square')
              gtStruct(count).type = 1;
-         elseif strcmp(maskSt(ii).type, 'circle')
+         elseif strcmp(maskSt(ii).type, 'circle') || strcmp(maskSt(ii).type, 'annulus')
              gtStruct(count).type = 2;
          end
      end
@@ -270,8 +281,10 @@ end
      assert(isscalar(ovlp), 'Overlap should be a single number')
      assert(ovlp < 1, 'Overlap value above 1 are not accepted')
      assert(ovlp ~=1, 'What are you stupid? overlap 1 means no grid')
+     
+     relMask = max(corrMaskRO); % for an automatic grid, the maximal size is chosen
  
-     maskS = 2*maskR(1)+1;
+     maskS = 2*relMask(1)+1;
      space = maskS - maskS*ovlp;
      gridSt.spacing = [space, space];
      

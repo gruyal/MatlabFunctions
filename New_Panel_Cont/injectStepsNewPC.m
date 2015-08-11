@@ -144,7 +144,17 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 
 protocolStructAO = consolidateData(folderName);
 
+% cleaning up and closing AO channels
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
 
+pConfig = fileread(panelContConfigFileDir);
+pConfigFormatted = textscan(pConfig, '%s');
+pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
+temp_path = pConfigFormatted{1}{pathInd};
+
+dos(['del /Q "' temp_path '\*.ao"']); %deleting ao files
+
+Panel_tcp_com('set_active_analog_channel', [0 0 0 0])
 
 % % Plotting data
 % if numSteps > 6

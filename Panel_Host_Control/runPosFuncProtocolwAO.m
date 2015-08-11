@@ -204,6 +204,10 @@ assert(statPat == 0, 'Problem creating pattern files')
 assert(statPos == 0, 'Problem creating function files')
 assert(statVec == 0, 'Problem creating AO files')
 
+message = sprintf('Please check that red LED is set to ON and TTL');
+uiwait(msgbox(message));
+
+
 % Add waitbar to be able to abort protocol cleanly
 wbh = waitbar(0,'1','Name','Presenting Protocol',...
             'CreateCancelBtn',...
@@ -222,8 +226,9 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 % Config 2 block a third of the arena to speed up performance
 % Since T4s respond to middle of arena it should be avoided
 
+
 relFreq = round(protocolStruct.generalFrequency); % This function does not perform freq correction
-chInBin = dec2bin(relCh, 4);
+chInBin = dec2bin(relCh, 4); % true in this context, but not always (since relCh 3 would mean activating channels 1 and 2 - which is wrong)
 
 Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getting the Ack Error)  
 
@@ -303,6 +308,17 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 
 protocolStructAO = consolidateData(folderName);
 close(figH)
+
+% finding the directory in which to place file
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
+
+pConfig = fileread(panelContConfigFileDir);
+pConfigFormatted = textscan(pConfig, '%s');
+pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
+temp_path = pConfigFormatted{1}{pathInd};
+dos(['del /Q "' temp_path '\*.ao"']); % delete all the remaining AO files
+% closing the active channels
+Panel_tcp_com('set_active_analog_channel', '0000')
 
 
 end
