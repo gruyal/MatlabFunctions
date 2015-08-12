@@ -124,7 +124,7 @@ Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getti
 
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
-
+Panel_tcp_com('reset_counter')
 
 figH = figure('position', [1450, 50, 450, 150]);
 figH.MenuBar = 'none';

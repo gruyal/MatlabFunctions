@@ -236,9 +236,11 @@ Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 Panel_tcp_com('set_funcx_freq', relFreq);
 Panel_tcp_com('set_active_analog_channel', chInBin)
+Panel_tcp_com('reset_counter')
 figH = figure('position', [1450, 50, 450, 150]);
 figH.MenuBar = 'none';
 maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
+
 
 
 for ii=1:numStim

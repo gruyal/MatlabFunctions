@@ -107,6 +107,7 @@ Panel_tcp_com('g_level_0')
 % Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 Panel_tcp_com('set_active_analog_channel', chInBin)
 Panel_tcp_com('set_analog_output_function', [relCh-1, 1]) % since counting starts at zero
+Panel_tcp_com('reset_counter')
 
 Panel_tcp_com('start_log')
 Panel_tcp_com('start')
