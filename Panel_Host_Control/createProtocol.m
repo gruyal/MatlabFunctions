@@ -303,9 +303,15 @@ switch protocolStruct.interleave
         emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
         relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
         
+        if isfield(protocolStruct.randomize, 'randWithin')
+            randWithinF = protocolStruct.randomize.randWithin;
+        else
+            randWithinF = 0;
+        end
+        
         for ii=1:numReps
             
-            stimInds = randomizeMatrixInds([numSeqs, numOrt], relRand);
+            stimInds = randomizeMatrixInds([numSeqs, numOrt], relRand, randWithinF);
         
             tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
             
@@ -313,7 +319,8 @@ switch protocolStruct.interleave
         
         % changed back to 1 since centerSurround was not randomized
         % properly
-            secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [1, protocolStruct.randomize.maskPositions]);
+            tempRelRand = min(relRand);
+            secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [tempRelRand, protocolStruct.randomize.maskPositions]);
             tempStimMat = cell(1, size(secStimInd, 1)); %size of secStimInd is the actual number of individual stimuli after they have been combined
             
             for jj=1:size(secStimInd, 1)

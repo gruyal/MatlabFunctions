@@ -155,7 +155,7 @@ temp_path = pConfigFormatted{1}{pathInd};
 
 dos(['del /Q "' temp_path '\*.ao"']); %deleting ao files
 
-Panel_tcp_com('set_active_analog_channel', [0 0 0 0])
+Panel_tcp_com('set_active_analog_channel', '0000')
 
 % % Plotting data
 % if numSteps > 6

@@ -1,4 +1,4 @@
-function randInds = randomizeMatrixInds(matSize, randDim)
+function randInds = randomizeMatrixInds(matSize, randDim, randWithinFlag)
 
 % function randInds = randomizeMatrixInds(matSize, randDim)
 %
@@ -8,12 +8,27 @@ function randInds = randomizeMatrixInds(matSize, randDim)
 %
 % INPUT
 %
-% matSize -     1X2 vector describing the size of the 2-dim matrix to be randomized
-% randDim -     binary vector tagging which dimension to randomize. Should be same length as matSize  
+% matSize -         1X2 vector describing the size of the 2-dim matrix to be randomized
+% randDim -         binary vector tagging which dimension to randomize. Should be same length as matSize  
+% randWithinFlag -  logical (optional). in cases where just one dimension is
+%                   randomized, this flag determines whether to shuffle the non-randomized
+%                   dimension within the randomized one. 
+%   1   2   vs  2   2
+%   2   2       3   2
+%   3   2       1   2
+%   1   1       3   1
+%   2   1       1   1
+%   3   1       2   1   
+%   
 %
 % OUTPUT
 % randInds -    (MXN)X2 vector of indices into the required matrix (x,y
 %               coordinates of the given matrix size
+
+if nargin < 3
+    randWithinFlag = 0;
+end
+
 
 if size(matSize) ~= 2
     error('MatSize should be refer to a 2D matrix')
@@ -46,7 +61,11 @@ elseif isequal(randDim, [1, 0])
         for ii=1:fDim
             tInd = (ii-1)*sDim+1;
             randInds(tInd:(tInd+sDim-1), 1) = permInds(ii);
-            randInds(tInd:(tInd+sDim-1), 2) = 1:sDim;
+            if randWithinFlag
+                randInds(tInd:(tInd+sDim-1), 2) = randperm(sDim);
+            else
+                randInds(tInd:(tInd+sDim-1), 2) = 1:sDim;
+            end
         end
         
 elseif isequal(randDim, [0, 1])
@@ -54,7 +73,11 @@ elseif isequal(randDim, [0, 1])
         permInds = randperm(sDim);
         for ii=1:sDim
             tInd = (ii-1)*fDim+1;
-            randInds(tInd:(tInd+fDim-1), 1) = 1:fDim;
+            if randWithinFlag
+                randInds(tInd:(tInd+fDim-1), 1) = randperm(fDim);
+            else
+                randInds(tInd:(tInd+fDim-1), 1) = 1:fDim;
+            end
             randInds(tInd:(tInd+fDim-1), 2) = permInds(ii);
         end
          
