@@ -76,6 +76,11 @@ assert(stat == 0, 'Problem creating AO file')
 
 protocolStructAO.signal = anaSig;
 
+
+%% Generating empty pattern and posFunc
+
+generateEmptyPatAndVec(3) % gives a value of 3 to the arena (mid point for gs level 3)
+
 %% Establish panel host connection 
 [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
 
@@ -100,6 +105,11 @@ end
 % file
 Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_0')
+
+% sets the pattern and position functions to the empty ones
+Panel_tcp_com('set_pattern_id', 1)
+Panel_tcp_com('set_posfunc_id', [1, 1])
+
 
 %% Running the experiment
 
