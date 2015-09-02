@@ -422,10 +422,10 @@ switch lower(command)
         %50 is hardcoded no matter what is the length of the the message
         send_tcp(char([50, signed_16Bit_to_char(argument(1)), signed_16Bit_to_char(argument(2)),...
             signed_16Bit_to_char(argument(3)), argument(4), argument(5), argument(6), argument(7:end)]));
-    case 'start_log'
-        send_tcp( char([1 hex2dec('41')]));
-    case 'stop_log'
-        send_tcp( char([1 hex2dec('40')]));
+%     case 'start_log'
+%         send_tcp( char([1 hex2dec('41')]));
+%     case 'stop_log'
+%         send_tcp( char([1 hex2dec('40')]));
 
     otherwise
         error('invalid command name, please check help')

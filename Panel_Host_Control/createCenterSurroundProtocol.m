@@ -56,7 +56,7 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
 %                   will not have a position in the actual center.
-% .intFrames -      number of empty intervening frames. If not given half a
+% .intFrames -      number of empty intervening frames. If not given quarter a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3} 
 % .generalFrequency-Frequency with which frames from the generated protocol
@@ -306,7 +306,7 @@ end
  
 intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(default.generalFrequency/2);
+     protocolStruct.intFrames = floor(default.generalFrequency/4);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;

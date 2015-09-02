@@ -119,28 +119,28 @@ Panel_tcp_com('set_active_analog_channel', chInBin)
 Panel_tcp_com('set_analog_output_function', [relCh-1, 1]) % since counting starts at zero
 Panel_tcp_com('reset_counter')
 
-Panel_tcp_com('start_log')
+Panel_tcp_log('start')
 Panel_tcp_com('start')
 
 pause(length(anaSig)/sampRate)
 Panel_tcp_com('stop')
-Panel_tcp_com('stop_log')
+fileName = Panel_tcp_log('stop');
 
 %% Cleaning up after the experiment is done
 
 pause(1)
 
 % getting all the new file names
-fileSt = dir(fullfile(logDir, '*.tdms'));
-if ~isempty(newestOldFileName) % gets rid of old files in the directory
-    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-    fileSt = fileSt(oldFilesInd+1:end);
-end
+% fileSt = dir(fullfile(logDir, '*.tdms'));
+% if ~isempty(newestOldFileName) % gets rid of old files in the directory
+%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+%     fileSt = fileSt(oldFilesInd+1:end);
+% end
+% 
+% % just one file should be generated for this experiment
+% assert(length(fileSt) == 1, 'Generated TDMS files do not match number of stimuli presented')
 
-% just one file should be generated for this experiment
-assert(length(fileSt) == 1, 'Generated TDMS files do not match number of stimuli presented')
-
-protocolStructAO.stim(1).fileName = fileSt(1).name;
+protocolStructAO.stim(1).fileName = fileName;
 protocolStructAO.type = 'currentInj';
 
 timeStamp = datestr(now, 'yyyymmdd_HH-MM');

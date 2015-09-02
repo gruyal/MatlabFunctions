@@ -245,7 +245,7 @@ maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 
 for ii=1:numStim
     
-    Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
+    Panel_tcp_log('start') % to minimize non-recorded time loop iteration begin and end in log commands
     
     
     patTime = size(protocolStructAO.stim(ii).patVecMat, 2)/relFreq;
@@ -268,8 +268,10 @@ for ii=1:numStim
     pause(stimTime + fudgeT)
     
     Panel_tcp_com('stop')
+    pause(0.01)
+    tempFileName = Panel_tcp_log('stop');
     
-    Panel_tcp_com('stop_log')
+    protocolStruct.stim(ii).fileName = tempFileName;
   
     
     if getappdata(wbh,'canceling')
@@ -286,20 +288,20 @@ Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_7')
 
 % getting all the new file names
-fileSt = dir(fullfile(logDir, '*.tdms'));
-if ~isempty(newestOldFileName) % gets rid of old files in the directory
-    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-    fileSt = fileSt(oldFilesInd+1:end);
-end
-
-assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
-
-[~, fileNameInd] = sort([fileSt.datenum], 'ascend');
-
-
-for ii=1:totStimNum
-    protocolStructAO.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
-end
+% fileSt = dir(fullfile(logDir, '*.tdms'));
+% if ~isempty(newestOldFileName) % gets rid of old files in the directory
+%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+%     fileSt = fileSt(oldFilesInd+1:end);
+% end
+% 
+% assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
+% 
+% [~, fileNameInd] = sort([fileSt.datenum], 'ascend');
+% 
+% 
+% for ii=1:totStimNum
+%     protocolStructAO.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
+% end
 
 
 
