@@ -64,12 +64,10 @@ for ii=1:numFigs
             plotInds = find(firstInds+secInds+thirdInds+dataInd == 4);
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
-<<<<<<< HEAD
+
                 %dataX = pStruct.stim(plotInds(mm)).data{1}(1, :);
                 dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1);
-=======
-                dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1); 
->>>>>>> f9eb9908008ffbee3728d83d9d2190f5a1d17919
+
                 dataX = dataX-dataX(1); % gets rid of samples that doen't start w/ zero
                 if dataX(1) < minX
                     minX = dataX(1);
@@ -77,10 +75,7 @@ for ii=1:numFigs
                 if dataX(end) > maxX
                     maxX = dataX(end);
                 end
-<<<<<<< HEAD
-                %dataY = pStruct.stim(plotInds(mm)).data{1}(relChannel, :)*10; % to convert to mV
-=======
->>>>>>> f9eb9908008ffbee3728d83d9d2190f5a1d17919
+
                 dataY = pStruct.stim(plotInds(mm)).data{1}(:, relChannel)*10; % to convert to mV
                 lh = plot(axh(ii, jj), dataX, dataY, 'linewidth', 1, 'color', plotCol);
             end

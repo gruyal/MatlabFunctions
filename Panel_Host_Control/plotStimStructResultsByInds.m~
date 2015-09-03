@@ -70,10 +70,8 @@ numCols = length(unique(sepColDimandInds{2}));
 if pairedFlag
     relCols = cbrewer('qual', 'Paired', numCols);
 else
-    relCols = cbrewer('qual', 'Set1', numCols);
-end
-%goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
-goodColsInds = 1:length(relCols);
+    relCols = cbrewer('qual', 'Paired', numCols);
+goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
 axh = zeros(numFigs, numX*numY);
 
 % generating new indices lists
