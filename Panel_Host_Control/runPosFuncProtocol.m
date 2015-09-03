@@ -147,13 +147,13 @@ for ii=1:numStim
     plotMidFrame(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
     tH = title(num2str(protocolStruct.stim(ii).relInds));
     tH.VerticalAlignment = 'top';
-    
+    tic
     Panel_tcp_com('start')
 
     pause(stimTime + fudgeT)
 
     Panel_tcp_com('stop')
-
+    toc
     pause(0.01)
     tempFileName = Panel_tcp_log('stop');
     

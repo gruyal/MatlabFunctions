@@ -19,14 +19,18 @@ function varargout = plotStimStructResultsByInds(pStruct, sepFigDimandInds, sepC
 %                       should be {1, [1 1 2 2]}
 %                       sepColDimandInds - same as above only for what would be presented as a
 %                       separate color on the same figure.
+% pairedFlag -          Logical. Flag whether or not to use cbrewer paired colomap (default 1). 
 
 
 close all
+if nargin < 4
+    pairedFlag = 1;
+end
 
 relChannel = 3; %since the first column in the data is timeStamp
 % Choosing colors that will make sense (be able to see progression)
 %relCols = repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
-relCols = lines;
+
 close(gcf)
 offset = 5;
 
@@ -53,6 +57,7 @@ sepColDim = sepColDimandInds{1};
 assert(ismember(sepFigDim, 1:3), 'Dimension by which to seperate figures cannot be bigger than 3')
 assert(ismember(sepColDim, 1:3), 'Dimension by which to designate colors cannot be bigger than 3')
 
+
 relLength = [length(pStruct.gratingStruct), length(pStruct.masksStruct), length(pStruct.orientations)];
 
 assert(relLength(sepFigDim) == length(sepFigDimandInds{2}), 'Separate figure dimension does not match number of elements')
@@ -61,7 +66,14 @@ assert(relLength(sepColDim) == length(sepColDimandInds{2}), 'Separate color dime
 
 numFigs = length(unique(sepFigDimandInds{2}));
 numCols = length(unique(sepColDimandInds{2}));
-goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
+
+if pairedFlag
+    relCols = cbrewer('qual', 'Paired', numCols);
+else
+    relCols = cbrewer('qual', 'Set1', numCols);
+end
+%goodColsInds = round(linspace(1+offset, size(relCols, 1) - offset, numCols)); 
+goodColsInds = 1:length(relCols);
 axh = zeros(numFigs, numX*numY);
 
 % generating new indices lists

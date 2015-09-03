@@ -129,7 +129,7 @@ end
  % Making sure that circle masks are of adequate size
  % LIST TAKEN FROM GenerateBaseMask and is a result of circle that are
  % symmetrycal to rotations  
- relRad = [2,3,4,5,7,9,10,12,15];
+ relRad = [1,2,3,4,5,7,9,10,12,15,17];
  
  tempI = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskRI);
  tempO = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskRO);

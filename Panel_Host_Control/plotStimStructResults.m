@@ -69,13 +69,14 @@ for ii=1:numFigs
 
                 dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1); 
                 dataX = (dataX-dataX(1))/convertXtoMSFactor; % converts to ms since beginning of stim
+
                 if dataX(1) < minX
                     minX = dataX(1);
                 end
                 if dataX(end) > maxX
                     maxX = dataX(end);
                 end
-                
+
                 dataY = pStruct.stim(plotInds(mm)).data{1}(:, relChannel)*10; % to convert to mV
                 lh = plot(axh(ii, jj), dataX, dataY, 'linewidth', 1, 'color', plotCol);
             end
