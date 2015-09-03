@@ -100,7 +100,7 @@ fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
 % if pStcutCombPar is not given generate default struct
 if nargin < 1
     pStructCombPar.desiredComb = [1, 0; 0, 1; 1, 1];
-    pStructCombPar.timing = {'', '', [-0.2, 0, 0.2]};
+    pStructCombPar.timing = {'', '', [0]};
 end
 
 assert(isfield(pStructCombPar, 'desiredComb'), 'pstructCombPar is missing desiredComb field')
