@@ -315,7 +315,7 @@ end
 
 % Sets arena to mid GS level and switches half off (with the second config
 % file
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 
@@ -340,7 +340,7 @@ folderName = fullfile(pwd, [funcStr, timeStamp]);
 assert(stat==1, 'error creating folder: %s', mess)
 save(fullfile(folderName, ['protocolStructComb', timeStamp]), 'protocolStructComb')
 
-Panel_tcp_com('set_config_id', 2)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 
@@ -380,7 +380,7 @@ end
 totStimNum = ii;
 
 delete(wbh)
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 %% Cleaning up and assigning files to stimuli

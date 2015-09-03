@@ -8,7 +8,7 @@ function copyLogFiletoCurrDir(fileNameCellArray, newFolderName)
 % fileNameCellArray -   cell array of file names to transfer
 % newFolderName     -   String. Can be Full path or relative path and name of new folder
 
-logDir = 'F:\Panel Host\Support Files\Log Files';
+load logDir
 
 folderStat = exist(newFolderName, 'dir');
 
@@ -26,7 +26,7 @@ for ii=1:length(relCellArray)
     
     [tempStat, tempMess] = copyfile(fileToCopy, destFile);
     
-    assert(tempStat == 1, 'error % in copying %s', tempMess, relCellArray{ii})
+    assert(tempStat == 1, 'error %s in copying %s', tempMess, relCellArray{ii})
     
 end
 

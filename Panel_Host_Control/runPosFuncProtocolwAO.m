@@ -93,7 +93,7 @@ end
 
 % Sets arena to mid GS level and switches half off (with the second config
 % file
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 %% run the desired function to generate the 32X96XN matrix to be presented
@@ -284,7 +284,7 @@ totStimNum = ii;
 
 %% clean up after exp is done
 delete(wbh)
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 % getting all the new file names

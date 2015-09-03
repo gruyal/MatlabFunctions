@@ -71,7 +71,7 @@ end
 
 % Sets arena to mid GS level and switches half off (with the second config
 % file
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 %% run the desired function to generate the 32X96XN matrix to be presented
@@ -170,7 +170,7 @@ totStimNum = ii;
 
 %% clean up after exp is done
 delete(wbh)
-Panel_tcp_com('set_config_id', 1)
+Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
 
 % % getting all the new file names
@@ -189,7 +189,8 @@ Panel_tcp_com('g_level_7')
 %     protocolStruct.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
 % end
 
-
+% To get file names if function crashes while trying to move files
+save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
 
 fileNameCell = arrayfun(@(x) protocolStruct.stim(x).fileName, 1:numStim, 'uniformoutput', 0)';
 copyLogFiletoCurrDir(fileNameCell, folderName) 
