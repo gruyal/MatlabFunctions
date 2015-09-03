@@ -39,7 +39,14 @@ end
 figure
 
 imagesc(corrResMat, [-1, 1])
-protFreq = num2str(pStruct.generalFrequency);
+if isfield(pStruct, 'generalFrequency')
+    protFreq = num2str(pStruct.generalFrequency);
+elseif isfield(pStruct, 'inputStruct')
+    protFreq = num2str(pStruct.inputStruct.generalFrequency);
+else
+    protFreq = 'Not found';
+end
+
 title(['genFreq - ', protFreq])
 
 axh = gca;

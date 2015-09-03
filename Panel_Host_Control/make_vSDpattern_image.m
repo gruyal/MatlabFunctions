@@ -59,11 +59,11 @@ for ii = 1:num_patterns
     
     block_indexer = 1;  % points to the first block
     % now write all of the frame info
-    for i = 1:current_num_frames(ii)
+    for jj = 1:current_num_frames(ii)
         sd_start_address = (block_indexer - 1)*block_size + 1;
         sd_end_address = sd_start_address + current_frame_size(ii) - 1;    
         % always forced to start frame at a block boundary
-        pat_start_address = (i - 1)*current_frame_size(ii) + 1;
+        pat_start_address = (jj - 1)*current_frame_size(ii) + 1;
         pat_end_address = pat_start_address + current_frame_size(ii) - 1;    
         Pattern_Data(sd_start_address:sd_end_address) = relStim.patVecMat(pat_start_address:pat_end_address);
         block_indexer = block_indexer + blocks_per_frame(ii);

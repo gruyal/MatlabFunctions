@@ -14,19 +14,23 @@ function xPos = extractPositionFromTDMSStruct(tdmsStruct)
 
 groupInd  = find(cellfun(@(x) strcmp(x, 'Pattern Position'), tdmsStruct.groupNames));
 
+if isempty(groupInd)
+    fprintf('No position data in file')
+    xPos = NaN;
+else
 
-nameInd = find(cellfun(@(x) strcmp(x, 'X Index'), tdmsStruct.chanNames{groupInd}));
-timeInd = find(cellfun(@(x) strcmp(x, 'Time'), tdmsStruct.chanNames{groupInd}));
+    nameInd = find(cellfun(@(x) strcmp(x, 'X Index'), tdmsStruct.chanNames{groupInd}));
+    timeInd = find(cellfun(@(x) strcmp(x, 'Time'), tdmsStruct.chanNames{groupInd}));
 
-posNumInd = tdmsStruct.chanIndices{groupInd}(nameInd);
-timeStInd = tdmsStruct.chanIndices{groupInd}(timeInd);
+    posNumInd = tdmsStruct.chanIndices{groupInd}(nameInd);
+    timeStInd = tdmsStruct.chanIndices{groupInd}(timeInd);
 
 
-posNum = tdmsStruct.data{posNumInd};
-timeStamp = tdmsStruct.data{timeStInd};
-xPos = [timeStamp', double(posNum')];
+    posNum = tdmsStruct.data{posNumInd};
+    timeStamp = tdmsStruct.data{timeStInd};
+    xPos = [timeStamp', double(posNum')];
 
-    
+end
 
 
 end

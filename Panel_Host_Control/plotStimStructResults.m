@@ -13,6 +13,8 @@ relChannel = 3; %since the first column in the data is timeStamp
 relCols = jet;
 close(gcf)
 offset = 5;
+convertXtoMSFactor = 10^3; %since clock is at 10^6;
+
 
 % determining how to divide each figure (by checking maskPositions)
 mPos = pStruct.maskPositions;
@@ -65,10 +67,9 @@ for ii=1:numFigs
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
 
-                %dataX = pStruct.stim(plotInds(mm)).data{1}(1, :);
-                dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1);
+                dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1); 
+                dataX = (dataX-dataX(1))/convertXtoMSFactor; % converts to ms since beginning of stim
 
-                dataX = dataX-dataX(1); % gets rid of samples that doen't start w/ zero
                 if dataX(1) < minX
                     minX = dataX(1);
                 end

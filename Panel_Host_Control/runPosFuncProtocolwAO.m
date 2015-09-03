@@ -204,6 +204,10 @@ assert(statPat == 0, 'Problem creating pattern files')
 assert(statPos == 0, 'Problem creating function files')
 assert(statVec == 0, 'Problem creating AO files')
 
+message = sprintf('Please check that red LED is set to ON and TTL');
+uiwait(msgbox(message));
+
+
 % Add waitbar to be able to abort protocol cleanly
 wbh = waitbar(0,'1','Name','Presenting Protocol',...
             'CreateCancelBtn',...
@@ -222,8 +226,9 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 % Config 2 block a third of the arena to speed up performance
 % Since T4s respond to middle of arena it should be avoided
 
+
 relFreq = round(protocolStruct.generalFrequency); % This function does not perform freq correction
-chInBin = dec2bin(relCh, 4);
+chInBin = dec2bin(relCh, 4); % true in this context, but not always (since relCh 3 would mean activating channels 1 and 2 - which is wrong)
 
 Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getting the Ack Error)  
 
@@ -231,14 +236,16 @@ Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 Panel_tcp_com('set_funcx_freq', relFreq);
 Panel_tcp_com('set_active_analog_channel', chInBin)
+Panel_tcp_com('reset_counter')
 figH = figure('position', [1450, 50, 450, 150]);
 figH.MenuBar = 'none';
 maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 
 
+
 for ii=1:numStim
     
-    Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
+    Panel_tcp_log('start') % to minimize non-recorded time loop iteration begin and end in log commands
     
     
     patTime = size(protocolStructAO.stim(ii).patVecMat, 2)/relFreq;
@@ -261,8 +268,10 @@ for ii=1:numStim
     pause(stimTime + fudgeT)
     
     Panel_tcp_com('stop')
+    pause(0.01)
+    tempFileName = Panel_tcp_log('stop');
     
-    Panel_tcp_com('stop_log')
+    protocolStruct.stim(ii).fileName = tempFileName;
   
     
     if getappdata(wbh,'canceling')
@@ -279,20 +288,20 @@ Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_7')
 
 % getting all the new file names
-fileSt = dir(fullfile(logDir, '*.tdms'));
-if ~isempty(newestOldFileName) % gets rid of old files in the directory
-    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-    fileSt = fileSt(oldFilesInd+1:end);
-end
-
-assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
-
-[~, fileNameInd] = sort([fileSt.datenum], 'ascend');
-
-
-for ii=1:totStimNum
-    protocolStructAO.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
-end
+% fileSt = dir(fullfile(logDir, '*.tdms'));
+% if ~isempty(newestOldFileName) % gets rid of old files in the directory
+%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+%     fileSt = fileSt(oldFilesInd+1:end);
+% end
+% 
+% assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
+% 
+% [~, fileNameInd] = sort([fileSt.datenum], 'ascend');
+% 
+% 
+% for ii=1:totStimNum
+%     protocolStructAO.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
+% end
 
 
 
@@ -303,6 +312,17 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 
 protocolStructAO = consolidateData(folderName);
 close(figH)
+
+% finding the directory in which to place file
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
+
+pConfig = fileread(panelContConfigFileDir);
+pConfigFormatted = textscan(pConfig, '%s');
+pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
+temp_path = pConfigFormatted{1}{pathInd};
+dos(['del /Q "' temp_path '\*.ao"']); % delete all the remaining AO files
+% closing the active channels
+Panel_tcp_com('set_active_analog_channel', '0000')
 
 
 end

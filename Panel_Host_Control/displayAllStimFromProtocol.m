@@ -76,15 +76,28 @@ for ii=1:size(relStimInds, 1)
     end
 end
 
-posCell = generatePositionCell(0.05, 0.95, 0.01, 0.975, -1, 0.01, length(exmpIm));
-figure('units', 'normalized', 'position', [0.4, 0.05, 0.175, 0.9])
+if length(exmpIm) > 10
+    posCell = generatePositionCell(0.05, 0.95, 0.01, 0.975, -1, 0.01, 10);
+    numFigs = ceil(length(exmpIm)/10);
+    numAxes = 10;
+else
+    posCell = generatePositionCell(0.05, 0.95, 0.01, 0.975, -1, 0.01, length(exmpIm));
+    numFigs = 1;
+    numAxes = length(exmpIm);
+end
 
-for ii=1:length(exmpIm)
-    
-    axes('position', posCell{ii})
-    plotMidFrame2(exmpIm{ii}, maxVal)
-    th = title(num2str(relStimInds(ii, :)));
-    th.VerticalAlignment = 'middle';
+for ii=1:numFigs
+    figure('units', 'normalized', 'position', [0.4, 0.05, 0.175, 0.9])
+    for jj=1:numAxes
+        relInd =(ii-1)*10 + jj;
+        if relInd > length(exmpIm)
+            break
+        end
+        axes('position', posCell{jj})
+        plotMidFrame2(exmpIm{relInd}, maxVal)
+        th = title(num2str(relStimInds(relInd, :)));
+        th.VerticalAlignment = 'middle';
+    end
 end
     
     

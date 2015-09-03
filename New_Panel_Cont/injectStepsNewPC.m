@@ -76,6 +76,11 @@ assert(stat == 0, 'Problem creating AO file')
 
 protocolStructAO.signal = anaSig;
 
+
+%% Generating empty pattern and posFunc
+
+generateEmptyPatAndVec(3) % gives a value of 3 to the arena (mid point for gs level 3)
+
 %% Establish panel host connection 
 [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
 
@@ -101,35 +106,41 @@ end
 Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_0')
 
+% sets the pattern and position functions to the empty ones
+Panel_tcp_com('set_pattern_id', 1)
+Panel_tcp_com('set_posfunc_id', [1, 1])
+
+
 %% Running the experiment
 
 % Panel_tcp_com('set_mode', [4, 0]);
 % Panel_tcp_com('send_gain_bias', [0 0 0 0]);
 Panel_tcp_com('set_active_analog_channel', chInBin)
 Panel_tcp_com('set_analog_output_function', [relCh-1, 1]) % since counting starts at zero
+Panel_tcp_com('reset_counter')
 
-Panel_tcp_com('start_log')
+Panel_tcp_log('start')
 Panel_tcp_com('start')
 
 pause(length(anaSig)/sampRate)
 Panel_tcp_com('stop')
-Panel_tcp_com('stop_log')
+fileName = Panel_tcp_log('stop');
 
 %% Cleaning up after the experiment is done
 
 pause(1)
 
 % getting all the new file names
-fileSt = dir(fullfile(logDir, '*.tdms'));
-if ~isempty(newestOldFileName) % gets rid of old files in the directory
-    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-    fileSt = fileSt(oldFilesInd+1:end);
-end
+% fileSt = dir(fullfile(logDir, '*.tdms'));
+% if ~isempty(newestOldFileName) % gets rid of old files in the directory
+%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+%     fileSt = fileSt(oldFilesInd+1:end);
+% end
+% 
+% % just one file should be generated for this experiment
+% assert(length(fileSt) == 1, 'Generated TDMS files do not match number of stimuli presented')
 
-% just one file should be generated for this experiment
-assert(length(fileSt) == 1, 'Generated TDMS files do not match number of stimuli presented')
-
-protocolStructAO.stim(1).fileName = fileSt(1).name;
+protocolStructAO.stim(1).fileName = fileName;
 protocolStructAO.type = 'currentInj';
 
 timeStamp = datestr(now, 'yyyymmdd_HH-MM');
@@ -144,7 +155,17 @@ save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
 
 protocolStructAO = consolidateData(folderName);
 
+% cleaning up and closing AO channels
+load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
 
+pConfig = fileread(panelContConfigFileDir);
+pConfigFormatted = textscan(pConfig, '%s');
+pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
+temp_path = pConfigFormatted{1}{pathInd};
+
+dos(['del /Q "' temp_path '\*.ao"']); %deleting ao files
+
+Panel_tcp_com('set_active_analog_channel', '0000')
 
 % % Plotting data
 % if numSteps > 6

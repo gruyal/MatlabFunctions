@@ -32,9 +32,12 @@ function protocolStruct = createFlickerBarProtocol(inputStruct)
 % inputStruct -     Should have the following fields
 % .barWidth  -      Width of the flickering bar. For now can only be length
 %                   1.  { 2 }
+% .stepSize -       step size to be taken within the window (in pixels). If
+%                   not given (NaN), function uses barWidth to avoid overlap. 
+%                   Number given will be rounded. 
 % .gsLevel -        gray scale level for grating frames
-% .numFlicksPerSec- number of flickers per second in each position { 5 }.
-% .flickerDuraion - How long bar will flicker in each position (in secs { 1 }.
+% .numFlicksPerSec- number of flickers per second in each position { 10 }.
+% .flickerDuraion - How long bar will flicker in each position (in secs { 0.5 }.
 %
 %                   To generate the proper movie generalFrequency is divided by 
 %                   numFlicksPerSec (and rounded) to determine how many frames should each flicker last. 
@@ -69,7 +72,9 @@ function protocolStruct = createFlickerBarProtocol(inputStruct)
 %                   will be dumped (passed on to runDumpProtocol) in Hz.
 % .freqCorrFlag -   Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
-%                   correction { 0 }.  
+%                   correction { 0 }.  \
+% .randomize.randWithin - Added this field to allow ort to be randomized
+% and grating to be randomized within each ort
 %
 % OUTPUT 
 % protocolStruct with all the required fields from createProtocl. 
@@ -88,13 +93,14 @@ arenaSize = [96, 32];
 gratingFuncHand = @generateGratingFrame;
 
 default.gridCenter = 'UI';
-default.generalFrequency = 30;
-default.barWidth = 2;
-default.maskRadius = 17; 
+default.generalFrequency = 20;
+default.barWidth = 1;
+default.stepSize = NaN;
+default.maskRadius = 4; 
 default.contrast = 1;
 default.numFlicksPerSec = 5;
 default.flickerDuraion = 1;
-default.orientations = [0, 2];
+default.orientations = 0:3;
 default.gsLevel = 3;
 default.maskType = {'square'};
 default.maskInt = 1;
@@ -103,7 +109,7 @@ default.gridOverlap = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
 default.intFrames = nan;
-default.repeats = 3;
+default.repeats = 2;
 default.randomize = 1;
 default.freqCorrFlag = 0;
 
@@ -199,6 +205,18 @@ end
  barW = default.barWidth;
  assert(isvector(barW) && length(barW) == 1, 'barWidth should be a vector of length 1')
  
+ 
+ stepSz = default.stepSize;
+ if isnan(stepSz)
+     stepSz = barW;
+ else
+     assert(isvector(stepSz) && length(stepSz) ==1, 'step size should be a vector of length 1')
+     assert(stepSz > 0, 'step size should be a positive number')
+ end
+ 
+ stepSz = round(stepSz);
+ halfStep = floor(stepSz/2);
+ 
  cont = default.contrast;
  assert(isvector(cont) && length(cont) == 1, 'Contrast should be vector of length 1')
  assert(cont > 0 && cont <= 1, 'Contrast should be  0 < cont <= 1');
@@ -228,7 +246,7 @@ end
  count = 0;
 for ii=1:numMasks
     relMaskR = maskSt.radius(ii);
-    relPos = -relMaskR:relMaskR-barW+1; % so as not present a half frame
+    relPos = -relMaskR+halfStep:stepSz:relMaskR-barW+1-halfStep; % so as not present a half frame
     for jj=1:length(relPos)
             count = count+1;
             
@@ -321,10 +339,11 @@ intF = default.intFrames;
  
  protocolStruct.repeats = default.repeats;
  
- protocolStruct.randomize.gratingSeq = default.randomize;
+ protocolStruct.randomize.gratingSeq = 0;
  protocolStruct.randomize.masks = default.randomize;
  protocolStruct.randomize.orientations = default.randomize;
  protocolStruct.randomize.maskPositions = default.randomize;
+ protocolStruct.randomize.randWithin = 1;
  
  %% Creating protocl 
  

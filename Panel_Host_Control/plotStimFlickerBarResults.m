@@ -58,7 +58,7 @@ for ii=1:length(stimOri)
             cleanV = crudeDat(:,2) *10;
             tempD{kk} = [cleanTime, cleanV];
             allPos = pStruct.stim(stimTempI(kk)).data{2};
-            relTimesPos = allPos([posToCut, end-posToCut], 1);
+            relTimesPos = double(allPos([posToCut, end-posToCut], 1) - crudeDat(1,1));
             tempPos{kk} = allPos;
             for mm = 1:2
                 tempTimeInd(kk, mm) = find(cleanTime - relTimesPos(mm) > 0, 1, 'first');
@@ -75,6 +75,8 @@ end
 
 % calculating quantiles
 
+sampRate = 10000; % need to change according to panelHost ini file
+
 for ii=1:length(stimOri)
     for jj=1:length(stimSteps)
         tempSt = plotSt(ii).stepDat(jj);
@@ -82,8 +84,16 @@ for ii=1:length(stimOri)
         for kk=1:length(tempSt.data)
             tempTimeInds = tempSt.xInds(kk, 1):tempSt.xInds(kk, 2);
             tempV = tempSt.data{kk}(tempTimeInds, 2);
-            tempQuant = quantile(tempV, relQuants);
-            tempResp(kk) = tempQuant(2) - tempQuant(1);
+%             tempQuant = quantile(tempV, relQuants);
+%             tempResp(kk) = tempQuant(2) - tempQuant(1);
+            
+            datLen = length(tempV);
+            nFft = 2^nextpow2(datLen);
+            Y = fft(tempV, nFft);
+            Pyy = Y.*conj(Y)/nFft;
+            
+            tempResp(kk) = Pyy(6)/Pyy(61);
+            
         end
         plotSt(ii).stepDat(jj).results = tempResp;
     end

@@ -124,16 +124,15 @@ Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getti
 
 Panel_tcp_com('set_mode', [4, 0]);
 Panel_tcp_com('send_gain_bias', [0 0 0 0]);
-
+Panel_tcp_com('reset_counter')
 
 figH = figure('position', [1450, 50, 450, 150]);
 figH.MenuBar = 'none';
 maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
 
 for ii=1:numStim
-    
-    Panel_tcp_com('start_log') % to minimize non-recorded time loop iteration begin and end in log commands
-    
+
+    Panel_tcp_log('start'); % to minimize non-recorded time loop iteration begin and end in log commands
     pause(0.1)
     relFreq = round(protocolStruct.generalFrequency/protocolStruct.stim(ii).freqCorr); % to avoid weird behavior
     
@@ -148,15 +147,17 @@ for ii=1:numStim
     plotMidFrame(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
     tH = title(num2str(protocolStruct.stim(ii).relInds));
     tH.VerticalAlignment = 'top';
-    
+    tic
     Panel_tcp_com('start')
-    
+
     pause(stimTime + fudgeT)
-    
+
     Panel_tcp_com('stop')
-    pause(0.02)
-    Panel_tcp_com('stop_log')
-  
+    toc
+    pause(0.01)
+    tempFileName = Panel_tcp_log('stop');
+    
+    protocolStruct.stim(ii).fileName = tempFileName;
     
     if getappdata(wbh,'canceling')
         break
@@ -172,21 +173,21 @@ delete(wbh)
 Panel_tcp_com('set_config_id', 1)
 Panel_tcp_com('g_level_7')
 
-% getting all the new file names
-fileSt = dir(fullfile(logDir, '*.tdms'));
-if ~isempty(newestOldFileName) % gets rid of old files in the directory
-    oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-    fileSt = fileSt(oldFilesInd+1:end);
-end
-
-assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
-
-[~, fileNameInd] = sort([fileSt.datenum], 'ascend');
-
-
-for ii=1:totStimNum
-    protocolStruct.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
-end
+% % getting all the new file names
+% fileSt = dir(fullfile(logDir, '*.tdms'));
+% if ~isempty(newestOldFileName) % gets rid of old files in the directory
+%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
+%     fileSt = fileSt(oldFilesInd+1:end);
+% end
+% 
+% assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
+% 
+% [~, fileNameInd] = sort([fileSt.datenum], 'ascend');
+% 
+% 
+% for ii=1:totStimNum
+%     protocolStruct.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
+% end
 
 
 
