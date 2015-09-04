@@ -367,8 +367,8 @@ for ii=1:numStim
     pause(stimTime + fudgeT)
     
     Panel_tcp_com('stop')
-    fileName = Panel_tcp_log('stop');
-    protocolStruct.stim(ii).fileName = tempFileName;
+    tempFileName = Panel_tcp_log('stop');
+    protocolStructComb.stim(ii).fileName = tempFileName;
     
     if getappdata(wbh,'canceling')
         break
