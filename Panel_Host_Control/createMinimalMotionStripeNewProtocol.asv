@@ -72,8 +72,6 @@ function protocolStruct = createMinimalMotionStripeNewProtocol(inputStruct)
 % .generalFrequency-Frequency with which frames from the generated protocol
 %                   will be dumped (passed on to runDumpProtocol) in position function units 
 %                   (frames per second on the controller). 
-% .presentSimFlag - logical. Whether to present both bar flashing together
-%                   also { 1 } 
 %
 %       NOTE: frequency is meanningless in the protocol since duration of bar
 %       presentation is corrected for it
@@ -107,7 +105,7 @@ arenaSize = [96,32];
 gratingFuncHand = @generate4BarsGratingFrame;
 
 default.firstBar = [0,1,1];
-default.secondBar = [1,0,1];
+default.secondBar = [1;
 default.windowHalfWidth = 3;
 default.barHeight = 9;
 default.winCenter = 'UI';
@@ -122,7 +120,7 @@ default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 default.freqCorrFlag = 0;
-default.presentSimFlag = 1;
+
 fixed.maskType = {'rectangle'};
 
 
@@ -181,9 +179,6 @@ stimS = default.secondBar;
 assert(min(stimS) >=0 && max(stimS) <= 1, 'secondBar should be between 0 and 1');
 assert(isvector(stimS), 'secondBar should be a 1XN vector')
 
-preSim = default.presentSimFlag;
-assert(ismember(preSim, [0,1]), 'presentSimFlag should be logical')
-
 if length(stimF) ~= length(stimS)
     if      length(stimF) == 1
         stimF = ones(1, length(stimS)) * stimF;
@@ -239,28 +234,26 @@ for ii=1:length(stimF)
             end
             grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, stimFrames];
             
-            if preSim
-                if secPos > relPos(jj) % adds sim flash of bars
-                    count = count+1;
-                    gtStruct(count).width1 = 1;
-                    gtStruct(count).width2 = widB2;
-                    gtStruct(count).width3 = 1;
-                    gtStruct(count).width4 = widB4;
-                    gtStruct(count).vals1St = vals1BSim;
-                    gtStruct(count).vals1End = vals1BSim;
-                    gtStruct(count).vals2St = vals2BSim;
-                    gtStruct(count).vals2End = vals2BSim;
-                    gtStruct(count).vals3St = vals3BSim;
-                    gtStruct(count).vals3End = vals3BSim;
-                    gtStruct(count).vals4St = vals4BSim;
-                    gtStruct(count).vals4End = vals4BSim;
-                    gtStruct(count).barAtPos = 1;
-                    gtStruct(count).gsLevel = gsLev; 
-                    gtStruct(count).position = relPos(jj);
-                    newMaskSt(count) = maskSt(1);
+            if secPos > relPos(jj) % adds sim flash of bars
+                count = count+1;
+                gtStruct(count).width1 = 1;
+                gtStruct(count).width2 = widB2;
+                gtStruct(count).width3 = 1;
+                gtStruct(count).width4 = widB4;
+                gtStruct(count).vals1St = vals1BSim;
+                gtStruct(count).vals1End = vals1BSim;
+                gtStruct(count).vals2St = vals2BSim;
+                gtStruct(count).vals2End = vals2BSim;
+                gtStruct(count).vals3St = vals3BSim;
+                gtStruct(count).vals3End = vals3BSim;
+                gtStruct(count).vals4St = vals4BSim;
+                gtStruct(count).vals4End = vals4BSim;
+                gtStruct(count).barAtPos = 1;
+                gtStruct(count).gsLevel = gsLev; 
+                gtStruct(count).position = relPos(jj);
+                newMaskSt(count) = maskSt(1);
                 
-                    grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, 0];
-                end
+                grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, 0];
             end
             
             

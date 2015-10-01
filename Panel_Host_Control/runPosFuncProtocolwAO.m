@@ -271,7 +271,7 @@ for ii=1:numStim
     pause(0.01)
     tempFileName = Panel_tcp_log('stop');
     
-    protocolStruct.stim(ii).fileName = tempFileName;
+    protocolStructAO.stim(ii).fileName = tempFileName;
   
     
     if getappdata(wbh,'canceling')
@@ -286,6 +286,8 @@ totStimNum = ii;
 delete(wbh)
 Panel_tcp_com('set_config_id', 3)
 Panel_tcp_com('g_level_7')
+% closing the active channels
+Panel_tcp_com('set_active_analog_channel', '0000')
 
 % getting all the new file names
 % fileSt = dir(fullfile(logDir, '*.tdms'));
@@ -321,8 +323,7 @@ pConfigFormatted = textscan(pConfig, '%s');
 pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
 temp_path = pConfigFormatted{1}{pathInd};
 dos(['del /Q "' temp_path '\*.ao"']); % delete all the remaining AO files
-% closing the active channels
-Panel_tcp_com('set_active_analog_channel', '0000')
+
 
 
 end

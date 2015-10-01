@@ -99,7 +99,7 @@ for ii=1:length(stimOri)
                 Y = fft(tempV, nFft);
                 Pyy = Y.*conj(Y)/nFft;
             
-                tempResp(kk) = Pyy(6)/Pyy(61); % this is wrong
+                tempResp(kk) = Pyy(6)/Pyy(61);
             else
                 tempQuant = quantile(tempV, relQuants);
                 tempResp(kk) = tempQuant(2) - tempQuant(1); 
@@ -111,7 +111,7 @@ for ii=1:length(stimOri)
 end
 
 % totImage = zeros(size(plotSt(ii).stepDat(jj).stimEx));
-totImage = zeros(size(plotSt(ii).stepDat(jj).stimEx));
+totImage = zeros(size(plotSt(ii).stepDat(jj).stimEx), length(stimOri));
 
 % for ii=1:length(stimSteps)
 %     
@@ -129,10 +129,10 @@ for ii=1:length(stimSteps)
     for jj=1:length(stimOri)
         oriVal = median(plotSt(jj).stepDat(ii).results);
     
-        oriIm = plotSt(jj).stepDat(ii).stimEx * oriVal;
-        totImage = totImage + oriIm;    
+        oriIm = plotSt(1).stepDat(ii).stimEx * oriVal;
+        
     end
-    
+    totImage = totImage + ori1Im + ori2Im;    
 end
 
 

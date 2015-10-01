@@ -22,8 +22,8 @@ maxVal = 2^gsLevel-1;
 % modFramesMat(1:2, 29:31, 1:end) = 0;
 % modFramesMat(1, 30, 2:2:end) = maxVal;
 
-modFramesMat(31:32, 2:4, 1:end) = 0;
-modFramesMat(32, 3, 2:2:end) = maxVal;
+modFramesMat(31:32, 1:3, 1:end) = 0;
+modFramesMat(32, 2, 2:2:end) = maxVal;
 
 
 

@@ -79,7 +79,7 @@ protocolStructAO.signal = anaSig;
 
 %% Generating empty pattern and posFunc
 
-generateEmptyPatAndVec(3) % gives a value of 3 to the arena (mid point for gs level 3)
+generateEmptyPatAndVec(0) % gives a value of 0 to the arena 
 
 %% Establish panel host connection 
 [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
