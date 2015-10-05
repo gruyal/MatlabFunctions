@@ -1,4 +1,4 @@
-function varargout = plotStimStructResults(pStruct, sepFigDim, sepColDim)
+function varargout = plotStimStructResultsOldDatSt(pStruct, sepFigDim, sepColDim)
 
 % function plotStimStructResults(pStruct, sepFigDim, sepColDim)
 %
@@ -50,7 +50,7 @@ end
 for ii=1:numFigs
     figure
     firstInds = allInds(:, sepFigDim) == ii;
-    set(gcf, 'name', [indsNames{sepFigDim}, num2str(ii)], 'menubar', 'none', 'toolbar', 'none')
+    set(gcf, 'name', [indsNames{sepFigDim}, num2str(ii)])
     minX = 1000;
     maxX = 0;
     handForLegend = zeros(1, numCols);
@@ -67,7 +67,7 @@ for ii=1:numFigs
             plotCol = relCols(goodColsInds(kk), :);
             for mm=1:length(plotInds)
 
-                dataX = pStruct.stim(plotInds(mm)).data{1}(:, 1); 
+                dataX = pStruct.stim(plotInds(mm)).data{1}(1, :); 
                 dataX = (dataX-dataX(1))/convertXtoMSFactor; % converts to ms since beginning of stim
 
                 if dataX(1) < minX
@@ -77,7 +77,7 @@ for ii=1:numFigs
                     maxX = dataX(end);
                 end
 
-                dataY = pStruct.stim(plotInds(mm)).data{1}(:, relChannel)*10; % to convert to mV
+                dataY = pStruct.stim(plotInds(mm)).data{1}(relChannel, :)*10; % to convert to mV
                 lh = plot(axh(ii, jj), dataX, dataY, 'linewidth', 1, 'color', plotCol);
             end
             if ~isempty(plotInds)

@@ -160,7 +160,9 @@ for ii=1:numUStim
             if tempXLen > maxXLen
                 maxXLen = plotStruct(ii).data(jj, kk).plot{tempXInd}(end,1);
             end
-            text(preStim-stimLen/4, totMin+plotRange/1.5, num2str([cenFirstBarPos(jj), cenFirstBarPos(jj)+sortsecBarDist(kk)]))
+            %text(preStim-stimLen/4, totMin+plotRange/1.5, num2str([cenFirstBarPos(jj), cenFirstBarPos(jj)+sortsecBarDist(kk)]))
+            text(preStim+2.5*stimLen, totMin+plotRange/1.25, num2str([cenFirstBarPos(jj), cenFirstBarPos(jj)+sortsecBarDist(kk)]), ...
+                 'FontSize', 16, 'FontWeight', 'bold')
             stimPosMat(:,jj,kk) = [cenFirstBarPos(jj), cenFirstBarPos(jj)+sortsecBarDist(kk)];
             hold off
         end
@@ -221,9 +223,9 @@ for ii=1:length(fh)
     for jj=1:length(firInds)
         set(0, 'CurrentFigure', fh(ii))
         set(fh(ii), 'CurrentAxes', tempAh(firInds(jj)))
-        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(jj,:), 'FaceColor', 'None', 'lineWidth', 3)
+        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(jj,:), 'FaceColor', 'None', 'lineWidth', 4)
         set(fh(ii), 'CurrentAxes', tempAh(secInds(jj)))
-        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(jj,:), 'FaceColor', 'None', 'lineWidth', 3)
+        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(jj,:), 'FaceColor', 'None', 'lineWidth', 4)
     end
 end
 

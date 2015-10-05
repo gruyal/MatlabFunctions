@@ -47,12 +47,12 @@ end
 allYLim = vertcat(yLims{:});
 yyMax = max(allYLim(:,2));
 yyMin = min(allYLim(:,1));
-yyRange = yyMax - yyMin;
+yyRange = yyMax - yyMin
 
 
 for ii=1:length(axhCell)
     tempAx = axhCell{ii};
-    set(tempAx(:), 'ylim', [yyMin - yyRange/10, yyMax + yyRange/10])
+    set(tempAx(:), 'ylim', [yyMin, yyMax])
 end
     
 
