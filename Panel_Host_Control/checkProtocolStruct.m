@@ -86,7 +86,7 @@ if isfield(protStruct, 'maskPositions')
         assert(size(protStruct.maskPositions,3) == 1, 'mask position matrix should be an NX2 matrix')
         assert(size(protStruct.maskPositions, 2) == 2, 'mask position matrix should be an NX2 matrix')
         for ii=1:2
-            assert(max(protStruct.maskPositions(:,ii)) < arenaSize(ii), ...
+            assert(max(protStruct.maskPositions(:,ii)) <= arenaSize(ii), ...
                 'Values of mask positions should not exceed %d', arenaSize(ii)) 
         end
 
