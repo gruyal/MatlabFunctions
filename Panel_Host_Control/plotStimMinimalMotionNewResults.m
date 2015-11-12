@@ -152,7 +152,7 @@ plotRange = totMax - totMin;
 yyLim = [totMin-plotRange/10, totMax+plotRange/10];
 
 lineCol = cbrewer('qual', 'Set1', 3);
-linW = [2,3];
+linW = [1,1];
 %lineCol = [[1,1,1]*0.4; [1,0,0]];
 stimCol = [1,1,1]*0.9; 
 
