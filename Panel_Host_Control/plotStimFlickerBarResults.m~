@@ -94,10 +94,8 @@ for ii=1:length(stimOri)
             filtDat = filtfilt(ones(1, winSiz)/winSiz, 1, tempV); % to facilitate peak finding
             tempPeaks = findpeaks(filtDat);
             baseLine = mean(tempV(winSiz:2*winSiz));
-            if length(tempPeaks) < numRelPeaks
-                numRelPeaks = length(tempPeaks);
-            end
-            peakResp = median(tempPeaks(1:numRelPeaks)); 
+            if length(tempPeaks) 
+            peakResp = median(tempPeaks(1:5)); 
 
             tempResp(kk) = peakResp - baseLine;
             

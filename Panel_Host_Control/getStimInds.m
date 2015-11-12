@@ -31,6 +31,7 @@ relvStim = desiredStim(desiredStim > 0);
 
 allRelvStim = allInds(all(bsxfun(@eq, relvInds, relvStim), 2), :);
 uRelvStim = unique(allRelvStim, 'rows');
+assert(~isempty(uRelvStim), 'No matching inds to desired inds')
 
 for ii=1:size(uRelvStim)
     stimInds(ii).val = uRelvStim(ii, :);
