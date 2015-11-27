@@ -30,7 +30,7 @@ fieldInd = find(fieldLen > 1);
 
 % checks that the is at least one variable that changes
 if isempty(fieldInd)
-    warning('No field is a vector, generating a single frame')
+    warning('gratingGeneration:singleFrame', 'No field is a vector, generating a single frame')
     fieldInd = 1;
 elseif length(fieldInd) > 1 % checks that variables that change together are of the same length
     testEqLen = fieldLen(fieldInd);
