@@ -226,7 +226,11 @@ for ii=1:size(pStructCombPar.desiredComb, 1)
                 for mm=1:length(pStructCombPar.timing{ii})
                     counter = counter+1;
                     relT = pStructCombPar.timing{ii}(mm);
-                    relFrameDelay = floor(relT*genFreq);
+                    if relT < 0 
+                        relFrameDelay = ceil(relT*genFreq);
+                    else
+                        relFrameDelay = floor(relT*genFreq);
+                    end
             
                     if relFrameDelay < 0 % stim2 will appear right after intFrame frames and stim1 after relFrameDelay more
                         tempDiff = tempStim1.length - relFrameDelay - tempStim2.length;
