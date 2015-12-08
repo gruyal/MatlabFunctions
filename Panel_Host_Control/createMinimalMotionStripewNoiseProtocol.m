@@ -207,22 +207,39 @@ for ii=1:length(stimF)
     vals2BSim = ones(1, stimFrames) * bkgdVal;
     vals3B = [ones(1, stimFrames) * bkgdVal, ones(1, stimFrames) * stimS(ii)];
     vals3BSim = ones(1, stimFrames) * stimS(ii); % generates a flash of both bars sim 
+    vals1BSame = vals1B;
+    vals1BSame(stimFrames+1:2*stimFrames) = vals3BSim; 
     vals4B = ones(1, 2*stimFrames) * bkgdVal;
     vals4BSim = ones(1, stimFrames) * bkgdVal;
     
     for jj=1:length(relPos)
-        for kk=1:length(relPos)-1
+        for kk=0:length(relPos)-1
             
-            widB2 = kk-1;
-            widB4 = 2*relMaskRHW + 1 -2 -widB2; % 2R+1 si window size and 2 is width of other 2 bars
-                            
             count = count+1;
+            if kk > 0
+                widB2 = kk-1;
+                widB3 = 1;
+                widB4 = 2*relMaskRHW + 1 -2 -widB2; % 2R+1 si window size and 2 is width of other 2 bars
+                relVal1B = vals1B;
+                secPos =  1 + widB2 + relPos(jj);
+                if secPos > relPos(end)
+                    secPos = secPos -2*relPos(end) -1;
+                end
+            else % kk==0 (present bars in the same position - no memvement)
+                widB2 = 0;
+                widB3 = 0;
+                widB4 = 2*relMaskRHW + 1 -1 -widB2; % 2R+1 si window size and 1 is width of other bar
+                relVal1B = vals1BSame;
+                secPos = relPos(jj);
+            end
+                            
+            
             gtStruct(count).width1 = 1;
             gtStruct(count).width2 = widB2;
-            gtStruct(count).width3 = 1;
+            gtStruct(count).width3 = widB3;
             gtStruct(count).width4 = widB4;
-            gtStruct(count).vals1St = vals1B;
-            gtStruct(count).vals1End = vals1B;
+            gtStruct(count).vals1St = relVal1B;
+            gtStruct(count).vals1End = relVal1B;
             gtStruct(count).vals2St = vals2B;
             gtStruct(count).vals2End = vals2B;
             gtStruct(count).vals3St = vals3B;
@@ -233,18 +250,14 @@ for ii=1:length(stimF)
             gtStruct(count).gsLevel = gsLev; 
             gtStruct(count).position = relPos(jj);
             newMaskSt(count) = maskSt(1);
-            secPos =  1 + widB2 + relPos(jj);
-            if secPos > relPos(end)
-                secPos = secPos -2*relPos(end) -1;
-            end
             grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, stimFrames];
-            
+                
             if preSim
-                if secPos > relPos(jj) % adds sim flash of bars
+                if secPos >= relPos(jj) % adds sim flash of bars (in same position would present just the first bar)
                     count = count+1;
                     gtStruct(count).width1 = 1;
                     gtStruct(count).width2 = widB2;
-                    gtStruct(count).width3 = 1;
+                    gtStruct(count).width3 = widB3;
                     gtStruct(count).width4 = widB4;
                     gtStruct(count).vals1St = vals1BSim;
                     gtStruct(count).vals1End = vals1BSim;

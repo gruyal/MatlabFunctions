@@ -48,7 +48,7 @@ for ii=1:length(stimOri)
     
     for jj=1:length(stimSteps)
         
-        tempI = getStimInds(pStruct, [stimSteps(jj), 0, stimOri(ii), 1]);
+        tempI = getStimInds(pStruct, [stimSteps(jj), nan, stimOri(ii), 1]);
         plotSt(ii).stepDat(jj).val = stimSteps(jj);
         
         stimTempI = tempI(1).inds;

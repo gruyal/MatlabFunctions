@@ -35,6 +35,8 @@ function protocolStruct = createGratingProtocol(inputStruct)
 % .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6} 
 % .cycles -         Number of times the grating will change through a full
 %                   cycle (lat frame identical to first)
+% .iniPos -         initial position of the grating (position for
+%                   generateGratingFrame). Default is zero (grating centered). 
 % .gsLevel -        gray scale level ( 3 ) 
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
@@ -94,6 +96,7 @@ default.gridCenter = 'UI';
 default.generalFrequency = 20;
 default.contrast = 1;
 default.cycles = 5;
+default.iniPos = 0;
 default.gsLevel = 3;
 default.orientations = 0:2:6;
 default.maskType = {'circle'};
@@ -142,8 +145,10 @@ elseif length(cont) == 1
      cont = ones(1, numGrt) * cont;
 end
 
- onVal = 0.49 + cont/2; % 0.49 is for the middle value to be rounded down (in GS3 it is 3 and not 4)
- offVal = 0.49 - cont/2.041; % so that it wont go negative
+iniPos = round(default.iniPos); % in case the input is not an integer
+assert(length(iniPos) == 1, 'iniPos should be a single number')
+onVal = 0.49 + cont/2; % 0.49 is for the middle value to be rounded down (in GS3 it is 3 and not 4)
+offVal = 0.49 - cont/2.041; % so that it wont go negative
  for ii=1:numGrt
     gtStruct(ii).valsONSt = onVal(ii);
     gtStruct(ii).valsONEnd = onVal(ii);
@@ -155,7 +160,7 @@ end
  
 % Grating assumptions
  for ii=1:numGrt
-    gtStruct(ii).position = [zeros(1, statFrames), 0:wid(ii)*2*default.cycles-1]; % -1 does not repeat the last position
+    gtStruct(ii).position = [ones(1, statFrames)*iniPos, iniPos:wid(ii)*2*default.cycles+iniPos-1]; % -1 does not repeat the last position
     gtStruct(ii).barAtPos = 1;
  end
 
@@ -348,7 +353,7 @@ end
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(default.generalFrequency/2);
+     protocolStruct.intFrames = floor(default.generalFrequency/4);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
