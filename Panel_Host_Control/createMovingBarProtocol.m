@@ -7,7 +7,8 @@ function protocolStruct = createMovingBarProtocol(inputStruct)
 % The stimulus is designed to map the center of a receptive field relatively quickly. 
 % It has certain assumptions and therefore requires less inputs. 
 % If function is called with no inputStruct, it prompt the user for
-% relevant input and allows to change the default
+% relevant input and allows to change the default. 
+% Added reverse Phi motion (bar flip contrast with every movement) 
 % 
 % ASSUMPTIONS
 % Since this is a grating certain parameters are assumed to be symmetrical.
@@ -30,6 +31,9 @@ function protocolStruct = createMovingBarProtocol(inputStruct)
 % .barWidth  -      1XN vector. Width of the moving bar. { 2 }
 % .barCont -        at most a 2 element vector. contrast of bar moving. For now only 0 or 1 (can be
 %                   adjusted by changing contract. {[0,1]}
+% .revPhi =         logical. Flag indicating whether to add erverse phi
+%                   motion. Applies for all widths and all orientations
+%                   (not contrast) { 0 }
 % .gsLevel -        gray scale level for grating frames
 % .contrast -       Difference between bright and dark bars relative to
 %                   mid. For now length should be 1.
@@ -82,6 +86,7 @@ default.generalFrequency = 15;
 default.barWidth = 2; 
 default.barCont = [0,1];
 default.contrast = 1;
+default.revPhi = 0;
 default.orientations = 0:2:6;
 default.gsLevel = 3;
 default.maskInt = 1;
@@ -152,6 +157,10 @@ end
  gsLev = default.gsLevel;
  assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
+ revPhi = default.revPhi;
+ assert(length(revPhi) == 1, 'revPhi can be either 0 or 1 only')
+ assert(ismember(revPhi, [0,1]), 'revPhi can be either 0 or 1 only')
+ 
  count = 0;
  relMaskR = maskSt(1).radius;
  
@@ -185,7 +194,33 @@ for ii=1:length(barW)
 
     end
     
- end
+end
+ 
+if revPhi
+    for ii=1:length(barW)
+        allPos = -(relMaskR+barW(ii)):relMaskR;
+        allValsMat = repmat([onVal, bkgdVal; bkgdVal, offVal; barW(ii), 2*relMaskR+1; 2*relMaskR+1, barW(ii); 1,0], ...
+                            1, ceil(length(allPos)/2));
+        onVals =    allValsMat(1, 1:length(allPos)); % in case not even
+        offVals =   allValsMat(2, 1:length(allPos));
+        onWid =     allValsMat(3, 1:length(allPos)); 
+        offWid =    allValsMat(4, 1:length(allPos)); 
+        bap =       allValsMat(5, 1:length(allPos)); 
+        count=count+1;
+        
+        gtStruct(count).valsONSt = onVals;
+        gtStruct(count).valsONEnd = onVals;
+        gtStruct(count).valsOFFSt = offVals;
+        gtStruct(count).valsOFFEnd = offVals;
+        gtStruct(count).widthOFF = offWid;
+        gtStruct(count).widthON = onWid;
+        gtStruct(count).barAtPos = bap;
+        gtStruct(count).position = allPos;
+        gtStruct(count).gsLevel = gsLev; 
+        newMaskSt(count) = maskSt;
+    end
+end
+        
  
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = newMaskSt;
@@ -246,7 +281,7 @@ for ii=1:length(barW)
  
 intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(default.generalFrequency/5);
+     protocolStruct.intFrames = floor(default.generalFrequency/4);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
