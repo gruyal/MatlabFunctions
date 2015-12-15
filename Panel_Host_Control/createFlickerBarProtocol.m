@@ -12,7 +12,6 @@ function protocolStruct = createFlickerBarProtocol(inputStruct)
 % ASSUMPTIONS
 % Since this is a grating certian parameters are assumed to be symmetrical.
 % 
-% width -           determined by maskRadius and centerProportion
 % position -        Bar will appear in all window positions
 % Contrast -        each bar is uniform (no on/off gradients), and both are same
 %                   distance from mid level GS (background). 
@@ -31,13 +30,13 @@ function protocolStruct = createFlickerBarProtocol(inputStruct)
 %
 % inputStruct -     Should have the following fields
 % .barWidth  -      Width of the flickering bar. For now can only be length
-%                   1.  { 2 }
+%                   1.  { 1 }
 % .stepSize -       step size to be taken within the window (in pixels). If
 %                   not given (NaN), function uses barWidth to avoid overlap. 
 %                   Number given will be rounded. 
 % .gsLevel -        gray scale level for grating frames
-% .numFlicksPerSec- number of flickers per second in each position { 10 }.
-% .flickerDuraion - How long bar will flicker in each position (in secs { 0.5 }.
+% .numFlicksPerSec- number of flickers per second in each position { 5 }.
+% .flickerDuraion - How long bar will flicker in each position (in secs { 0.8 }.
 %
 %                   To generate the proper movie generalFrequency is divided by 
 %                   numFlicksPerSec (and rounded) to determine how many frames should each flicker last. 
@@ -99,7 +98,7 @@ default.stepSize = NaN;
 default.maskRadius = 4; 
 default.contrast = 1;
 default.numFlicksPerSec = 5;
-default.flickerDuraion = 1;
+default.flickerDuraion = 0.8;
 default.orientations = 0:3;
 default.gsLevel = 3;
 default.maskType = {'square'};
@@ -109,7 +108,7 @@ default.gridOverlap = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
 default.intFrames = nan;
-default.repeats = 2;
+default.repeats = 3;
 default.randomize = 1;
 default.freqCorrFlag = 0;
 

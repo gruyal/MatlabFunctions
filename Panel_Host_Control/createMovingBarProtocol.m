@@ -100,7 +100,7 @@ default.freqCorrFlag = 0;
 
 
 % fixed parameters for this protocol that are not user modified
-fixed.maskRadius = 17;
+fixed.maskRadius = 9;
 fixed.maskType = {'square'};
 fixed.gridSize = [1,1];
 

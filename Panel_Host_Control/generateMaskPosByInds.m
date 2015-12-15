@@ -1,4 +1,4 @@
-function structWmaskPosField  = generateMaskPosByInds(xRange, yRange)
+function structWmaskPosField  = generateMaskPosByInds(xRange, yRange, takeOutCen)
 
 % function structWmaskPosField  = generateMaskPosByInds(xrange, yrange)
 %
@@ -10,6 +10,8 @@ function structWmaskPosField  = generateMaskPosByInds(xRange, yRange)
 % 
 % xRange(yRange) -          1XN(M) vector that includes the desired pixels indecies in the
 %                           relveant dimension. 
+% takeOutCen -              (optional) logical flag of whether to take out
+%                           the center in an oddXodd positions matrix
 %
 % OUTPUT
 % structWmaskPosField -     structure with maskPositions field that is
@@ -19,9 +21,22 @@ function structWmaskPosField  = generateMaskPosByInds(xRange, yRange)
 % NOTE! function has little input control since that should be dealt with
 % in other functions
 
+if nargin < 3
+    takeOutCen = 0;
+end
+
 [xGrd, yGrd] = meshgrid(xRange, yRange);
 
-structWmaskPosField.maskPositions = [xGrd(:), yGrd(:)];
+tempPos = [xGrd(:), yGrd(:)];
+
+if takeOutCen
+    assert(rem(length(xRange),2) == 1 && rem(length(yRange), 2) == 1, 'range should have odd number of argument when center is excluded')
+    cenPos = ceil(size(tempPos,1)/2);
+    relPos = setdiff(1:size(tempPos,1), cenPos);
+    tempPos = tempPos(relPos ,:);
+end
+
+structWmaskPosField.maskPositions = tempPos;
 
 
 end
