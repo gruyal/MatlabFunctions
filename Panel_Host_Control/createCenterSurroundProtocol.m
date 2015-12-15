@@ -48,10 +48,15 @@ function protocolStruct = createCenterSurroundProtocol(inputStruct)
 %                   between type and radius. { 1 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
 %                   coordinates). { [2,2] }
-% .gridPosOverlap - Overlap between different positions on mask position grid. 
+% .gridSteps -      An alternative input for grid overlap. If given overlap
+%                   would be disregarded {default is NaN). Step size in pixel that would be
+%                   be used in the grid. Same number would be used for both X and Y dimensions. 
+% .gridOverlap -    Overlap between different positions on mask position grid. 
 %                   Units s are normalized maskSizes so that 0 means no overlap and no gap, 
 %                   1 means complete overlap (meaningless), and -1 means a gap of one mask
 %                   between positions. { 0 }
+%.excludeGridCenter-logical. if true and if grid is odd numbered on both
+%                   dimensions, then the center would be removed from mask positions ( 0 ) 
 % .gridCenter -     1X2 vector specifying the center of the grid in X and Y
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
@@ -91,7 +96,9 @@ default.gsLevel = 3;
 default.maskType = {'circle'};
 default.maskInt = 1;
 default.gridSize = [1,1];
+default.gridSteps = NaN;
 default.gridOverlap = 0;
+default.excludeGridCenter = 0;
 default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
 default.intFrames = nan;
@@ -266,13 +273,23 @@ end
      assert(isvector(default.gridSize), 'gridSize should be a 1X2 vector');
      assert(length(default.gridSize) == 2, 'gridSize should be a 1X2 vector');
      
-     ovlp = default.gridOverlap;
-     assert(isscalar(ovlp), 'Overlap should be a single number')
-     assert(ovlp < 1, 'Overlap value above 1 are not accepted')
-     assert(ovlp ~=1, 'What are you stupid? overlap 1 means no grid')
+     gridStp = default.gridSteps;
+     
+     if isnan(gridStp)
+         ovlp = default.gridOverlap;
+         assert(isscalar(ovlp), 'Overlap should be a single number')
+         assert(ovlp < 1, 'Overlap value above 1 are not accepted')
+         assert(ovlp ~=1, 'What are you stupid? overlap 1 means no grid')
  
-     maskS = 2*maskR(1)+1;
-     space = maskS - maskS*ovlp;
+         maskS = 2*maskR(1)+1;
+         space = maskS - maskS*ovlp;
+         
+     else
+         assert(length(gridStp) == 1, 'grid steps must be a single number')
+         assert(gridStp > 0, 'grid steps must contain a positve number')
+         space = ceil(gridStp); 
+     end
+     
      gridSt.spacing = [space, space];
      
      gdCen = default.gridCenter;
@@ -292,6 +309,15 @@ end
      gridSt.startPos = stCrds;
  
      maskPos = makeGrid(gridSt);
+     
+     if default.excludeGridCenter
+         if rem(gridSt.gridSize(1), 2) == 1 && rem(gridSt.gridSize(2), 2) == 1 
+             relGrdInd = setdiff(1:size(maskPos,1), floor(size(maskPos,1)/2));
+             maskPos = maskPos(relGrdInd,:);
+         else
+             warning('excludeGridCenter only applies to odd numbered grids')
+         end
+     end
  
      protocolStruct.maskPositions = maskPos;
     

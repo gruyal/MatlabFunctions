@@ -172,9 +172,6 @@ for ii=1:numUStim
         
         for kk=1:numSPos
             
-            if jj == kk % since both bars can't appear at the same position
-                continue
-            end
             
             axh(ii, jj, kk) = axes('position', posCell{jj, kk});
             hold on 
@@ -259,6 +256,7 @@ end
 numCols = (numFPos * numSPos - numFPos)/2;
 
 colMap = cbrewer('div', 'BrBG', numCols, 'PCHIP');
+samePosCol = [1,1,1] * 0.7;
 
 for ii=1:length(fh)
     colCount = 0;
@@ -272,6 +270,9 @@ for ii=1:length(fh)
             set(fh(ii), 'CurrentAxes', axh(ii, kk, jj))
             rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
         end
+        
+        set(fh(ii), 'CurrentAxes', axh(ii, jj, jj))
+        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', samePosCol, 'FaceColor', 'None', 'lineWidth', 4)
     end
 end
 
