@@ -1,23 +1,35 @@
-function varargout = plotStimFlickerBarResults(pStruct)
+function varargout = plotStimFlickerBarResultsNew(pStruct, peakThresh)
 
 % function plotStimFlickerBarResults(pStruct)
 %
 % This function calculates the min and max (actually 0.1 and 0.9 quantiles) of each presentation of the bar
 % and plots the results mapped back on the arena. 
 %
-% (a fancier way can fit a sine and plot amplitude)
+% difference from older version is calculation is done on average and uses
+% findpeaks with more restrictions on the peaks
 %
 % INPUT
-% pStruct - protocol structure from a flicker experiment
+% pStruct -         protocol structure from a flicker experiment
+% peakThresh -      threshold for detecting peaks in mV. if not given default is
+%                   3mV;
 %
 % OUTPUT
-% plotSt -  structure calculated from pStruct to generate figure
+% plotSt -          structure calculated from pStruct to generate figure
 
 
 close all
 relCh = 3;
 
+if nargin < 2
+    peakThresh = 3;
+end
+
+
 assert(isfield(pStruct, 'stim'), 'Protocol struct is missing stim field')
+assert(isfield(pStruct, 'inputParams'), 'Protocol struct is missing inputParams field')
+assert(isfield(pStruct.inputParams, 'numFlicksPerSec'), 'inputParams is missing numFlicksPerSec field')
+
+totNumFlicks = floor(pStruct.inputParams.numFlicksPerSec * pStruct.inputParams.flickerDuraion);
 
 uniStim = unique(vertcat(pStruct.stim.relInds), 'rows');
 
@@ -57,11 +69,15 @@ for ii=1:length(stimOri)
         tempD = cell(1,length(stimTempI));
         tempPos = tempD;
         tempTimeInd = zeros(length(stimTempI), 2);
+        minLen = 10^9;
         for kk=1:length(stimTempI)
             crudeDat = pStruct.stim(stimTempI(kk)).data{1}(:,[1,relCh]);
             cleanTime = crudeDat(:,1) - crudeDat(1,1);
             cleanV = crudeDat(:,2) *10;
-            tempD{kk} = [cleanTime, cleanV];
+            tempD{kk} = cleanV;
+            if length(cleanV) < minLen
+                minLen = length(cleanV);
+            end
             allPos = pStruct.stim(stimTempI(kk)).data{2};
             relTimesPos = double(allPos([posToCut, end-posToCut], 1) - crudeDat(1,1));
             tempPos{kk} = allPos;
@@ -70,10 +86,17 @@ for ii=1:length(stimOri)
             end
         end
         
-        plotSt(ii).stepDat(jj).stimEx = pStruct.stim(stimTempI(1)).matCell(:,:,exFrame) >= cutOffVal;
+        tempExample = pStruct.stim(stimTempI(1)).matCell(:,:,exFrame) >= cutOffVal;
+        tempExample(31:32,1:3) = 0; % removes blinker
+        plotSt(ii).stepDat(jj).stimEx = tempExample;
         plotSt(ii).stepDat(jj).pos = tempPos;
         plotSt(ii).stepDat(jj).data = tempD;
         plotSt(ii).stepDat(jj).xInds = tempTimeInd;
+        tempCell = cellfun(@(x) x(1:minLen), tempD, 'uniformoutput', 0);
+        plotSt(ii).stepDat(jj).meanData = mean([tempCell{:}],2);
+        plotSt(ii).stepDat(jj).meanXInds = round(mean(tempTimeInd));
+        
+        
     end
     
 end
@@ -82,54 +105,40 @@ end
 
 
 winFactor = 25; % number to determine window size for filtering
-numRelPeaks = 3; % looks just at the meadin of the first five peaks
+
 
 for ii=1:length(stimOri)
     for jj=1:length(stimSteps)
         tempSt = plotSt(ii).stepDat(jj);
-        tempResp = zeros(1, length(tempSt.data));
-        for kk=1:length(tempSt.data)
-            tempTimeInds = tempSt.xInds(kk, 1):tempSt.xInds(kk, 2);
-            tempV = tempSt.data{kk}(tempTimeInds, 2);
-            datSiz = length(tempV);
-            winSiz = floor(datSiz/winFactor);
-            filtDat = filtfilt(ones(1, winSiz)/winSiz, 1, tempV); % to facilitate peak finding
-            tempPeaks = findpeaks(filtDat);
-            baseLine = mean(tempV(winSiz:2*winSiz));
-            if length(tempPeaks) < numRelPeaks
-                numRelPeaks = length(tempPeaks);
-            end
-            peakResp = median(tempPeaks(1:numRelPeaks)); 
-
-            tempResp(kk) = peakResp - baseLine;
-            
-            
+        %tempResp = zeros(1, length(tempSt.data));
+        
+        tempTimeInds = tempSt.meanXInds(1):tempSt.meanXInds(2);
+        tempV = tempSt.meanData(tempTimeInds);
+        datSiz = length(tempV);
+        winSiz = floor(datSiz/winFactor);
+        filtDat = filtfilt(ones(1, winSiz)/winSiz, 1, tempV); % to facilitate peak finding
+        [tempPeaks, ~, ~, prom] = findpeaks(filtDat, 'minPeakProminence', peakThresh, 'NPeaks', totNumFlicks); % doesn't count peaks smaller than 2mV
+        
+        if length(tempPeaks) < totNumFlicks
+            plotSt(ii).stepDat(jj).results = 1;
+        else
+            plotSt(ii).stepDat(jj).results = sum(prom);
         end
-        plotSt(ii).stepDat(jj).results = tempResp;
     end
 end
 
-% totImage = zeros(size(plotSt(ii).stepDat(jj).stimEx));
-totImage = zeros(size(plotSt(ii).stepDat(jj).stimEx));
 
-% for ii=1:length(stimSteps)
-%     
-%     ori1Val = median(plotSt(1).stepDat(ii).results);
-%     ori2Val = median(plotSt(2).stepDat(ii).results);
-%     
-%     ori1Im = plotSt(1).stepDat(ii).stimEx * ori1Val;
-%     ori2Im = plotSt(2).stepDat(ii).stimEx * ori2Val;
-%     
-%     totImage = totImage + ori1Im + ori2Im;    
-% end
+totImage = ones(size(plotSt(ii).stepDat(jj).stimEx));
+
 
 for ii=1:length(stimSteps)
     
     for jj=1:length(stimOri)
-        oriVal = median(plotSt(jj).stepDat(ii).results);
+        oriVal = plotSt(jj).stepDat(ii).results;
     
         oriIm = plotSt(jj).stepDat(ii).stimEx * oriVal;
-        totImage = totImage + oriIm;    
+        oriIm(oriIm == 0) = 1;
+        totImage = totImage .* oriIm;  
     end
     
 end
@@ -138,7 +147,7 @@ end
 % to present the image in arena coordinates
 %finIm = imrotate(totImage, 180);
 figure('units', 'normalized', 'position', [0.3, 0.7, 0.33, 0.2])
-imagesc(totImage)
+imagesc(sqrt(totImage))
 title('Y values should be calculated by 33-Y')
 
 fprintf('Please point to max resp pixel \n')

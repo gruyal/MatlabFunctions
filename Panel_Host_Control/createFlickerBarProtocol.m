@@ -124,7 +124,7 @@ end
  
  ort = default.orientations;
  assert(isvector(ort), 'Orientation should be 1XM vector')
- assert(prod(ismember(ort, 0:7)) == 1, 'Orientation values should be between 0 and 7')
+ assert(prod(ismember(ort, 0:3)) == 1, 'Orientation values should be between 0 and 3')
 
  protocolStruct.orientations = ort;
  
@@ -346,9 +346,14 @@ intF = default.intFrames;
  
  %% Creating protocl 
  
- protocolStruct = createProtocol(protocolStruct);
+ if any(ismember(ort, [1,3])) && barW == 1
+     protocolStruct = createProtocolMod(protocolStruct);
+ else
+     protocolStruct = createProtocol(protocolStruct);
+ end
  
  protocolStruct.inputParams = default;
+ 
  
 end
 

@@ -43,6 +43,10 @@ if length(unique(indsDiff)) > 1 % if it is 1 then all values are the same and th
            xCorrInds = inds(relRange(ii))-corrPix:inds(relRange(ii))+corrPix;
            linInd = sub2ind(imSiz, xCorrInds, yCorrInds);
            fixedIm(linInd) = bkgdVal;
+       elseif indsDiff(relRange(ii)) < skipSize && indsDiff(relRange(ii)) == 1
+           xCorrInds = inds(relRange(ii))-corrPix:inds(relRange(ii))+corrPix;
+           linInd = sub2ind(imSiz, xCorrInds, yCorrInds);
+           fixedIm(linInd) = bkgdVal;
        end
    end
 end

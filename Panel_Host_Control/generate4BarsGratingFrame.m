@@ -16,6 +16,9 @@ function gtFrame = generate4BarsGratingFrame(gtStruct)
 %                           values are linearly interpolated between these ends
 %                           (number of steps depends on width)
 % gsLevel -                 (optional) number of bit on the gray scale level (default 3)
+% roundFlag -               (optional) logical. Whether to apply round
+%                           function on the output or postpose the
+%                           operation. {default 1}
 %
 % OUTPUT 
 % gtFrame -     a 225X225 matrix to be used with the relevant masks
@@ -27,6 +30,13 @@ if isfield(gtStruct, 'gsLevel')
     gsLevel = gtStruct.gsLevel;
 else
     gsLevel = 3;
+end
+
+if isfield(gtStruct, 'roundFlag')
+    roundF = gtStruct.roundFlag;
+    assert(ismember(roundF, [0,1]), 'roundFlag should be logical')
+else
+    roundF = 1;
 end
 
 % size of the total image
@@ -44,10 +54,17 @@ if min([vals1,vals2,vals3,vals4]) < 0 || max([vals1,vals2,vals3,vals4]) > 1
     error('ON or OFF bar values are out of range (0-1)')
 end
 
-firVals = round(linspace(vals1(1)*maxVal, vals1(2)*maxVal, gtStruct.width1));
-secVals = round(linspace(vals2(1)*maxVal, vals2(2)*maxVal, gtStruct.width2));
-thiVals = round(linspace(vals3(1)*maxVal, vals3(2)*maxVal, gtStruct.width3));
-fouVals = round(linspace(vals4(1)*maxVal, vals4(2)*maxVal, gtStruct.width4));
+if roundF
+    firVals = round(linspace(vals1(1)*maxVal, vals1(2)*maxVal, gtStruct.width1));
+    secVals = round(linspace(vals2(1)*maxVal, vals2(2)*maxVal, gtStruct.width2));
+    thiVals = round(linspace(vals3(1)*maxVal, vals3(2)*maxVal, gtStruct.width3));
+    fouVals = round(linspace(vals4(1)*maxVal, vals4(2)*maxVal, gtStruct.width4));
+else
+    firVals = linspace(vals1(1)*maxVal, vals1(2)*maxVal, gtStruct.width1);
+    secVals = linspace(vals2(1)*maxVal, vals2(2)*maxVal, gtStruct.width2);
+    thiVals = linspace(vals3(1)*maxVal, vals3(2)*maxVal, gtStruct.width3);
+    fouVals = linspace(vals4(1)*maxVal, vals4(2)*maxVal, gtStruct.width4);
+end
 
 bar1 = repmat(firVals, matSiz, 1);
 bar2 = repmat(secVals, matSiz, 1);

@@ -312,7 +312,7 @@ end
      
      if default.excludeGridCenter
          if rem(gridSt.gridSize(1), 2) == 1 && rem(gridSt.gridSize(2), 2) == 1 
-             relGrdInd = setdiff(1:size(maskPos,1), floor(size(maskPos,1)/2));
+             relGrdInd = setdiff(1:size(maskPos,1), ceil(size(maskPos,1)/2));
              maskPos = maskPos(relGrdInd,:);
          else
              warning('excludeGridCenter only applies to odd numbered grids')

@@ -24,7 +24,7 @@ function varargout = plotStimMinimalMotionNewResults(pStruct, posToDrawLines, co
 msConvFac = 10^3; %since panel controller is stamping time @ 1MHz
 
 if nargin < 2
-    posToDrawLines = 6:5:16;
+    posToDrawLines = 6:2:10; % for diff of 0.1 and genFreq 20 (for diff 0.25 it is 6:5:16)
 else
     posToDrawLines = sort(posToDrawLines);
 end

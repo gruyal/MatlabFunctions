@@ -92,7 +92,7 @@ function protocolStruct = createProtocolMod(protocolStruct)
 %checking inputs 
 
 %arenaSiz = [32,96];
-
+%valsToAdj = [0.001,7, 0.0005, 0.9995]; % related to how createMinimalMotionStripewNoiseModProtocol generates the second bar
 
 protocolStruct = checkProtocolStruct(protocolStruct);
 
@@ -238,11 +238,21 @@ switch protocolStruct.interleave
                 tempOri = protocolStruct.orientations(orI(ii));
                 tempStim = imrotate(tempSeq(:,:,jj), 45*tempOri, 'nearest', 'crop');
                 if tempOri == 1
-                    tempStim = fixImAfterRot(tempStim, 7, 1);
-                    tempStim = fixImAfterRot(tempStim, 0.001, 1); % value equivalent to zero (deals with bkgd in rotation)
+                    
+                    valsToFix = unique(tempStim(:));
+                    valsToFix = valsToFix(floor(valsToFix) ~= 3);  % so as not to fix background
+                    for kk=1:length(valsToFix)
+                        tempStim = fixImAfterRot(tempStim, valsToFix(kk), 1);
+                        %tempStim = fixImAfterRot(tempStim, 0.001, 1); % value equivalent to zero (deals with bkgd in rotation)
+                    end
                 elseif tempOri == 3
-                    tempStim = fixImAfterRot(tempStim, 7, -1);
-                    tempStim = fixImAfterRot(tempStim, 0.001, -1);
+                    
+                    valsToFix = unique(tempStim(:));
+                    valsToFix = valsToFix(floor(valsToFix) ~= 3);  % so as not to fix background
+                    for kk=1:length(valsToFix)
+                        tempStim = fixImAfterRot(tempStim, valsToFix(kk), -1);
+                        %tempStim = fixImAfterRot(tempStim, 0.001, -1); % value equivalent to zero (deals with bkgd in rotation)
+                    end
                 end
                 
                 tempMask = imrotate(protocolStruct.masksMat(:,:,mkI(ii)), 45*tempOri,'nearest', 'crop');
@@ -287,8 +297,92 @@ switch protocolStruct.interleave
             
         end
         
+    case 1  % GRATINGSEQ AND MASKS ARE NOT INTERLEAVED (ONE TO ONE) BUT THE COMBINATIONS ARE INTERLEAVED WITH ALL ORIENTATIONS 
+        
+        assert(numSeqs == numMasks, 'For interleave 1, gratingSeqs and masks should be of same length')
+        
+        rotSeqs = cell(numSeqs, numOrt);
+        
+        for ii=1:numSeqs
+            tempSeq = protocolStruct.stimSeqCell{ii};
+            for jj=1:size(tempSeq, 3)
+                
+                for kk=1:numOrt
+                    tempOri = protocolStruct.orientations(kk);
+                    tempStim = imrotate(tempSeq(:,:,jj), 45*tempOri, 'nearest', 'crop');
+                    tempMask = imrotate(protocolStruct.masksMat(:,:,ii), 45*tempOri,'nearest', 'crop');
+                    
+                    if tempOri == 1
+                    
+                        valsToFix = unique(tempStim(:));
+                        valsToFix = valsToFix(floor(valsToFix) ~= 3);  % so as not to fix background
+                        for mm=1:length(valsToFix)
+                            tempStim = fixImAfterRot(tempStim, valsToFix(mm), 1);
+                        end
+                    elseif tempOri == 3
+                    
+                        valsToFix = unique(tempStim(:));
+                        valsToFix = valsToFix(floor(valsToFix) ~= 3);  % so as not to fix background
+                        for mm=1:length(valsToFix)
+                            tempStim = fixImAfterRot(tempStim, valsToFix(mm), -1);
+                        end
+                    end
+                    
+                    tempStim2 = tempStim.*tempMask;
+                    %sets background to desired level
+                    tempStim2(tempStim2 == 0) = bkgdVal;
+                    rotSeqs{ii, kk}(:,:,jj) = round(tempStim2);
+                end
+            end
+        end
+        
+        
+        % mapping to arena and randomizing
+        [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
+        emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
+        relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
+        
+        if isfield(protocolStruct.randomize, 'randWithin')
+            randWithinF = protocolStruct.randomize.randWithin;
+        else
+            randWithinF = 0;
+        end
+        
+        for ii=1:numReps
+            
+            stimInds = randomizeMatrixInds([numSeqs, numOrt], relRand, randWithinF);
+        
+            tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
+            
+        % Changed rand flag for tempStimCell to 0 - might need to do that in the rest 
+        
+        % changed back to 1 since centerSurround was not randomized
+        % properly
+            tempRelRand = min(relRand);
+            secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [tempRelRand, protocolStruct.randomize.maskPositions]);
+            tempStimMat = cell(1, size(secStimInd, 1)); %size of secStimInd is the actual number of individual stimuli after they have been combined
+            
+            for jj=1:size(secStimInd, 1)
+                relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
+                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                stimWBuffer = cat(3, addEmpty, emptyIntFrames);
+                tempStimMat{jj} = stimWBuffer;
+            
+            end
+        
+            presentedInd = [stimInds(secStimInd(:,1), [1,1,2]), secStimInd(:,2)]; % since gratingSeqs and masks have the same ind
+            
+            mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
+            relInds{ii} = presentedInd;
+            if ~isempty(tempFreqCorr)
+                freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
+            end
+            %reshape makes sure lengths and freqCorr are same shape even
+            %when there are multiple inputs
+        end
+        
     otherwise
-        error('This modification of createProtocol is designed for minimalMotion and should only work with interleave 0')
+        error('This modification of createProtocol is designed for minimalMotion <interleave 0> or flickerBar <interleave 1>')
         
 end
 

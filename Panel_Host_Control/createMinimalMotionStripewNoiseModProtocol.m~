@@ -201,10 +201,7 @@ end
 
 
 % Changes second bar values so that it will differ from first and easier to
-% adjust in fixImAfterRot
-% Only deals with 0 & 1 in first bar (other values will not get fixed
-stimS(stimS == 0) = 0.0005;
-stimS(stimS == 1) = 0.9995;
+stimS(
 
 count = 0;
 
@@ -260,7 +257,6 @@ for ii=1:length(stimF)
             gtStruct(count).barAtPos = 1;
             gtStruct(count).gsLevel = gsLev; 
             gtStruct(count).position = relPos(jj);
-            gtStruct(count).roundFlag = 0;
             newMaskSt(count) = maskSt(1);
             grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, stimFrames];
                 
@@ -282,7 +278,6 @@ for ii=1:length(stimF)
                     gtStruct(count).barAtPos = 1;
                     gtStruct(count).gsLevel = gsLev; 
                     gtStruct(count).position = relPos(jj);
-                    gtStruct(count).roundFlag = 0;
                     newMaskSt(count) = maskSt(1);
                 
                     grtInds(count, :) = [stimF(ii), stimS(ii), relPos(jj), secPos, 0];
