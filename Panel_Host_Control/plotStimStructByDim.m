@@ -147,9 +147,10 @@ for ii=1:numFigs
             % regular color input
             plot(timeToPlot, datToPlot, 'lineWidth', 1, 'color', relCol(indvColInd(kk), :))
             
-            meanTime = nanmean(timeToPlot,2);
+            notNanInds = all(~isnan(timeToPlot), 2);
+            meanTime = mean(timeToPlot(notNanInds, :),2);
             
-            plot(meanTime, nanmean(datToPlot,2), 'lineWidth', 3, 'color', relCol(meanColInd(kk), :))
+            plot(meanTime, mean(datToPlot(notNanInds, :),2), 'lineWidth', 3, 'color', relCol(meanColInd(kk), :))
             
             title(num2str(jj))
             if meanTime(end) > maxTime

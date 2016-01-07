@@ -18,10 +18,8 @@ function protocolStruct = createMovingBarProtocol(inputStruct)
 %                   distance from mid level GS (background). 
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
-% maskType -        becuase of the way movement is generated it is fixed at
-%                   rectangle
-% grtMaskInt -      since grating width is completely dependent only on mask
-%                   width, they will be read independently. {interleave 2}
+% grtMaskInt -      since grating width is completely dependent on mask
+%                   size, they will be read one to one. {interleave 1}
 % gratingFuncHand - Function uses the generateGratingFrame
 %
 %
@@ -31,10 +29,6 @@ function protocolStruct = createMovingBarProtocol(inputStruct)
 %
 % inputStruct -     Should have the following fields
 % .barWidth  -      1XN vector. Width of the moving bar. { 2 }
-% .barHeight -      1XM vector. Height of moving bar. practically
-%                   determines the height of the rectangle window. If more
-%                   than 1 is given would be interleaved with barWidth. { 5 }
-% .barDist -        For now single value. distance in pixels tranveled by the bar. Practically width of the rectangular window { 9 }
 % .barCont -        at most a 2 element vector. contrast of bar moving. For now only 0 or 1 (can be
 %                   adjusted by changing contract. {[0,1]}
 % .revPhi =         logical. Flag indicating whether to add erverse phi
@@ -46,7 +40,8 @@ function protocolStruct = createMovingBarProtocol(inputStruct)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
-% .maskType -       'circle' or {'square'}. Can also be a 1XM cell array 
+% .maskType -       'circle' or {'square'}. Can also be a 1XM cell array
+% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones} { 4 }   
 % .maskInt -        logical. If TRUE function will generate all the combinations
 %                   between type and radius. { 17 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
@@ -86,11 +81,9 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96, 32];
 gratingFuncHand = @generateGratingFrame;
 
-default.gridCenter = 'UI';
+default.gridCenter = [48,16];
 default.generalFrequency = 15;
 default.barWidth = 2; 
-default.barHeight = 5;
-default.barDist = 9;
 default.barCont = [0,1];
 default.contrast = 1;
 default.revPhi = 0;
@@ -98,7 +91,7 @@ default.orientations = 0:2:6;
 default.gsLevel = 3;
 default.maskInt = 1;
 default.gridOverlap = 0;
-%default.grtMaskInt = 1;
+default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
 default.intFrames = nan;
 default.repeats = 3;
@@ -107,10 +100,9 @@ default.freqCorrFlag = 0;
 
 
 % fixed parameters for this protocol that are not user modified
-
-fixed.maskType = {'rectangle'};
+fixed.maskRadius = 9;
+fixed.maskType = {'square'};
 fixed.gridSize = [1,1];
-fixed.grtMaskInt = 2;
 
 % combining default and input structures
 if nargin ==0
@@ -132,26 +124,14 @@ end
  
  %% MASK
  
- maskHW = floor(default.barDist/2); % rectangle mask input is half width
- assert(maskHW > 1, 'barDist should be a positive number')
- assert(length(maskHW) == 1, 'for now, barDist can only have one value') 
- 
- maskHH = floor(default.barHeight/2);
- assert(isvector(maskHH), 'barHeight should be a 1XM vector');
- assert(min(maskHH) > 0, 'barHeight minimum should be a positive number')
- 
  maskT = fixed.maskType;
+ maskR = fixed.maskRadius;
  
- for ii=1:length(maskHH)
-    maskSt(ii).type = maskT{1};
-    maskSt(ii).radius = [maskHW, maskHH(ii)];
- end
- 
- protocolStruct.masksStruct = maskSt;
- 
+ maskSt(1).type = maskT{1};
+ maskSt(1).radius = maskR(1);
  
  % might change after startBar is read in 
- %numMasks = length(maskSt);
+ numMasks = length(maskSt);
 
  %% GRATING PARAMETERS
  
@@ -182,7 +162,7 @@ end
  assert(ismember(revPhi, [0,1]), 'revPhi can be either 0 or 1 only')
  
  count = 0;
- relMaskR = maskSt(1).radius(1); % first since width is the same for all masks
+ relMaskR = maskSt(1).radius;
  
 for ii=1:length(barW)
        
@@ -210,7 +190,7 @@ for ii=1:length(barW)
         gtStruct(count).position = -(relMaskR+barW(ii)):relMaskR;
         gtStruct(count).gsLevel = gsLev; 
         
-       % newMaskSt(count) = maskSt; % since length(maskSt) == 1  
+        newMaskSt(count) = maskSt; % since length(maskSt) == 1  
 
     end
     
@@ -237,12 +217,13 @@ if revPhi
         gtStruct(count).barAtPos = bap;
         gtStruct(count).position = allPos;
         gtStruct(count).gsLevel = gsLev; 
-        %newMaskSt(count) = maskSt;
+        newMaskSt(count) = maskSt;
     end
 end
         
  
  protocolStruct.gratingStruct = gtStruct;
+ protocolStruct.masksStruct = newMaskSt;
  
  %% GRID 
  
@@ -264,7 +245,7 @@ end
      assert(ovlp < 1, 'Overlap value above 1 are not accepted')
      assert(ovlp ~=1, 'What are you stupid? overlap 1 means no grid')
  
-     maskS = 2*max(maskHH)+1;
+     maskS = 2*maskR(1)+1;
      space = maskS - maskS*ovlp;
      gridSt.spacing = [space, space];
      
@@ -296,7 +277,7 @@ end
  protocolStruct.generalFrequency = default.generalFrequency;
  
  protocolStruct.funcHand = gratingFuncHand;
- protocolStruct.interleave = fixed.grtMaskInt;
+ protocolStruct.interleave = default.grtMaskInt;
  
 intF = default.intFrames;
  if isnan(intF)
