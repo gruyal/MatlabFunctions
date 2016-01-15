@@ -1,4 +1,4 @@
-function protocolStruct = createCenterSurroundProtocol2(inputStruct)
+function protocolStruct = createCenterSurroundwAnnulusProtocol(inputStruct)
 
 % function createCenterSurroundProtocol2(inputStruct)
 %
