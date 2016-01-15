@@ -163,7 +163,8 @@ switch lower(command)
 %             error('Pattern ID command requires 1 numerical argument that is between 1 and 99');
 %         end
         % panel ID:  0x03, Panel_ID
-        send_tcp( char([2 3 argument(1)]));
+        convArg = dec2char(argument(1), 2);
+        send_tcp( char([3 3 convArg(1) convArg(2)]));
         
     case 'adc_test'
         if (~isequal(length(argument),1)||(~isnumeric(argument))||(argument(1) >7)||(argument(1) < 0))
@@ -270,13 +271,14 @@ switch lower(command)
     case 'set_posfunc_id' 
         % argument 1 is the channel number 
         % 1:X channel    2:Y channel
-        % argument 2 is the function id
+        % argument 2 is the function id 2 bytes
         % 0 is default function
         if (~isequal(length(argument),2)||(~isnumeric(argument)))
             error('set position function command requires 2 numerical arguments');
         end
         
-        send_tcp( char([3 hex2dec('15') argument(1) argument(2)]));
+        convArg = dec2char(argument(2), 2);
+        send_tcp( char([4 hex2dec('15') argument(1) convArg(1) convArg(2)]));
         
     case 'set_velfunc_id'
         % argument 1 is the channel number 

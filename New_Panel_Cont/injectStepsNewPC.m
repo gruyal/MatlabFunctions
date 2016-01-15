@@ -49,7 +49,7 @@ protocolStructAO.signalPar.numSteps = numSteps;
 protocolStructAO.signalPar.repeats = reps;
 
 %% Generating the signal
-conversionRatio = 400/1; % 400pA/V
+conversionRatio = 40/1; % 40pA/V when feedback resistor is 5GOhm
 maxVol = maxCurr/conversionRatio; % conversion ratio from a velfunc to voltage
 assert(maxVol >= -10 && maxVol <= 10, 'current cannot exceed -10 to 10 when converted to V')
 
