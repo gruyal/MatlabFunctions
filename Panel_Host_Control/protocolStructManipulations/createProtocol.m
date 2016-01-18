@@ -354,7 +354,9 @@ switch protocolStruct.interleave
                      tempOri = 45*protocolStruct.orientations(kk);
                     for mm=1:size(tempSeq,3)
                         tempStim = tempSeq(:,:,mm).*tempMask;
-                        tempStim = imrotate(tempStim, tempOri, 'nearest', 'crop');
+                        if tempOri ~= 0
+                            tempStim = imrotate(tempStim, tempOri, 'nearest', 'crop');
+                        end
                         %  sets background to desired level
                         tempStim(tempStim == 0) = bkgdVal;
                         rotSeqs{ii, jj, kk}(:,:,mm) = round(tempStim);
@@ -374,7 +376,7 @@ switch protocolStruct.interleave
             stimInds = randomizeMatrixInds2([numSeqs, numMasks, numOrt], relRandInd);
         
             tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2), stimInds(x,3)}, 1:size(stimInds,1), 'uniformoutput', 0);
-            secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [1, protocolStruct.randomize.maskPositions]);
+            secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [max(relRandInd), protocolStruct.randomize.maskPositions]); % changed since forced randomization
             tempStimMat = cell(1, size(secStimInd, 1));  %size of secStimInd is the actual number of individual stimuli after they have been combined
         
             for jj=1:size(secStimInd, 1)

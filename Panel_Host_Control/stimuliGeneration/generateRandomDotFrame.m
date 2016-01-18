@@ -4,7 +4,8 @@ function gtFrame = generateRandomDotFrame(gtStruct)
 % frame (uneven due to rotation symmetry). 
 %
 % INPUT
-% gtSeqStruct - structure with the following fields
+% gtSeqStruct - structure with the following fields (all fields should be
+% single values).
 % .dotSize  -           	single number. size of each random dot in pixel 
 % .propON(OFF) -            fraction. Proportion of dots that will be
 %                           ON(OFF). Rest would be background level
@@ -13,7 +14,7 @@ function gtFrame = generateRandomDotFrame(gtStruct)
 % .gsLevel -                (optional) number of bit on the gray scale level (default 3)
 % .bkgdVal -                (optional) value for the rest of the frame.
 %                           Defualt is 0.49
-% .relFrameSize -            (optional) size of matrix in which to generate
+% .relFrameSize -           (optional) size of matrix in which to generate
 %                           the random pattern (can speed up performance).
 %                           Shoud be a single odd number (odd is important for matrix rotation. 
 %                           if not given the entire matSize is taken
@@ -37,24 +38,32 @@ matSiz = 225;
 
 if isfield(gtStruct, 'gsLevel')
     gsLevel = gtStruct.gsLevel;
+    assert(isvector(gsLevel), 'gsLevel should be a single number')
+    assert(length(gsLevel) == 1, 'gsLevel should be a single number')
 else
     gsLevel = 3;
 end
 
 if isfield(gtStruct, 'valON')
     valON = gtStruct.valON;
+    assert(isvector(valON), 'valON should be a single number')
+    assert(length(valON) == 1, 'valON should be a single number')
 else
     valON = 1;
 end
 
 if isfield(gtStruct, 'valOFF')
     valOFF = gtStruct.valOFF;
+    assert(isvector(valOFF), 'valOFF should be a single number')
+    assert(length(valOFF) == 1, 'valOFF should be a single number')
 else
     valOFF = 0;
 end
 
 if isfield(gtStruct, 'bkgdVal')
     bkgdVal = gtStruct.bkgdVal;
+    assert(isvector(bkgdVal), 'bkgdVal should be a single number')
+    assert(length(bkgdVal) == 1, 'bkgdVal should be a single number')
 else
     bkgdVal = 0.49;
 end
@@ -69,6 +78,8 @@ end
 
 if isfield(gtStruct, 'rngSeed')
     seed = gtStruct.rngSeed;
+    assert(isvector(seed), 'seed should be a single number')
+    assert(length(seed) == 1, 'seed should be a single number')
 else
     tt = clock;
     seed = tt(5) * tt(6);

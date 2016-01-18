@@ -1,4 +1,4 @@
-function protocolStruct = createRandomFrameProtocol(inputStruct)
+function protocolStruct = createRandomNoiseProtocol(inputStruct)
 
 % function createRandomFrameProtocol(inputStruct)
 %
@@ -10,14 +10,16 @@ function protocolStruct = createRandomFrameProtocol(inputStruct)
 % 
 % ASSUMPTIONS
 % Since this is a noise pattern certain parameters are assumed. 
-% Stimuli are constructed in 5 frame chunks:
-%           empty/random/empty/random/empty
+% Stimuli are constructed in stimLength packets with intFrames padding each
+% packet. 
 % All parameters that are used to generate the random frame are equal across all frames in the sequence. 
 % .orientation -    No orientation options in this protocol 
 % .intFrames -      in this protocol, this is a fixed amount and unrelated
 %                   to frequency {2}.
-% mask -            in this protocol there can be only one mask (one mask
-%                   radius and one mask type
+% .mask -           in this protocol there can be only one mask (one mask
+%                   radius and one mask type)
+% .gridSize -       imposes a [1,1] grid.
+% .randomize -      set to zero since everything is random anyway. Allow to repeat control stim in determined intervals 
 % gratingFuncHand = function uses generateRandomDotFrame
 %
 % INPUT 
@@ -40,26 +42,19 @@ function protocolStruct = createRandomFrameProtocol(inputStruct)
 % .maskType -       {'circle'}, annulus or 'square'. Can also be a 1XM cell
 %                   array.
 %                   Note! if type is annulus maskRadius is taken as inner while outer is maximal (17) 
-% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. 
+% .maskRadius -     Single number. mask is actually 2XmaskRadius+1. 
 %                   {2*width - closest value from the available ones}. 
 %                   if maskRadius is NaN or not given then mask2WidthFactor
 %                   is used.
-% .mask2WidthFactor-integer. Number with which the width is multiplied to
-%                   create the size for the mask { 2 }.
-% .maskEqualize -   logical flag. If TRUE all masks are the same size (max
-%                   mask) { 0 }
-% .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
-%                   coordinates). { [1,1] }
-% .gridPosOverlap - Overlap between different positions on mask position grid. 
-%                   Units s are normalized maskSizes so that 0 means no overlap and no gap, 
-%                   1 means complete overlap (meaningless), and -1 means a gap of one mask
-%                   between positions. { 0 }
 % .gridCenter -     1X2 vector specifying the center of the grid in X and Y
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
 %                   will not have a position in the actual center.
+% .stimLength -     length of each noise frames packet. 
 % .grtMaskInt -     logical. interleave of grating and masks given (would
 %                   be handed into createProtocol. { 1 }
+% .intFrames -      number of frames to pad each stimulus group { nan -
+%                   which means 250ms caculated by the generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3}
 % .generalFrequency-Frequency with which frames from the generated protocol
 %                   will be dumped (passed on to runDumpProtocol) in positoin function Hz. 
@@ -67,6 +62,12 @@ function protocolStruct = createRandomFrameProtocol(inputStruct)
 %                   indicate whether different stimuli should be run with temporal frequency
 %                   correction { 1 }.  
 %
+% Note! in the fixed structure is a .contRepeat field which determines how
+% many time a single packet will be repeated (for control purposes)
+%
+% Note! control repeat is at the expanse of other stim (counted towards the
+% total)
+% 
 % OUTPUT 
 % protocolStruct with all the required fields from createProtocl. 
 %
@@ -88,23 +89,23 @@ default.propOFF = 0.025;
 default.valON = 1;
 default.valOFF = 0;
 default.bkgdVal = 0.49;
-default.relSize = 19;
-default.gridCenter = [48, 16];
+default.relSize = 17;
+default.gridCenter = 'UI';
+default.stimLength = 100;
 default.gsLevel = 3;
 default.maskType = {'circle'};
-default.maskRadius = 5;
-default.gridSize = [1,1];
-default.gridOverlap = 0;
-default.grtMaskInt = 1;
-default.intFrames = 2;
-default.repeats = 3;
-default.randomize = 1;
-%both are required for the following function (though they are meaningless
-%in this case)
-fixed.freqCorrFlag = 0;
-fixed.generalFrequency = 20;
-fixed.orientations = 0;
+default.maskRadius = 7;
+default.intFrames = nan;
+default.generalFrequency = 10;
 
+fixed.grtMaskInt = 2;
+fixed.randomize = 0;
+fixed.freqCorrFlag = 0;
+fixed.orientations = 0;
+fixed.gridSize = [1,1];
+fixed.gridOverlap = 0;
+fixed.repeats = 1;
+fixed.contRepeat = 5;
 
 % combining default and input structures
 if nargin == 0
@@ -134,6 +135,19 @@ assert(length(tMaskR) == 1, 'maskRadius should be a single integer')
 relSiz = tMaskR;
 assert(relSiz > 0, 'maskRadius must be comprised of positive numbers')
 
+stimLen = default.stimLength;
+assert(isvector(stimLen), 'stimLength should be a single number')
+assert(length(stimLen) == 1, 'stimLength should be a single number')
+assert(stimLen <= numGrt, 'stimLength should be small or equal to totNumStim')
+
+effNumGrt = round(numGrt/stimLen);
+
+if effNumGrt <= 10
+    warning('Actual number of stim is small, repeating control stim would be non-random')
+end
+
+contInd = floor(effNumGrt/fixed.contRepeat);
+
 % rest of parameters are checked within generateRandomDotFrame
 onV = default.valON;
 offV = default.valOFF;
@@ -143,16 +157,24 @@ offP = default.propOFF;
 tt = clock;
 seedBase = abs(tt(6)^2 - tt(5));
 
-for ii=1:numGrt
-        gtStruct(ii).dotSize= dotSiz;
-        gtStruct(ii).valON = onV;
-        gtStruct(ii).valOFF = offV;
-        gtStruct(ii).propON = onP;
-        gtStruct(ii).propOFF = offP;
-        gtStruct(ii).gsLevel = gsLev;
-        gtStruct(ii).bkgdVal = bkgdV;
-        gtStruct(ii).relFrameSize = relSiz;
-        gtStruct(ii).rngSeed = seedBase + ii;
+for ii=1:effNumGrt
+    if mod(ii, contInd) == 0
+        gtStruct(ii).contStim = 1;
+        gtStruct(ii).rngSeed = seedBase + (1:stimLen);
+    else
+        gtStruct(ii).contStim = 0;
+        gtStruct(ii).rngSeed = seedBase + (1:stimLen) + ii;
+    end
+    
+    gtStruct(ii).dotSize= dotSiz;
+    gtStruct(ii).valON = onV;
+    gtStruct(ii).valOFF = offV;
+    gtStruct(ii).propON = onP;
+    gtStruct(ii).propOFF = offP;
+    gtStruct(ii).gsLevel = gsLev;
+    gtStruct(ii).bkgdVal = bkgdV;
+    gtStruct(ii).relFrameSize = relSiz;
+    
 end
  
  
@@ -161,10 +183,6 @@ end
  %% ORIENTATIONS
  
  ort = fixed.orientations;
- 
- if length(ort) > 1 || ort ~= 0
-     warning('orientation is irrelevant for this protocol')
- end
  
  protocolStruct.orientations = ort;
  
@@ -191,8 +209,6 @@ end
  
  maskR = origMaskR; 
  
- 
- 
  % Making sure radi are rotation symetric
  relRad = [1,2,3,4,5,7,9,10,12,15,17];
  tempR = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskR);
@@ -204,10 +220,10 @@ end
  end
  maskR = corrMaskR;
  
- for ii=1:numGrt
-     maskSt(ii).type = maskT{1};
-     maskSt(ii).radius = maskR;
- end
+ 
+ maskSt(1).type = maskT{1};
+ maskSt(1).radius = maskR;
+
  
  
  protocolStruct.masksStruct = maskSt;
@@ -226,12 +242,12 @@ end
      
  else %if maskPositions isn't given use default paramters (or grid input)
      
-     gridSt.gridSize = default.gridSize;
+     gridSt.gridSize = fixed.gridSize;
      assert(isvector(gridSt.gridSize), 'gridSize should be a 1X2 vector');
      assert(length(gridSt.gridSize) == 2, 'gridSize should be a 1X2 vector');
      
      
-     ovlp = default.gridOverlap;
+     ovlp = fixed.gridOverlap;
      assert(isscalar(ovlp), 'Overlap should be a single number')
      assert(ovlp < 1, 'Overlap value above 1 are not accepted')
      assert(ovlp ~=1, 'What are you stupid? overlap 1 means no grid')
@@ -265,26 +281,26 @@ end
  
  %% Misc parameters
  
- protocolStruct.generalFrequency = fixed.generalFrequency;
+ protocolStruct.generalFrequency = default.generalFrequency;
  protocolStruct.freqCorrFlag = fixed.freqCorrFlag;
  
  protocolStruct.funcHand = gratingFuncHand;
- protocolStruct.interleave = default.grtMaskInt;
+ protocolStruct.interleave = fixed.grtMaskInt;
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(fixed.generalFrequency/4);
+     protocolStruct.intFrames = floor(default.generalFrequency/4);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
  end
  
- protocolStruct.repeats = default.repeats;
+ protocolStruct.repeats = fixed.repeats;
  
- protocolStruct.randomize.gratingSeq = default.randomize;
- protocolStruct.randomize.masks = default.randomize;
- protocolStruct.randomize.orientations = default.randomize;
- protocolStruct.randomize.maskPositions = default.randomize;
+ protocolStruct.randomize.gratingSeq = fixed.randomize;
+ protocolStruct.randomize.masks = fixed.randomize;
+ protocolStruct.randomize.orientations = fixed.randomize;
+ protocolStruct.randomize.maskPositions = fixed.randomize;
  
  %% Creating protocl 
  
