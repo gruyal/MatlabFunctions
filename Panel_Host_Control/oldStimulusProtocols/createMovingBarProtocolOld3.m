@@ -1,4 +1,4 @@
-function protocolStruct = createMovingBarProtocolTemp(inputStruct)
+function protocolStruct = createMovingBarProtocol(inputStruct)
 
 % function createFlickerBarProtocol(inputStruct)
 %
@@ -155,15 +155,11 @@ end
  %% GRATING PARAMETERS
  
  stepDur = default.stepDur; 
- assert(isvector(stepDur), 'stepDur should be a vector')
- assert(min(stepDur) > 0, 'stepDur should be a positive number (in secs)')
+ assert(length(stepDur) == 1, 'stepDur should be one number')
+ assert(stepDur > 0, 'stepDur should be a positive number')
 
- stepFrames = unique(round(stepDur * fixed.generalFrequency));
- if length(stepFrames) < length(stepDur)
-     warning('%d step durations omitted since were the same after rounding', length(stepDur) - length(stepFrames))
- end
- 
- assert(min(stepFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
+ stepFrames = round(stepDur * fixed.generalFrequency);
+ assert(stepFrames > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
 
  
  barW = default.barWidth;
@@ -197,36 +193,33 @@ for mm=1:length(maskSt)
     for ii=1:length(barW)
        
         for jj=1:length(barC)
-            
-            for kk=1:length(stepFrames)
         
-                count = count+1;
-                if barC(jj) == 0
-                    gtStruct(count).valsONSt = bkgdVal;
-                    gtStruct(count).valsONEnd = bkgdVal;
-                    gtStruct(count).valsOFFSt = offVal;
-                    gtStruct(count).valsOFFEnd = offVal;
-                    gtStruct(count).widthON = 2*relMaskR+1; % to make sure bar gradually appears and disappears
-                    gtStruct(count).widthOFF = barW(ii);
-                    gtStruct(count).barAtPos = 0;
-                elseif barC(jj) == 1
-                    gtStruct(count).valsONSt = onVal;
-                    gtStruct(count).valsONEnd = onVal;
-                    gtStruct(count).valsOFFSt = bkgdVal;
-                    gtStruct(count).valsOFFEnd = bkgdVal;
-                    gtStruct(count).widthOFF = 2*relMaskR+1;
-                    gtStruct(count).widthON = barW(ii);
-                    gtStruct(count).barAtPos = 1;
-                end
-            
-                basePos = -(relMaskR+barW(ii)):relMaskR;
-                corrPos = reshape(repmat(basePos, stepFrames(kk), 1), 1, []);
-                gtStruct(count).position = corrPos;
-                gtStruct(count).gsLevel = gsLev; 
-        
-                newMaskSt(count) = maskSt(mm); 
-                
+            count = count+1;
+            if barC(jj) == 0
+                gtStruct(count).valsONSt = bkgdVal;
+                gtStruct(count).valsONEnd = bkgdVal;
+                gtStruct(count).valsOFFSt = offVal;
+                gtStruct(count).valsOFFEnd = offVal;
+                gtStruct(count).widthON = 2*relMaskR+1; % to make sure bar gradually appears and disappears
+                gtStruct(count).widthOFF = barW(ii);
+                gtStruct(count).barAtPos = 0;
+            elseif barC(jj) == 1
+                gtStruct(count).valsONSt = onVal;
+                gtStruct(count).valsONEnd = onVal;
+                gtStruct(count).valsOFFSt = bkgdVal;
+                gtStruct(count).valsOFFEnd = bkgdVal;
+                gtStruct(count).widthOFF = 2*relMaskR+1;
+                gtStruct(count).widthON = barW(ii);
+                gtStruct(count).barAtPos = 1;
             end
+            
+            basePos = -(relMaskR+barW(ii)):relMaskR;
+            corrPos = reshape(repmat(basePos, stepFrames, 1), 1, []);
+            gtStruct(count).position = corrPos;
+            gtStruct(count).gsLevel = gsLev; 
+        
+            newMaskSt(count) = maskSt(mm); % since length(maskSt) == 1  
+
         end
         
     end
