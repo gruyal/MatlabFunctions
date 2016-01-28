@@ -34,13 +34,9 @@ function protocolStruct = createGratingProtocol(inputStruct)
 %                   contrast and width should have the same length. { 1 }
 % .orientation -    Vector (0-7). Orientations for the gratings. Applied on all inputs {0:2:6} 
 % .cycles -         Number of times the grating will change through a full
-%                   cycle (last frame identical to first). should be single
-%                   number
+%                   cycle (lat frame identical to first)
 % .iniPos -         initial position of the grating (position for
-%                   generateGratingFrame). Default is zero (grating centered).
-%                   can be either of length 1 or length equal to width
-% .revPhi -         logical. if true adds gratings with same specs but also
-%                   changing contrast each frame { 0 }
+%                   generateGratingFrame). Default is zero (grating centered). 
 % .gsLevel -        gray scale level ( 3 ) 
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
@@ -101,7 +97,6 @@ default.generalFrequency = 20;
 default.contrast = 1;
 default.cycles = 5;
 default.iniPos = 0;
-default.revPhi = 0;
 default.gsLevel = 3;
 default.orientations = 0:2:6;
 default.maskType = {'circle'};
@@ -134,6 +129,12 @@ numGrt = length(wid);
 
 gsLev = default.gsLevel;
 assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
+
+for ii=1:numGrt
+        gtStruct(ii).widthON = wid(ii);
+        gtStruct(ii).widthOFF = wid(ii);
+        gtStruct(ii).gsLevel = gsLev; 
+end
  
 cont = default.contrast;     
 assert(min(cont) >=0 && max(cont) <= 1, 'Contrast should be between 0 and 1');
@@ -144,53 +145,27 @@ elseif length(cont) == 1
      cont = ones(1, numGrt) * cont;
 end
 
+iniPos = round(default.iniPos); % in case the input is not an integer
+assert(length(iniPos) == 1, 'iniPos should be a single number')
 onVal = 0.49 + cont/2; % 0.49 is for the middle value to be rounded down (in GS3 it is 3 and not 4)
 offVal = 0.49 - cont/2.041; % so that it wont go negative
-
-iniPos = round(default.iniPos); % in case the input is not an integer
-assert(length(iniPos) == 1 || length(iniPos) == length(wid), 'iniPos should be of same length as width or a single number')
-
-relIniPos = repmat(iniPos, 1, length(wid)/length(iniPos)); % makes them of same length without an "if" statement 
-
-statFrames = floor(default.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
-
-cyc = default.cycles;
-assert(isvector(cyc), 'cycles should be a single number')
-assert(length(cyc) == 1, 'cycles should be a single number')
-assert(cyc > 0, 'cycles should be a positive number')
-
-revPhi = default.revPhi;
-assert(isvector(revPhi), 'revPhi should be a logical')
-assert(length(revPhi) == 1, 'length of revPhi should be 1')
-assert(ismember(revPhi, [0,1]), 'revPhi should be a logical')
-
-revPhi = revPhi+1;
-count = 0;
-
  for ii=1:numGrt
-     
-     for jj=1:revPhi
-         count = count+1;
-         gtStruct(count).widthON = wid(ii);
-         gtStruct(count).widthOFF = wid(ii);
-         gtStruct(count).gsLevel = gsLev; 
-         gtStruct(count).valsONSt = onVal(ii);
-         gtStruct(count).valsONEnd = onVal(ii);
-         gtStruct(count).valsOFFSt = offVal(ii);
-         gtStruct(count).valsOFFEnd = offVal(ii);
-         gtStruct(count).position = [ones(1, statFrames)*relIniPos(ii), relIniPos(ii)+1:wid(ii)*2*cyc+relIniPos(ii)]; % -1 does not repeat the last position
-         if jj == 1 
-             gtStruct(count).barAtPos = 1;
-         else
-             tempLen = wid(ii)*cyc;
-             gtStruct(count).barAtPos = [ones(1, statFrames), repmat([0,1], 1, tempLen)];
-         end
-         
-     end
-     
+    gtStruct(ii).valsONSt = onVal(ii);
+    gtStruct(ii).valsONEnd = onVal(ii);
+    gtStruct(ii).valsOFFSt = offVal(ii);
+    gtStruct(ii).valsOFFEnd = offVal(ii);
  end
 
- relNumGrt = numGrt*revPhi;
+ statFrames = floor(default.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
+ 
+% Grating assumptions
+ for ii=1:numGrt
+    gtStruct(ii).position = [ones(1, statFrames)*iniPos, iniPos:wid(ii)*2*default.cycles+iniPos-1]; % -1 does not repeat the last position
+    gtStruct(ii).barAtPos = 1;
+ end
+
+ 
+ %protocolStruct.gratingStruct = gtStruct;
   
  %% ORIENTATIONS
  
@@ -233,7 +208,7 @@ count = 0;
      tInd = chRInd(ii);
      warning('Inner mask %d radius was changed from %d to %d', tInd, maskR(tInd), corrMaskR(tInd))
  end
- maskR = repmat(corrMaskR, 1, revPhi);
+ maskR = corrMaskR;
  
  
  maskInt = default.maskInt;
@@ -306,7 +281,7 @@ count = 0;
  
  % change gratingStructure to account for more than one mask type
  for ii=1:numT
-     protocolStruct.gratingStruct((relNumGrt*(ii-1)+1):(relNumGrt*ii)) = gtStruct;
+     protocolStruct.gratingStruct((numGrt*(ii-1)+1):(numGrt*ii)) = gtStruct;
  end
 
  % change gridStructure to account for non-automatically generated maskRadi
