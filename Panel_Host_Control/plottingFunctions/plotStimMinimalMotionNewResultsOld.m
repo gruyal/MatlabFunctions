@@ -41,8 +41,7 @@ maxVal = 2^pStruct.inputParams.gsLevel-1;
 
 assert(isfield(pStruct, 'gratingInds'), 'Protocol structure is missing gratingInds field')
 
-gratInds = round(pStruct.gratingInds);
-timeInds = unique(gratInds(:,5));
+gratInds = pStruct.gratingInds;
 
 uniStim = unique(gratInds(:,1:2), 'rows');
 numUStim = size(uniStim,1);
@@ -101,7 +100,7 @@ for ii=1:size(uniAllStimInds,1)
     relGrtInd = gratInds(uniAllStimInds(ii,1), :);
     fInd = find(barPos == relGrtInd(3));
     sInd = find(barPos == relGrtInd(4));
-    tInd = find(timeInds == relGrtInd(5));
+    tInd = sign(relGrtInd(5));
     
     
     tempNumReps = length(currInds(1).inds);
@@ -122,23 +121,16 @@ for ii=1:size(uniAllStimInds,1)
         
     end
     
-    
-    if timeInds(1) == 0
-        if tInd == 1 % value is actually zero for time index
-            plotStruct(relStim).data(fInd, sInd, tInd).plot = tempDataBucket;
-            plotStruct(relStim).data(fInd, sInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
-            % so the sim case would be plotted with both stim
-            plotStruct(relStim).data(sInd, fInd, tInd).plot = tempDataBucket;
-            plotStruct(relStim).data(sInd, fInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
-        else
-            plotStruct(relStim).data(fInd, sInd, tInd).plot = tempDataBucket;
-            plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
-            plotStruct(relStim).data(fInd, sInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
-        end
+    if tInd == 0
+        plotStruct(relStim).data(fInd, sInd, 2).plot = tempDataBucket;
+        plotStruct(relStim).data(fInd, sInd, 2).example = pStruct.stim(currInds(1).inds(jj)).matCell;
+        % so the sim case would be plotted with both stim
+        plotStruct(relStim).data(sInd, fInd, 2).plot = tempDataBucket;
+        plotStruct(relStim).data(sInd, fInd, 2).example = pStruct.stim(currInds(1).inds(jj)).matCell;
     else
-        plotStruct(relStim).data(fInd, sInd, tInd).plot = tempDataBucket;
-        plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
-        plotStruct(relStim).data(fInd, sInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
+        plotStruct(relStim).data(fInd, sInd, 1).plot = tempDataBucket;
+        plotStruct(relStim).data(fInd, sInd, 1).pos = tempPosArray;
+        plotStruct(relStim).data(fInd, sInd, 1).example = pStruct.stim(currInds(1).inds(jj)).matCell;
     end
     tempMax = max(cellfun(@(x) max(x(:,2)), tempDataBucket));
     tempMin = min(cellfun(@(x) min(x(:,2)), tempDataBucket));
@@ -160,71 +152,57 @@ end
 plotRange = totMax - totMin;
 yyLim = [totMin-plotRange/10, totMax+plotRange/10];
 
+lineCol = cbrewer('qual', 'Set1', 3);
+linW = [1,1];
+%lineCol = [[1,1,1]*0.4; [1,0,0]];
 stimCol = [1,1,1]*0.9; 
 
 [numFPos, numSPos, numT] = size(plotStruct(1).data);
 
-lineCol = cbrewer('qual', 'Set1', numT+1);
-linW = ones(1, numT);
-
+axh = zeros(numUStim, numFPos, numSPos); % since they should all have the same size
 posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.005, [numFPos, numSPos]);
 maxXLen = 0;
-%stimPosMat = zeros(2, numFPos, numSPos);
-
-if numT > 1
-    numPairs = nchoosek(numT, 2); % to present everything in a pairwise manner
-    timePairs = nchoosek(1:numT, 2);
-    
-else
-    numPairs = 1;
-    timePairs = 1;
-end
-
-fh = zeros(numUStim, numPairs);
-axh = zeros(numUStim, numPairs, numFPos, numSPos); % since they should all have the same size
+stimPosMat = zeros(2, numFPos, numSPos);
+fh = zeros(1, numUStim);
 
 for ii=1:numUStim
-    
-    for pp=1:numPairs
-        fh(ii, pp) = figure;
-        relPair = timePairs(pp, :);
-        set(gcf, 'NumberTitle', 'off', 'Name', num2str([round(uniStim(ii, :)), relPair]), ...
-            'units', 'normalized', 'position', [0.1, 0.05, 0.55, 0.85])
+    fh(ii) = figure;
+    set(gcf, 'NumberTitle', 'off', 'Name', num2str(round(uniStim(ii, :))), ...
+        'units', 'normalized', 'position', [0.1, 0.05, 0.55, 0.85])
+    for jj=1:numFPos
         
-        for jj=1:numFPos
-        
-            for kk=1:numSPos
+        for kk=1:numSPos
             
             
-                axh(ii, pp, jj, kk) = axes('position', posCell{jj, kk});
-                hold on 
+            axh(ii, jj, kk) = axes('position', posCell{jj, kk});
+            hold on 
             
-                lineDat = mean(plotStruct(ii).data(jj, kk, 1).pos);
-                line([lineDat; lineDat], [ones(1,length(lineDat))*yyLim(1); ones(1,length(lineDat))*yyLim(2)], 'color', stimCol)
+            lineDat = mean(plotStruct(ii).data(jj, kk, 1).pos);
+            line([lineDat; lineDat], [ones(1,length(lineDat))*yyLim(1); ones(1,length(lineDat))*yyLim(2)], 'color', stimCol)
             
-                for mm=1:length(relPair) % either 2 or 1 (when there is no comparision to be made)
-                    
-                    tempDat = plotStruct(ii).data(jj, kk, relPair(mm)).plot;
+            for mm=numT:-1:1
+                tempDat = plotStruct(ii).data(jj, kk, mm).plot;
                 
-                    if isempty(tempDat) % since the sim case was presented only once (for [1,2] only and not [2,1] also)
-                        continue
-                    end
-                
-                    [tempXLen, tempXInd] = max(cellfun(@(x) size(x,1), plotStruct(ii).data(jj, kk, relPair(mm)).plot));
-                
-                    cellfun(@(x) plot(x(:,1), x(:,2), 'color', lineCol(relPair(mm), :), 'linewidth', linW(mm)), tempDat)
-            
-                    if tempXLen > maxXLen
-                        maxXLen = plotStruct(ii).data(jj, kk).plot{tempXInd}(end,1);
-                    end
-       
+                if isempty(tempDat) % since the sim case was presented only once (for [1,2] only and not [2,1] also)
+                    continue
                 end
-             
-                hold off
+                
+                [tempXLen, tempXInd] = max(cellfun(@(x) size(x,1), plotStruct(ii).data(jj, kk, mm).plot));
+                
+                cellfun(@(x) plot(x(:,1), x(:,2), 'color', lineCol(mm, :), 'linewidth', linW(mm)), tempDat)
+            
+                if tempXLen > maxXLen
+                    maxXLen = plotStruct(ii).data(jj, kk).plot{tempXInd}(end,1);
+                end
+       
             end
-        
+            
+            
+            hold off
         end
+        
     end
+    
 end
             
 
@@ -246,34 +224,30 @@ for ii=1:length(axh(:))
     end
 end
 
-relAxh = axh(:, :, :, end);
+relAxh = axh(:, :, end);
 set(relAxh(relAxh > 0), 'XTickLabel', xTickLab)
 
 for ii=1:numUStim
-    for jj=1:numPairs
-        relAxh = axh(ii, jj, 1:numFPos:end, :);
-        set(relAxh(relAxh > 0), 'YTickLabel', yTickLab)
-    end
+    relAxh = axh(ii, 1:numFPos:end, :);
+    set(relAxh(relAxh > 0), 'YTickLabel', yTickLab)
 end
 
 for ii=1:numUStim
-    for pp=1:numPairs
-        for jj=1:numSPos
-            relAxh = axh(ii,pp,1,jj);
-            tempAxh = get(relAxh(relAxh > 0));
-            tempAxh.YLabel.String = num2str(barPos(jj));
-            if barPos(jj) == 0
-                tempAxh.YLabel.String = {'Second Bar Position'; '0'};
-            end
+    for jj=1:numSPos
+        relAxh = axh(ii,1,jj);
+        tempAxh = get(relAxh(relAxh > 0));
+        tempAxh.YLabel.String = num2str(barPos(jj));
+        if barPos(jj) == 0
+            tempAxh.YLabel.String = {'Second Bar Position'; '0'};
         end
+    end
     
-        for jj=1:numFPos
-            relAxh = axh(ii,pp,jj,1);
-            tempAxh = get(relAxh(relAxh > 0));
-            tempAxh.Title.String = num2str(barPos(jj));
-            if barPos(jj) == 0
-                tempAxh.Title.String = {'First Bar Position'; '0'};
-            end
+    for jj=1:numFPos
+        relAxh = axh(ii,jj,1);
+        tempAxh = get(relAxh(relAxh > 0));
+        tempAxh.Title.String = num2str(barPos(jj));
+        if barPos(jj) == 0
+            tempAxh.Title.String = {'First Bar Position'; '0'};
         end
     end
 end
@@ -285,25 +259,21 @@ numCols = (numFPos * numSPos - numFPos)/2;
 colMap = cbrewer('div', 'BrBG', numCols, 'PCHIP');
 samePosCol = [1,1,1] * 0.7;
 
-for ii=1:numUStim
-    
-    for pp=1:numPairs
-        colCount = 0;
+for ii=1:length(fh)
+    colCount = 0;
+    for jj=1:numFPos
         
-        for jj=1:numFPos
-        
-            for kk=jj+1:numSPos
-                colCount = colCount+1;
-                set(0, 'CurrentFigure', fh(ii, pp))
-                set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, jj, kk))
-                rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
-                set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, kk, jj))
-                rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
-            end
-        
-            set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, jj, jj))
-            rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', samePosCol, 'FaceColor', 'None', 'lineWidth', 4)
+        for kk=jj+1:numSPos
+            colCount = colCount+1;
+            set(0, 'CurrentFigure', fh(ii))
+            set(fh(ii), 'CurrentAxes', axh(ii, jj, kk))
+            rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
+            set(fh(ii), 'CurrentAxes', axh(ii, kk, jj))
+            rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
         end
+        
+        set(fh(ii), 'CurrentAxes', axh(ii, jj, jj))
+        rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', samePosCol, 'FaceColor', 'None', 'lineWidth', 4)
     end
 end
 
@@ -318,12 +288,12 @@ if contPlotFlag
         for jj=1:numFPos
             for kk=1:numSPos
                 
-                if isempty(plotStruct(ii).data(jj, kk, 1).example) % plots only one condition since hard to differentiate with ave. anyway
+                if isempty(plotStruct(ii).data(jj, kk).example)
                     continue
                 end
                 
                 contAxh(ii, jj, kk) = axes('position', posCell{jj, kk});
-                imagesc((mean(plotStruct(ii).data(jj, kk).example, 3)-3) > 0) % 3 is usual background level
+                plotMidFrame2(mean(plotStruct(ii).data(jj, kk).example, 3), maxVal)
             end
         end
     end
@@ -332,9 +302,6 @@ end
 
 if nargout == 1
     varargout{1} = axh;
-elseif nargout == 2
-    varargout{1} = axh;
-    varargout{2} = plotStruct;
 end
 
 
