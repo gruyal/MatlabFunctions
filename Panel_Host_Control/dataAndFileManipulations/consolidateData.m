@@ -56,12 +56,12 @@ end
 
 if protFlag == 1
     protocolStructComb = protocolStruct;
-    save(fullfile(direct, pTest.name), 'protocolStructComb')
+    save(fullfile(direct, pTest.name), 'protocolStructComb', '-v7.3')
 elseif protFlag == 2
     protocolStructAO = protocolStruct;
-    save(fullfile(direct, pTest.name), 'protocolStructAO')
+    save(fullfile(direct, pTest.name), 'protocolStructAO', '-v7.3')
 else
-    save(fullfile(direct, pTest.name), 'protocolStruct')
+    save(fullfile(direct, pTest.name), 'protocolStruct', '-v7.3')
 end
 
 fprintf('Structure was saved with input data consolidated \n')

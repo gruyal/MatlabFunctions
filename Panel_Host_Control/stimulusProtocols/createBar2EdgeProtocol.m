@@ -1,7 +1,10 @@
-function protocolStruct = createEdgeProtocol(inputStruct)
+function protocolStruct = createBar2EdgeProtocol(inputStruct)
 
 % function createEdgeProtocol(inputStruct)
 %
+% This function generates a stimulus set that transitions between a single
+% bar, a grating and an edge, by making one bar in a grating wider and
+% keeping the total the same. 
 % This function uses the inputStruct and createProtocol function to
 % generate full edge stimuli. It has certain assumptions and therefore requires
 % less inputs. 
@@ -9,15 +12,13 @@ function protocolStruct = createEdgeProtocol(inputStruct)
 % relevant input and allows to change the default
 % 
 % ASSUMPTIONS
-% Since this is a grating certian parameters are assumed to be symmetrical.
-% Width -           same as the size of the mask 
+% Since this is a grating certian parameters are assumed to be symmetrical. 
 % Contrast -        each bar is uniform (no on/off gradients), and both are same
 %                   distance from mid level GS (background). 
 % Position -        desired bar always start in the right on the edge of the window. 
-% Cycles -          1 Cycles of movement (1 cycle being from first change until it
-%                   image is the same again).
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
+% maskType -        fixed as square.
 % Masks positions - Grid is assumed, but parameters should be given
 % grtMaskInt -      since grating width is completely dependent on mask
 %                   size, they will be read one to one. {interleave 1}
@@ -39,15 +40,17 @@ function protocolStruct = createEdgeProtocol(inputStruct)
 % .stimBar -        1XN vector (0-1). Brightness level of the stimulus (moving edge). 
 % .stepDur -        (1XP vector) Duration of each invidual step in sec. (since general
 %                   freq is capped at 50Hz stepDur sould be in steps of 0.02)
-% .staticDispTime - Single number. Time in secs to be added in the begining and the
-%                   end of each stimulus (surrounding the actual edge
-%                   movement) { 0.2, which adds the 10 frames in the begining and the end, since genFreq is 50}
+% .barWids -        1XW vector. List of widths (in pixels) for the bar to
+%                   transition between. The function will only use widths that are <= 2*maskR, 
+%                   since the other bar in the grating has to be present (and its minimal width is one)
+% .numCyc -         Number of cycles to move the grating
+% .staticDispTime - Single number. Time in secs to be added in the begining stimulus (surrounding the actual edge
+%                   movement) { 0.2, which adds the 10 frames in the begining, since genFreq is 50}
 % .orientation -    Vector (0:1:7). Orientations for the gratings. Applied on all inputs {0:2:6}  
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
-% .maskType -       {'circle'} or 'square'. Can also be a 1XM cell array
-% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones}    
+% .maskRadius -     Single number. mask is actually 2XmaskRadius+1. {2*width - closest value from the available ones}    
 % .maskInt -        logical. If TRUE function will generate all the combinations
 %                   between type and radius. { 1 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
@@ -83,11 +86,12 @@ default.maskRadius = 4;
 default.gridCenter = 'UI';
 default.stepDur = 0.02;
 default.stimBar = 1;
-default.orientations = 0:7;
+default.barWids = [1,2,4,6,8];
+default.orientations = 0;
+default.numCyc = 5; 
 default.gsLevel = 3;
-default.maskType = {'square'};
 default.maskInt = 1;
-default.startBar = 0.49;
+default.startBar = 0;
 default.gridSize = [1,1];
 default.gridOverlap = 0;
 default.grtMaskInt = 1;
@@ -99,6 +103,7 @@ default.staticDispTime = 0.2;
 
 fixed.generalFrequency = 50;
 fixed.freqCorrFlag = 0;
+fixed.maskType = {'square'};
 
 % combining default and input structures
 if nargin ==0
@@ -118,17 +123,8 @@ end
  
  %% MASK
  
- maskT = default.maskType;
- 
- if ischar(maskT)
-    numT = 1;
-    assert(ismember(maskT, {'circle'; 'square'}), 'mask type should be either a circle or a square')
-    maskT = {maskT};
- elseif iscell(maskT)
-    assert(logical(prod(cellfun(@ischar, maskT))), 'masks type should be a string or a cell array of strings')
-    numT = length(maskT);
-    assert(logical(prod(ismember(maskT, {'circle', 'square'}))), 'mask type should be either a circle or a square')
- end
+ maskT = fixed.maskType;
+ numT = length(maskT);
  
  maskR = default.maskRadius;
  assert(isvector(maskR), 'maskRadius should be a 1XM vector')
@@ -150,24 +146,7 @@ end
          maskSt(ii).type = maskT{ii};
          maskSt(ii).radius = maskR(ii);
      end
- end
- 
- % Making sure that circle masks are of adequate size
- % LIST TAKEN FROM GenerateBaseMask and is a result of circle that are
- % symmetrycal to rotations  
- relRad = [2,3,4,5,7,9,10,12,15];
- 
- for ii=1:length(maskSt)
-     if strcmp(maskSt(ii).type, 'circle')
-         tempI = arrayfun(@(x) find(relRad - x <= 0, 1, 'last'), maskSt(ii).radius);
-         if maskSt(ii).radius ~= relRad(tempI)
-             warning('Mask %d radius was changed from %d to %d', ii, maskSt(ii).radius, relRad(tempI))
-             maskSt(ii).radius = relRad(tempI);
-         end
-     end
- end
- 
- 
+ end 
  
  % might change after startBar is read in 
  numMasks = length(maskSt);
@@ -192,6 +171,15 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
      startB = ones(1, length(stimB)) * startB;
  end
  
+ barW = default.barWids;
+ assert(isvector(barW), 'barWids should be a 1XW vector')
+ assert(sum(barW > 0) == length(barW), 'barWids should contain only positive numbers')
+ 
+ cyc = default.numCyc;
+ assert(isvector(cyc), 'numCyc should be a single number')
+ assert(length(cyc) == 1, 'numCyc should be a single number')
+ assert(cyc > 0, 'numCyc should be a positive number')
+
  staticDT  = default.staticDispTime;
  assert(staticDT >= 0, 'staticFrames should be a non-negative number')
  staticFrames = round(staticDT * fixed.generalFrequency);
@@ -210,37 +198,46 @@ assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
  
  count = 0;
  for ii=1:numMasks
-    
-    for jj=1:length(stimB)
+     
+     relR = maskSt(ii).radius;
+     relWid = barW(barW < 2*relR+1);
+     if length(relWid) < length(barW) 
+         warning('%d widths have been omitted for mask with value %d', length(barW)-length(relWid), relR)
+     end
+     for jj=1:length(stimB)
         
         for kk=1:length(stepFrames)
-            count = count+1;
-            if stimB(jj) > startB(jj)
-                gtStruct(count).valsONSt = stimB(jj); 
-                gtStruct(count).valsONEnd = stimB(jj);
-                gtStruct(count).valsOFFSt = startB(jj); 
-                gtStruct(count).valsOFFEnd = startB(jj);
-                gtStruct(count).barAtPos = 0;
-            elseif stimB(jj) < startB(jj)
-                gtStruct(count).valsONSt = startB(jj); 
-                gtStruct(count).valsONEnd = startB(jj);
-                gtStruct(count).valsOFFSt = stimB(jj); 
-                gtStruct(count).valsOFFEnd = stimB(jj);
-                gtStruct(count).barAtPos = 1;
-            else
-                error('stim and start bar are equal - no edge will be generated')
-            end
             
-            basePos = -maskSt(ii).radius:maskSt(ii).radius+1;
-            corrPos = reshape(repmat(basePos, stepFrames(kk), 1), 1, []);
-            gtStruct(count).position = [ones(1, staticFrames)*(-maskSt(ii).radius), ...
-                                       corrPos, ...
-                                    ones(1, staticFrames)*(maskSt(ii).radius+1)];
-            newMaskSt(count) = maskSt(ii);
-            %   Grating are 2X+1 for each X mask
-            gtStruct(count).widthON = 2*maskSt(ii).radius+1;
-            gtStruct(count).widthOFF = 2*maskSt(ii).radius+1;
-            gtStruct(count).gsLevel = gsLev; 
+            for ww=1:length(relWid)
+                count = count+1;
+                if stimB(jj) > startB(jj)
+                    gtStruct(count).valsONSt = stimB(jj); 
+                    gtStruct(count).valsONEnd = stimB(jj);
+                    gtStruct(count).valsOFFSt = startB(jj); 
+                    gtStruct(count).valsOFFEnd = startB(jj);
+                    gtStruct(count).widthON = relWid(ww);
+                    gtStruct(count).widthOFF = 2*relR+1 - relWid(ww);
+                    gtStruct(count).barAtPos = 0;
+                elseif stimB(jj) < startB(jj)
+                    gtStruct(count).valsONSt = startB(jj); 
+                    gtStruct(count).valsONEnd = startB(jj);
+                    gtStruct(count).valsOFFSt = stimB(jj); 
+                    gtStruct(count).valsOFFEnd = stimB(jj);
+                    gtStruct(count).widthOFF = relWid(ww);
+                    gtStruct(count).widthON = 2*relR+1 - relWid(ww);
+                    gtStruct(count).barAtPos = 1;
+                else
+                    error('stim and start bar are equal - no edge will be generated')
+                end
+            
+                basePos = -relR+relWid(ww)+1:(cyc*(2*relR+1)-relR); %stops with the relBar at the far edge of the window
+                corrPos = reshape(repmat(basePos, stepFrames(kk), 1), 1, []);
+                gtStruct(count).position = [ones(1, staticFrames)*(-relR+relWid(ww)), corrPos];
+                newMaskSt(count) = maskSt(ii);
+                %   Grating are 2X+1 for each X mask
+                
+                gtStruct(count).gsLevel = gsLev; 
+            end
         end
     end
  end

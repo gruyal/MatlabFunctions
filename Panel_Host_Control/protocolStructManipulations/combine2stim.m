@@ -27,7 +27,13 @@ function combStim = combine2stim(stim1, stim2, totalLength, firstFrame1, firstFr
 
 
 stSiz1 = size(stim1);
+if length(stSiz1) == 2
+    stSiz1(3) = 1;
+end
 stSiz2 = size(stim2);
+if length(stSiz2) == 2
+    stSiz2(3) = 1;
+end
 
 assert(stSiz1(1) == stSiz2(1) && stSiz1(2) == stSiz2(2), 'arena size is not identical between the 2 stim')
 assert(firstFrame1 > 0 && firstFrame2 > 0, 'First frame cannot be a negative number')

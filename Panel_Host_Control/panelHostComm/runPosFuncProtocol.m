@@ -114,7 +114,7 @@ funcStr = func2str(funcHand);
 folderName = fullfile(pwd, [funcStr(7:end), timeStamp]); %gets rid of the word 'create'
 [stat, mess] = mkdir(folderName);
 assert(stat==1, 'error creating folder: %s', mess)
-save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
+save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct', '-v7.3')
 
 %% Starts the experiment
 % Config 2 block a third of the arena to speed up performance
@@ -189,11 +189,11 @@ Panel_tcp_com('g_level_7')
 % end
 
 % To get file names if function crashes while trying to move files
-save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
+save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct', '-v7.3')
 
 fileNameCell = arrayfun(@(x) protocolStruct.stim(x).fileName, 1:numStim, 'uniformoutput', 0)';
 copyLogFiletoCurrDir(fileNameCell, folderName) 
-save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct')
+save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct', '-v7.3')
 
 
 protStruct = consolidateData(folderName);

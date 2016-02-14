@@ -104,7 +104,7 @@ default.gratingMidVal = 0.49;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
-default.staticFrames = 3;
+default.staticFrames = 2;
 default.freqCorrFlag = 0;
 
 % combining default and input structures
@@ -231,13 +231,13 @@ end
          gtStruct(count).valsOFFEnd = offVal(ii);
          gtStruct(count).gsLevel = gsLev;
          if cenBar(jj) == 1 %bright bar in center
-            gtStruct(count).widthON  = ceil(maskSt(ii).radius * cenProp(jj))+1;
+            gtStruct(count).widthON  = round(maskSt(ii).radius * cenProp(jj))+1;
             gtStruct(count).widthOFF = maskSt(ii).radius;
          elseif cenBar(jj) == 0 %dark bar in center
              gtStruct(count).widthON  = maskSt(ii).radius;
-             gtStruct(count).widthOFF = ceil(maskSt(ii).radius * cenProp(jj))+1;
+             gtStruct(count).widthOFF = round(maskSt(ii).radius * cenProp(jj))+1;
          end
-         gtStruct(count).position = ones(1, staticFrames) * (ceil(maskSt(ii).radius * cenProp(jj))+1);
+         gtStruct(count).position = ones(1, staticFrames) * (round(maskSt(ii).radius * cenProp(jj))+1);
          gtStruct(count).barAtPos = cenBar(jj);
          if strcmp(maskSt(ii).type, 'square')
              gtStruct(count).type = 1;
