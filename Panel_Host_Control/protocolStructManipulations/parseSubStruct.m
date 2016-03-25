@@ -10,7 +10,8 @@ function subStruct = parseSubStruct(pStruct, index, indexVal)
 % index -           along which column of the indices to parse the
 %                   structure. For protocolStrcut the relevant indices are relInds (within
 %                   each stim), and for protocolStrcutComb its combInds. 
-% indexVal -        value for to relevant index that will be parsed out
+% indexVal -        value for to relevant index that will be parsed out.
+%                   Could be single number or vector
 %
 % e.g. to take out just orientation with the value of 2 the input should be
 % index 3 indexVal 2. 
@@ -38,7 +39,7 @@ else
     
 end
 
-selInds = allInds(:, index) == indexVal;
+selInds = ismember(allInds(:, index), indexVal);
 
 if isempty(selInds) 
     error('index does not have the required value')

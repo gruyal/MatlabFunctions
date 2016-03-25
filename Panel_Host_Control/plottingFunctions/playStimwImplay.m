@@ -14,7 +14,7 @@ cmap(:,2) = linspace(0,1,maxVal);
 pHand.Visual.ColorMap.Map = cmap;
 
 pHand.Visual.ColorMap.UserRange = 1;
-pHand.Visual.Colormap.UserRangeMax = maxVal;
+pHand.Visual.ColorMap.UserRangeMax = maxVal;
 
 
 if nargout == 1

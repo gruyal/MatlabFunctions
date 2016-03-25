@@ -1,4 +1,4 @@
-function varargout = plotStimMinimalMotionNewResults(pStruct, posToZero, contPlotFlag)
+function varargout = plotStimMinimalMotionNewResults(pStruct, posToDrawLines, contPlotFlag)
 
 % function plotStimMinimalMotionStripeResults(pStruct)
 %
@@ -14,7 +14,9 @@ function varargout = plotStimMinimalMotionNewResults(pStruct, posToZero, contPlo
 % pStruct -         Protocol structure that is the output of
 %                   runPosFuncProtocol after a MinimalMotionStripeProtocol has been fed into
 %                   it.
-% posToZero -       posFunc number according to which temporal data will be zeroed. 
+% posToDrawLines -  Vector with posFunc numbers according to which lines
+%                   will be drawn. (default is positions 6, 11, and 16
+%                   (0.25 diff in 20Hz)
 % contPlotFlag -    logical (optional). Whether to plot the stim in each
 %                   position or not (default 0).
 % 
@@ -22,9 +24,10 @@ function varargout = plotStimMinimalMotionNewResults(pStruct, posToZero, contPlo
 msConvFac = 10^3; %since panel controller is stamping time @ 1MHz
 
 if nargin < 2
-    posToZero = 12; % position of first bar appearance
+    % posToDrawLines = 6:2:10; % for diff of 0.1 and genFreq 20 (for diff 0.25 it is 6:5:16)
+    posToDrawLines = 6:5:16;
 else
-    assert(length(posToZero) == 1, 'posToZero should be a single position number')
+    posToDrawLines = sort(posToDrawLines);
 end
 
 if nargin < 3
@@ -103,7 +106,7 @@ for ii=1:size(uniAllStimInds,1)
     
     tempNumReps = length(currInds(1).inds);
     tempDataBucket = cell(1, tempNumReps);
-    %tempPosArray = zeros(tempNumReps, length(posToZero));
+    tempPosArray = zeros(tempNumReps, length(posToDrawLines));
     
     for jj=1:tempNumReps
         tempData = pStruct.stim(currInds(1).inds(jj)).data;
@@ -111,11 +114,11 @@ for ii=1:size(uniAllStimInds,1)
         currTime = relTempData(:,1); % becuase of the problem with first time stamp
         currV = relTempData(:,2) * 10; % turns into mV
         posDat = tempData{2};
-        corrCurrTime = (double(currTime) - double(posDat(posDat(:,2) == posToZero, 1))) / msConvFac;
+        corrCurrTime = (double(currTime) - double(posDat(posDat(:,2) == 1, 1))) / msConvFac;
         tempDataBucket{jj} = [corrCurrTime, currV];
-%         if max(posDat(:,2)) > posToZero(end) % to avoid sim trials
-%             tempPosArray(jj, :) = (double(posDat(ismember(posDat(:,2), posToZero), 1)) - double(posDat(posDat(:,2) == 1, 1))) / msConvFac;
-%         end
+        if max(posDat(:,2)) > posToDrawLines(end) % to avoid sim trials
+            tempPosArray(jj, :) = (double(posDat(ismember(posDat(:,2), posToDrawLines), 1)) - double(posDat(posDat(:,2) == 1, 1))) / msConvFac;
+        end
         
     end
     
@@ -129,12 +132,12 @@ for ii=1:size(uniAllStimInds,1)
             plotStruct(relStim).data(sInd, fInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
         else
             plotStruct(relStim).data(fInd, sInd, tInd).plot = tempDataBucket;
-%             plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
+            plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
             plotStruct(relStim).data(fInd, sInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
         end
     else
         plotStruct(relStim).data(fInd, sInd, tInd).plot = tempDataBucket;
-%         plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
+        plotStruct(relStim).data(fInd, sInd, tInd).pos = tempPosArray;
         plotStruct(relStim).data(fInd, sInd, tInd).example = pStruct.stim(currInds(1).inds(jj)).matCell;
     end
     tempMax = max(cellfun(@(x) max(x(:,2)), tempDataBucket));
@@ -155,18 +158,16 @@ end
 %% plotting the data
 
 plotRange = totMax - totMin;
-yyLim = [totMin-plotRange/15, totMax+plotRange/10];
-xxMin = -200; % in ms
+yyLim = [totMin-plotRange/10, totMax+plotRange/10];
 
 stimCol = [1,1,1]*0.9; 
-stimDur = pStruct.inputParams.stimDur * 1000; % to convert to ms
 
 [numFPos, numSPos, numT] = size(plotStruct(1).data);
 
 lineCol = cbrewer('qual', 'Set1', numT+1);
 linW = ones(1, numT);
 
-posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.01, 0.0075, [numFPos, numSPos]);
+posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.005, [numFPos, numSPos]);
 maxXLen = 0;
 %stimPosMat = zeros(2, numFPos, numSPos);
 
@@ -198,7 +199,7 @@ for ii=1:numUStim
                 axh(ii, pp, jj, kk) = axes('position', posCell{jj, kk});
                 hold on 
             
-                lineDat = [0, abs(kk - jj) * stimDur];
+                lineDat = mean(plotStruct(ii).data(jj, kk, 1).pos);
                 line([lineDat; lineDat], [ones(1,length(lineDat))*yyLim(1); ones(1,length(lineDat))*yyLim(2)], 'color', stimCol)
             
                 for mm=1:length(relPair) % either 2 or 1 (when there is no comparision to be made)
@@ -229,7 +230,7 @@ end
 
 for ii=1:length(axh(:)) 
     if axh(ii)
-        set(axh(ii), 'YLim', yyLim, 'XLim', [xxMin, maxXLen])
+        set(axh(ii), 'YLim', yyLim, 'XLim', [0, maxXLen])
     end
 end
 
@@ -295,13 +296,13 @@ for ii=1:numUStim
                 colCount = colCount+1;
                 set(0, 'CurrentFigure', fh(ii, pp))
                 set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, jj, kk))
-                rectangle('Position', [xxMin, yyLim(1), maxXLen-xxMin, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
+                rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
                 set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, kk, jj))
-                rectangle('Position', [xxMin, yyLim(1), maxXLen-xxMin, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
+                rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', colMap(colCount,:), 'FaceColor', 'None', 'lineWidth', 4)
             end
         
             set(fh(ii, pp), 'CurrentAxes', axh(ii, pp, jj, jj))
-            rectangle('Position', [xxMin, yyLim(1), maxXLen-xxMin, yyLim(2)-yyLim(1)], 'EdgeColor', samePosCol, 'FaceColor', 'None', 'lineWidth', 4)
+            rectangle('Position', [0, yyLim(1), maxXLen, yyLim(2)-yyLim(1)], 'EdgeColor', samePosCol, 'FaceColor', 'None', 'lineWidth', 4)
         end
     end
 end

@@ -117,7 +117,7 @@ for ii=1:length(stimOri)
         datSiz = length(tempV);
         winSiz = floor(datSiz/winFactor);
         filtDat = filtfilt(ones(1, winSiz)/winSiz, 1, tempV); % to facilitate peak finding
-        [tempPeaks, ~, ~, prom] = findpeaks(filtDat, 'minPeakProminence', peakThresh, 'NPeaks', totNumFlicks); % doesn't count peaks smaller than 2mV
+        [tempPeaks, ~, ~, prom] = findpeaks(filtDat, 'minPeakProminence', peakThresh, 'NPeaks', totNumFlicks); % doesn't count peaks smaller than 3mV
         
         if length(tempPeaks) < totNumFlicks
             plotSt(ii).stepDat(jj).results = 1;

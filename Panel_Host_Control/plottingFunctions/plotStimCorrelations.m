@@ -16,16 +16,23 @@ function varargout = plotStimCorrelations(pStruct)
 assert(isfield(pStruct, 'stim'), 'Structure is missing .stim field') 
 
 % geting all the unique stimuli (getting rid of repeats)
-tempInds = vertcat(pStruct.stim.relInds);
+if isfield(pStruct.stim, 'relInds')
+    tempInds = vertcat(pStruct.stim.relInds);
+elseif isfield(pStruct.stim, 'combInds')
+    tempInds = vertcat(pStruct.stim.combInds);
+else
+    error('structure does not contain recognized inds field')
+end
+
 [~, stimInd, ~] = unique(tempInds, 'rows');
 numStim = length(stimInd);
 corrRes = cell(1,numStim); % used cell since stim might be of different length
 
 for ii=1:numStim
     tempStim = pStruct.stim(stimInd(ii)).matCell;
-    corrRes{ii} = zeros(1, size(tempStim,3) -1);
+    corrRes{ii} = zeros(1, size(tempStim,3));
     for jj=2:size(tempStim, 3)
-        corrRes{ii}(jj-1) = corr2(tempStim(:,:,jj-1), tempStim(:,:,jj));
+        corrRes{ii}(jj) = corr2(tempStim(:,:,jj-1), tempStim(:,:,jj));
     end
 end
         

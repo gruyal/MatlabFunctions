@@ -22,7 +22,13 @@ end
 assert(isfield(pStruct, 'stim'), 'stricture is missing .stim field')
 assert(ismember(relRelInd, 1:4), 'relRelInd is out of range')
 
-allUInds = unique(vertcat(pStruct.stim.relInds), 'rows');
+if isfield(pStruct.stim, 'relInds')
+    allUInds = unique(vertcat(pStruct.stim.relInds), 'rows');
+elseif isfield(pStruct.stim, 'combInds')
+    error('function not designed for pStructComb');
+else
+    error('pStruct does not contain relevant inds field')
+end
 
 if isfield(pStruct, 'gsLevel') % for AO and comb protocols 
     maxVal = 2^pStruct.gsLevel-1;
