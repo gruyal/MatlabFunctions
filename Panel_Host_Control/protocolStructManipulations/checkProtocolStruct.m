@@ -26,6 +26,8 @@ gratingConcenNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt';
 grating4BarNames = {'width1'; 'width2'; 'width3'; 'width4';'position'; 'barAtPos'; ...
                 'vals1St'; 'vals1End'; 'vals2St'; 'vals2End'; 'vals3St'; 'vals3End'; 'vals4St'; 'vals4End'};  
 randomDotNames = {'dotSize'; 'valON'; 'valOFF'; 'propON'; 'propOFF'; 'gsLevel'; 'bkgdVal'; 'relFrameSize'; 'rngSeed'}; 
+generateBarFrameByIndsNames = {'wid'; 'ori'; 'pos'; 'val'; 'sqDim'; 'gsLevel'; 'bkgdVal'; 'matSize'};
+generate2BarsFrameByIndsNames = {'fWid'; 'sWid'; 'fPos'; 'sPos'; 'fVal'; 'sVal'; 'sqDim'; 'ori'; 'gsLevel'; 'bkgdVal'; 'matSize'};
 funcStr = func2str(protStruct.funcHand);
 
 switch funcStr(9:11)
@@ -37,6 +39,10 @@ switch funcStr(9:11)
         relnames = grating4BarNames;
     case 'Ran'
         relnames = randomDotNames;
+    case '2Ba'
+        relnames = generate2BarsFrameByIndsNames;
+    case 'Bar'
+        relnames = generateBarFrameByIndsNames;
     otherwise
         relnames = [];
 end

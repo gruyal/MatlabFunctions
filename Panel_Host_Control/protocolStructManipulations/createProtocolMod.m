@@ -1,9 +1,10 @@
 function protocolStruct = createProtocolMod(protocolStruct)
 
-% function protocolStruct = createProtocol(protocolStruct)
+% function protocolStruct = createProtocolMod(protocolStruct)
 %
-% Thsi function uses the data within protocolStruct to add a field with the
-% data required for presenting the stim to the same structure.
+% This is a version of createProtocol designed specifically to fix single
+% bars when presented in a diagonal manner (used in minimal motion, flicker
+% and single stripe)
 %
 % INPUT
 %

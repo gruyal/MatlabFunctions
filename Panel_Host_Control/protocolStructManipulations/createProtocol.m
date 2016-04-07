@@ -2,7 +2,7 @@ function protocolStruct = createProtocol(protocolStruct)
 
 % function protocolStruct = createProtocol(protocolStruct)
 %
-% Thsi function uses the data within protocolStruct to add a field with the
+% This function uses the data within protocolStruct to add a field with the
 % data required for presenting the stim to the same structure.
 %
 % INPUT
@@ -148,7 +148,8 @@ frameSize = size(stimSeqCell{1}(:,:,1));
 masksMat = zeros([frameSize, numMasks]);
 % Generating masks
 for ii=1:numMasks
-    masksMat(:,:,ii) = generateBaseMask(protocolStruct.masksStruct(ii).type, protocolStruct.masksStruct(ii).radius);
+    %masksMat(:,:,ii) = generateBaseMask(protocolStruct.masksStruct(ii).type, protocolStruct.masksStruct(ii).radius);
+    masksMat(:,:,ii) = generateBaseMask(protocolStruct.masksStruct(ii));
 end
 
 protocolStruct.masksMat = masksMat;
@@ -158,7 +159,7 @@ protocolStruct.masksMat = masksMat;
 % by setting pattern zeros to be a bit over zero (implemented in
 % generateGratingFrame)
 if min(cellfun(@(x) min(x(:)), protocolStruct.stimSeqCell)) == 0
-    error('stimSeqs minmal value should be above 0 so it will not be set to background levels after rotation')
+    error('stimSeqs minimal value should be above 0 so it will not be set to background levels after rotation')
 end
 
 % maybe should move this into checkProtocol

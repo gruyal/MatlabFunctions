@@ -21,6 +21,15 @@ function varargout = plotMinMotSubMat(minMotSt, startInd, stopInd, plotOpts)
 %                   firstbar disappear, firstbar remains) will be plotted.
 %                   Should be same length as the third dim of minMotSt.data
 %   .plotRec:       logical. if TRUE plots means of reciprocal position  < (ii, jj) at (jj, ii)> 
+%   .compDiagResp:  Structure of 1XdatSiz(1) size. Should contain just the
+%                   responses along the diagonal of a seperate stim. Mean
+%                   response of the diagonal will be presented at second
+%                   bar position. Structure dimensions are 1XdatSiz(1)
+%                   since only one diagonal should be given. And since it
+%                   is generated from the result of calcMinMotMeans and
+%                   extracted from the data field, it shiould just have the
+%                   .mean field for each entry
+%                  
 %
 %
 % OUTPUT
@@ -32,6 +41,7 @@ defOptSt.plotReps = 0;
 defOptSt.zeroSecBar = 0;
 defOptSt.timFlag = ones(1, datSiz(3));
 defOptSt.plotRec = 0;
+defOptSt.compDiagResp = [];
 
 if nargin < 4
     plotOptSt = defOptSt;
@@ -43,6 +53,11 @@ repFlag = logical(plotOptSt.plotReps);
 zeroSecBarFlag = logical(plotOptSt.zeroSecBar);
 timFlag = plotOptSt.timFlag;
 recFlag = plotOptSt.plotRec;
+diagSt = plotOptSt.compDiagResp;
+
+if ~isempty(diagSt)
+    assert(prod(size(diagSt) == [1,datSiz(1)]) == 1, 'compDiagResp structure is of wrong size')
+end
 
 assert(prod(ismember(timFlag, [0,1]))==1, 'timPlotFlag should be logical')
 assert(length(timFlag) == datSiz(3), 'timPlotFlag should be the same length as size(minMotSt.data,3')
@@ -68,6 +83,10 @@ relStart = min(conStartInd, conStopInd);
 relStop = max(conStartInd, conStopInd);
 
 relData = minMotSt(1).data(relStart:relStop, relStart:relStop, logical(timFlag));
+
+if ~isempty(diagSt)
+    relDiagSt = diagSt(relStart:relStop);
+end
 
 
 % calculate plot range based only on means
@@ -101,6 +120,7 @@ axh = zeros(relDatSiz(1), relDatSiz(2));
 
 relCol = cbrewer('qual', 'Paired', 2*datSiz(3)); 
 stimCol = [1,1,1]*0.85;
+compDiagCol = [1,1,1]*0.65;
 
 xxMin = 0;
 xxMax = 0;
@@ -118,6 +138,9 @@ for ii=1:relDatSiz(1)
         line([0-timeAdjust, 0-timeAdjust], yyLim, 'color', stimCol, 'linewidth', 1)
         line([0+posDiff*stimDur-timeAdjust, 0+posDiff*stimDur-timeAdjust], yyLim, 'color', stimCol, 'linewidth', 1)
         
+        if ~isempty(diagSt)
+            plot(relDiagSt(jj).mean(:,1), relDiagSt(jj).mean(:,2), 'color', compDiagCol, 'linewidth', 2.5)
+        end
         
         for kk=1:rel3Dim
             
