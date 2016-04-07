@@ -30,11 +30,21 @@ assert(matSize/2 ~= floor(matSize/2), 'matSize should be odd to avoid rotation d
 cen=ceil(matSize/2); 
 maskIm = zeros(matSize);
 
-
+maxDim = 2*max(maskhW, maskhH)+1;
 maskIm(cen-maskhH:cen+maskhH, cen-maskhW:cen+maskhW) = 1;
 
 if ori
-    maskIm = imrotate(maskIm, 45 * ori, 'nearest', 'crop');
+    
+    rotIm = imrotate(maskIm, 45 * ori, 'nearest', 'crop');
+    tempInds = divideSquareToCols(maxDim, ori);
+    manRotSub = cellfun(@(x) x + repmat([cen, cen], size(x,1), 1), tempInds, 'uniformoutput', 0);
+    allManSub = vertcat(manRotSub{:});
+    manRotInds = sub2ind([matSize, matSize], allManSub(:,1), allManSub(:,2));
+    secRotIm = zeros(matSize);
+    secRotIm(manRotInds) = 1;
+    
+    maskIm = immultiply(rotIm, secRotIm);
+    
 end
 
 

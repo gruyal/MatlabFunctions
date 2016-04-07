@@ -21,11 +21,6 @@ function protocolStruct = createGratingProtocol(inputStruct)
 % Masks positions - Grid is assumed, but some parameters should be given
 % gratingFuncHand - Function uses the generateGratingFrame
 %
-% FIXED
-% .generalFrequency -   fixed @ 50Hz. To change grating speed use stepDur
-% .freqCorrFlag -       fixed @ 0 since this protocol was designed for same
-%                       spatial freq with diff temporal
-% .grtMaskInt -         set to 2 (interleave all - fed into createProtocol). 
 %
 % INPUT 
 % Defaults are dilimited with {} and are optional inputs. 
@@ -50,10 +45,18 @@ function protocolStruct = createGratingProtocol(inputStruct)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
-% .maskType -       {'circle'}, annulus or 'square'. For this protocol
-%                   there can be only one mask type
+% .maskType -       {'circle'}, annulus or 'square'. Can also be a 1XM cell
+%                   array.
 %                   Note! if type is annulus maskRadius is taken as inner while outer is maximal (17) 
-% .maskRadius -     1XR vector specifying mask radius (actual mask is 2XR+1). 
+% .maskRadius -     1XP vector in pixels. mask is actually 2XmaskRadius+1. 
+%                   {2*width - closest value from the available ones}
+%                   
+%                   if maskRadius is NaN or not given then mask2WidthFactor
+%                   is used.
+% .mask2WidthFactor-integer. Number with which the width is multiplied to
+%                   create the size for the mask { 2 }.
+% .maskEqualize -   logical flag. If TRUE all masks are the same size (max
+%                   mask) { 0 }
 % .maskInt -        logical. If TRUE function will generate all the combinations
 %                   between type and radius. { 1 } 
 % .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
@@ -66,9 +69,16 @@ function protocolStruct = createGratingProtocol(inputStruct)
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
 %                   will not have a position in the actual center.
-% .intFrames -      number of empty intervening frames. If not given quarter
+% .grtMaskInt -     logical. interleave of grating and masks given (would
+%                   be handed into createProtocol. { 1 }
+% .intFrames -      number of empty intervening frames. If not given half a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3}
+% .generalFrequency-Frequency with which frames from the generated protocol
+%                   will be dumped (passed on to runDumpProtocol) in positoin function Hz. 
+% .freqCorrFlag -       Also passed on to runDumpProtocol. Logical flag to
+%                   indicate whether different stimuli should be run with temporal frequency
+%                   correction { 1 }.  
 %
 % OUTPUT 
 % protocolStruct with all the required fields from createProtocl. 
@@ -82,30 +92,31 @@ function protocolStruct = createGratingProtocol(inputStruct)
 
 baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
-ultMaxRadius = 17;  % biggest size that is allowed in generateBaseMask 
+ultMaxRadius = 9;  % biggest size that is allowed in generateBaseMask 
 gratingFuncHand = @generateGratingFrame;
 
 default.width = 'UI';
 default.gridCenter = 'UI';
-default.stepDur = 0.02;
+default.generalFrequency = 20;
 default.contrast = 1;
 default.cycles = 5;
 default.iniPos = 0;
 default.revPhi = 0;
 default.gsLevel = 3;
-default.orientations = 0:7;
+default.orientations = 0:2:6;
 default.maskType = {'circle'};
+default.maskEqualize = 0;
 default.maskInt = 1;
-default.maskRadius = 9;
+default.maskRadius = nan;
+default.mask2WidthFactor = 2;
 default.gridSize = [1,1];
 default.gridOverlap = 0;
+default.grtMaskInt = 1;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
+default.freqCorrFlag = 1;
 
-fixed.generalFrequency = 50;
-fixed.freqCorrFlag = 0;
-fixed.grtMaskInt = 2;
 
 % combining default and input structures
 if nargin == 0
@@ -115,18 +126,6 @@ else
 end
 
 %% GRATING PARAMETERS
-
-stepDur = default.stepDur; 
-assert(isvector(stepDur), 'stepDur should be a vector')
-assert(min(stepDur) > 0, 'stepDur should be a positive number (in secs)')
-
-stepFrames = unique(round(stepDur * fixed.generalFrequency));
-if length(stepFrames) < length(stepDur)
-    warning('%d step durations omitted since were the same after rounding', length(stepDur) - length(stepFrames))
-end
- 
-assert(min(stepFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
-
 
 wid = default.width;
 assert(isvector(wid), 'Width should be a 1XN vector')
@@ -153,7 +152,7 @@ assert(length(iniPos) == 1 || length(iniPos) == length(wid), 'iniPos should be o
 
 relIniPos = repmat(iniPos, 1, length(wid)/length(iniPos)); % makes them of same length without an "if" statement 
 
-statFrames = floor(fixed.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
+statFrames = floor(default.generalFrequency/4)-1; % adds a quarter fo a second of stationary grating 
 
 cyc = default.cycles;
 assert(isvector(cyc), 'cycles should be a single number')
@@ -171,39 +170,27 @@ count = 0;
  for ii=1:numGrt
      
      for jj=1:revPhi
-         
-         for kk=1:length(stepFrames)
-            count = count+1;
-            gtStruct(count).widthON = wid(ii);
-            gtStruct(count).widthOFF = wid(ii);
-            gtStruct(count).gsLevel = gsLev; 
-            gtStruct(count).valsONSt = onVal(ii);
-            gtStruct(count).valsONEnd = onVal(ii);
-            gtStruct(count).valsOFFSt = offVal(ii);
-            gtStruct(count).valsOFFEnd = offVal(ii);
-            
-            basePos = relIniPos(ii)+1:wid(ii)*2*cyc+relIniPos(ii); % -1 does not repeat the last position
-            corrPos = reshape(repmat(basePos, stepFrames(kk), 1), 1, []);
-            
-            gtStruct(count).position = [ones(1, statFrames)*relIniPos(ii), corrPos];
-            
-            if jj == 1 
-                 gtStruct(count).barAtPos = 1;
-            else
-                 tempLen = length(corrPos)/(stepFrames(kk)*2); %times 2 since its [0,1]
-                 baseBarPos = reshape(repmat([0,1], stepFrames(kk), 1), 1, []);
-                 gtStruct(count).barAtPos = [ones(1, statFrames), repmat(baseBarPos, 1, tempLen)];
-            end
-            
+         count = count+1;
+         gtStruct(count).widthON = wid(ii);
+         gtStruct(count).widthOFF = wid(ii);
+         gtStruct(count).gsLevel = gsLev; 
+         gtStruct(count).valsONSt = onVal(ii);
+         gtStruct(count).valsONEnd = onVal(ii);
+         gtStruct(count).valsOFFSt = offVal(ii);
+         gtStruct(count).valsOFFEnd = offVal(ii);
+         gtStruct(count).position = [ones(1, statFrames)*relIniPos(ii), relIniPos(ii)+1:wid(ii)*2*cyc+relIniPos(ii)]; % -1 does not repeat the last position
+         if jj == 1 
+             gtStruct(count).barAtPos = 1;
+         else
+             tempLen = wid(ii)*cyc;
+             gtStruct(count).barAtPos = [ones(1, statFrames), repmat([0,1], 1, tempLen)];
          end
          
      end
      
  end
 
- protocolStruct.gratingStruct = gtStruct;
- 
-
+ relNumGrt = numGrt*revPhi;
   
  %% ORIENTATIONS
  
@@ -221,18 +208,20 @@ count = 0;
     assert(ismember(maskT, {'circle'; 'square'; 'annulus'}), 'mask type should be either a circle, annulus or a square')
     maskT = {maskT};
  elseif iscell(maskT)
-     assert(length(maskT) == 1, 'For this protocol there can be only one mask type')
-     assert(ismember(maskT{1}, {'circle'; 'square'; 'annulus'}), 'mask type should be either a circle, annulus or a square')
-     numT = 1;
- else
-    error('For this protocol there can be only one mask type')
+    assert(logical(prod(cellfun(@ischar, maskT))), 'masks type should be a string or a cell array of strings')
+    numT = length(maskT);
+    assert(logical(prod(ismember(maskT, {'circle', 'square', 'annulus'}))), 'mask type should be either a circle, annulus or a square')
  end
  
- % User able to input maskRadius directly (deleted the mask2wid factor
- origMaskR = round(default.maskRadius);
- assert(isvector(origMaskR), 'maskRadius should be a 1XM vector')
- maskR = origMaskR;
+ % User able to input maskRadius directly
  
+ if ~isnan(default.maskRadius)
+     origMaskR = round(default.maskRadius);
+     assert(isvector(origMaskR), 'maskRadius should be a 1XM vector')
+     maskR = sort(repmat(origMaskR, 1, length(wid))); % to make sure that masks and grt are same length
+ else
+     maskR = default.mask2WidthFactor*wid;
+ end
  
  
  % Making sure radi are rotation symetric
@@ -244,7 +233,7 @@ count = 0;
      tInd = chRInd(ii);
      warning('Inner mask %d radius was changed from %d to %d', tInd, maskR(tInd), corrMaskR(tInd))
  end
- maskR = corrMaskR;
+ maskR = repmat(corrMaskR, 1, revPhi);
  
  
  maskInt = default.maskInt;
@@ -279,6 +268,23 @@ count = 0;
      end
  end
  
+ maskEq = default.maskEqualize;
+ assert(length(maskEq) == 1, 'maskEqualize should be a logical flag')
+ assert(ismember(maskEq, [0,1]), 'maskEqualize should be a logical flag')
+ 
+ % since this cannot work with an annulus 
+ if annulusMaskPresent && maskEq
+     maskEq = 0;
+     warning('MaskEq cannot be 1 when an annulus mask is used')
+ end
+ 
+ if maskEq
+     maxMask = max(maskR);
+     for ii=1:length(maskR)
+         maskSt(ii).radius = maxMask;
+     end
+ end
+ 
  
  % Making sure that circle masks are of adequate size
  % LIST TAKEN FROM GenerateBaseMask and is a result of circle that are
@@ -298,6 +304,19 @@ count = 0;
  
  protocolStruct.masksStruct = maskSt;
  
+ % change gratingStructure to account for more than one mask type
+ for ii=1:numT
+     protocolStruct.gratingStruct((relNumGrt*(ii-1)+1):(relNumGrt*ii)) = gtStruct;
+ end
+
+ % change gridStructure to account for non-automatically generated maskRadi
+ if ~isnan(default.maskRadius)
+     newGrtSt = protocolStruct.gratingStruct;
+     newNumGrt = length(protocolStruct.gratingStruct);
+     for ii=1:length(origMaskR)
+         protocolStruct.gratingStruct((newNumGrt*(ii-1)+1):(newNumGrt*ii)) = newGrtSt;
+     end
+ end
  
  %% GRID 
  
@@ -351,15 +370,15 @@ count = 0;
  
  %% Misc parameters
  
- protocolStruct.generalFrequency = fixed.generalFrequency;
- protocolStruct.freqCorrFlag = fixed.freqCorrFlag;
+ protocolStruct.generalFrequency = default.generalFrequency;
+ protocolStruct.freqCorrFlag = default.freqCorrFlag;
  
  protocolStruct.funcHand = gratingFuncHand;
- protocolStruct.interleave = fixed.grtMaskInt;
+ protocolStruct.interleave = default.grtMaskInt;
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(fixed.generalFrequency/4);
+     protocolStruct.intFrames = floor(default.generalFrequency/4);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
