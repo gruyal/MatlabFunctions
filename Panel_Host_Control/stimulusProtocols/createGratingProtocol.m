@@ -92,7 +92,7 @@ function protocolStruct = createGratingProtocol(inputStruct)
 
 baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
-ultMaxRadius = 17;  % biggest size that is allowed in generateBaseMask 
+ultMaxRadius = 9;  % biggest size that is allowed in generateBaseMask 
 gratingFuncHand = @generateGratingFrame;
 
 default.width = 'UI';

@@ -47,8 +47,8 @@ default.rate = [10,20,40]; %pA per sec
 default.isi = 500;
 default.reps = 3;
 default.hypPulse = 0;
-default.hypCurr = -0.5;
-default.hypDur = 250;
+default.hypCurr = -1;
+default.hypDur = 500;
 default.arenaVal = 0;
 default.randomize = 1;
 

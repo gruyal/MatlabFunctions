@@ -1,6 +1,6 @@
 function protStruct  = runPosFuncProtocol(funcHand, pStruct)
 
-% function data  = runDumpProtocol(funcHand, pStruct)
+% function data  = runPosFuncProtocol(funcHand, pStruct)
 %
 % This function uses the function handle and the given protocol structure
 % to generate the required stimuli and dump them into the new panel controller (use tcp connection)
