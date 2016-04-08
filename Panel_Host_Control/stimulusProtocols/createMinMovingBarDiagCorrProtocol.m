@@ -1,9 +1,11 @@
-function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
+function protocolStruct = createMinMovingBarDiagCorrProtocol(inputStruct)
 
-% function createMinMotDiagCorrProtocol(inputStruct)
+% function createMinMovingBarDiagCorrProtocol(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
-% generate minimal motion stimulus. It has certain assumptions and therefore requires
+% generate single bar moving through the window using specific postions as
+% start and stop locations
+% It has certain assumptions and therefore requires
 % less inputs. 
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
@@ -20,6 +22,8 @@ function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
 %                   constant
 % gridSize -        protocol is only presented in a [1,1] grid
 % freqCorrFlag -    meaningless in this protocol. { 0 }
+% barPos -          positions are deduced from the combination of span and
+%                   orientation, and the user can choose the relevant one by clicking
 %
 %   NOTE!!! to correct small problems with diagonal line orientation is
 %   implemented here and not in createProtocol 
@@ -29,27 +33,17 @@ function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
 %
 % inputStruct -         Should have the following fields
 % bar parameters
-% .f/sBarWid -          single number for the width of each bar { 1 }
-% .f/sBarVal -          1XN vector (0-1) of normalized luminance values for
+% .barWid -             single number for the width of each bar { 1 }
+% .barVal -             single number for normalized luminance values for
 %                       each bar. { 1 }
-% .f/sBarPos -          1XP vector of positions for bars to be presented in. 0 is center, negative 
-%                       andpositive are according to the convention in divideSquareToCols. { 'UI' }   
 %
 % general parameters
 % .barsHeight -         Single number. height of bars in pixels. { 9 }
 % .span -               Single number. span (in pixels) to define ref. positions 
 %                       Will be converted into the width of the
 %                       rectangular mask { 11 }
-% .timeDiff -           1Xt vector of differenace between bars in secs
 % .orientation -        Single number between 0 and 3. Since the bar isn't moving 4-7 are redundant. 
-% .firstBarStat -       state of the first bar (0-2).
-%                       0 - first bar disappear {defualt}
-%                       1 - first bar remains
-%                       2 - both (protocol with both options)
-% .stepDur -            timing for bar presentation for when timeDiff == 0
-%                       (o/w timeDiff is used as stepDur)
-% .speedCor -           logical. If TRUE corrects for speed (dt is
-%                       multiplied by dx) { 1 }
+% .stepDur -            1XT vector. duration for each pixel step
 % .gsLevel -            gray scale level ( 3 ) 
 % .gratingMidVal -      value of the rest of the window (0.49 - bkgd level)
 % .gridCenter -         1X2 vector specifying the center of the grid in X and Y
@@ -66,29 +60,20 @@ function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
 % OUTPUT 
 %
 % protocolStruct with all the required fields from createProtocl. 
-%
-%
-%       NOTE!!! when timeDiff is zero, the duration of the sim flash will
-%       be the stepDur
+
 
 %% GENERAL AND DEFAULT PARAMETERS
 
 baseSiz = 225; % size of single frame or mask
-gratingFuncHand = @generate2BarsFrameByInds;
+gratingFuncHand = @generateBarFrameByInds;
 
 
-default.fBarWid = 1;
-default.sBarWid = 1;
-default.fBarVal = 1;
-default.sBarVal = 1;
-default.fBarPos = 'UI';
-default.sBarPos = 'UI';
+default.barWid = 1;
+default.barVal = 1;
 default.barsHeight = 9;
 default.span = 11;
-default.stepDur = 0.04; 
-default.timeDiff = [0, 0.02, 0.04];
-default.firstBarStat = 0;
-default.speedCor = 1;
+default.stepDur = [0.02, 0.04]; 
+default.recFlag = 1;
 default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
@@ -161,10 +146,14 @@ end
 protocolStruct.generalFrequency = fixed.generalFrequency;
 
 stepLen = default.stepDur; 
-assert(isvector(stepLen) && length(stepLen)==1, 'stepDur should be one a single number')
+assert(isvector(stepLen), 'stepDur should be a vector')
 
-stepFrames = round(stepLen * fixed.generalFrequency);
-assert(stepFrames > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
+stepFrames = sort(round(stepLen * fixed.generalFrequency));
+assert(min(stepFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
+
+if length(stepFrames) < length(stepLen)
+    warning('%d stepDur omitted since were the same after rounding', length(stepLen) - length(stepFrames))
+end
 
 gsLev = default.gsLevel;
 assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
@@ -173,120 +162,58 @@ bkgdVal = default.gratingMidVal;
 assert(length(bkgdVal) == 1, 'gratingMidVal should be a single number');
 assert(bkgdVal >=0 && bkgdVal <= 1, 'gratingMidVal should be between 0 and 1')
 
-fbStat = default.firstBarStat;
-assert(ismember(fbStat, 0:2), 'firstBarStat should be a number between 0 and 2')
+barW = default.barWid;
+assert(isvector(barW) && length(barW) == 1, 'barW should be a single number')
+assert(barW > 0, 'barW should be a positive number')
 
-spCorr = default.speedCor; 
-assert(ismember(spCorr, [0,1]), 'speedCor should be logical')
+barV = default.barVal;
+assert(isvector(barV) && length(barV) == 1, 'barVal should be a single number')
+assert(barV >=0 && barV <= 1, 'barVal should be between 0 and 1');
 
-fBarW = default.fBarWid;
-assert(isvector(fBarW) && length(fBarW) == 1, 'fBarW should be a single number')
-assert(fBarW > 0, 'fBarW should be a positive number')
+recFlag = default.recFlag;
+assert(ismember(recFlag, [0,1]), 'recFlag should be logical')
 
-sBarW = default.sBarWid;
-assert(isvector(sBarW) && length(sBarW) == 1, 'sBarW should be a single number')
-assert(sBarW > 0, 'sBarW should be a positive number')
-
-fBarV = default.fBarVal;
-assert(isvector(fBarV), 'fBarVal should be a 1XV1 vector')
-assert(min(fBarV) >=0 && max(fBarV) <= 1, 'fBarVal should be between 0 and 1');
-
-sBarV = default.sBarVal;
-assert(isvector(sBarV), 'sBarVal should be a 1XV2 vector')
-assert(min(sBarV) >=0 && max(sBarV) <= 1, 'sBarVal should be between 0 and 1');
-
-fBarPos = sort(default.fBarPos);
-assert(isvector(fBarPos), 'fBarVal should be a 1XP1 vector')
-
-sBarPos = sort(default.sBarPos);
-assert(isvector(sBarPos), 'sBarPos should be a 1XP2 vector')
-
-
-assert(all(ismember(abs(union(fBarPos, sBarPos)), 0:relMaxPos)), 'position values are out of range for the given span')
-
-timeDiff = sort(default.timeDiff);
-assert(isvector(timeDiff), 'timeDiff should be a vector')
-
-stepDiffFrames = unique(round(timeDiff * fixed.generalFrequency));
-
-if length(stepDiffFrames) < length(timeDiff)
-    warning('%d timeDiffs omitted since were the same after rounding', length(timeDiff) - length(stepDiffFrames))
-end
+selPos = selectPositions(-relMaxPos:relMaxPos, recFlag);
 
 
 relSpan = max(2*maskHW+1, 2*maskHH+1);
 count = 0;
 gratingArray = [];
 
+
+for ii=1:length(stepFrames)
     
-for v1=1:length(fBarV)
-    
-    switch fbStat
-        case 0 
-            postFBVal = bkgdVal;
-            pvFlag = 0;
-        case 1
-            postFBVal = fBarV(v1);
-            pvFlag = 1;
-        case 2
-            postFBVal = [bkgdVal, fBarV(v1)];
-            pvFlag = [0, 1];
-    end
-    
-    for v2=1:length(sBarV)
-    
-        for tt=1:length(stepDiffFrames)
-            
-            if stepDiffFrames(tt) == 0
-                stimFrames = stepFrames;
-            else
-                stimFrames = stepDiffFrames(tt);
-            end
+    for jj=1:size(selPos,1)
         
-            for pos1=1:length(fBarPos)
-                
-                for pos2=1:length(sBarPos)
+        count = count+1;
                     
-                    corrFac = abs(fBarPos(pos1) - sBarPos(pos2)) - 1;
-                    
-                    for pv = 1:length(postFBVal)
-                        
-                        if pv == 2 % so as to not generate the diagonal same stim twice
-                            if fBarPos(pos1) == sBarPos(pos2) || stepDiffFrames(tt)==0
-                                continue
-                            end
-                        end
-                        
-                        count = count+1;
-                            
-                        gtStruct(count).sqDim = relSpan; % generateBarFrameByInds corrects for diagonal internally
-                        gtStruct(count).gsLevel = gsLev; 
-                        gtStruct(count).bkgdVal = bkgdVal;
-                        gtStruct(count).matSize = baseSiz;
-                        gtStruct(count).ori = newOrt;
-                        gtStruct(count).fWid = fBarW;
-                        gtStruct(count).sWid = sBarW;
-                        gtStruct(count).fVal = [ones(1,stimFrames)*fBarV(v1), ones(1,stepDiffFrames(tt) * corrFac^spCorr) * postFBVal(pv), ones(1,stepDiffFrames(tt))*postFBVal(pv)];
-                        gtStruct(count).sVal = [ones(1,stepDiffFrames(tt))*bkgdVal, ones(1,stepDiffFrames(tt) * corrFac^spCorr) * bkgdVal, ones(1,stimFrames)*sBarV(v2)];
-                        gtStruct(count).fPos = fBarPos(pos1);
-                        gtStruct(count).sPos = sBarPos(pos2);
+        gtStruct(count).wid = barW;
+        gtStruct(count).ori = newOrt;
+        gtStruct(count).val = barV;
+        gtStruct(count).sqDim = relSpan; % generateBarFrameByInds corrects for diagonal internally
+        gtStruct(count).gsLevel = gsLev; 
+        gtStruct(count).bkgdVal = bkgdVal;
+        gtStruct(count).matSize = baseSiz;
+        
+        
+        startPos = selPos(jj,1);
+        stopPos = selPos(jj, 2);
+        relStep = sign(stopPos - startPos);
+        relPos = startPos:relStep:stopPos+barW-1;
+        corrPos = reshape(repmat(relPos, stepFrames(ii), 1), 1, []);
+        
+        gtStruct(count).pos = corrPos;
                 
-                        gratingArray = vertcat(gratingArray, ...
-                                                        [count, fBarV(v1), sBarV(v2), fBarPos(pos1), sBarPos(pos2), ...
-                                                        timeDiff(tt)/fixed.generalFrequency, pvFlag(pv)]); 
-                                                    
-                    end
-                                                
-                end
-            end
-        end
+        gratingArray = vertcat(gratingArray, ...
+                               [count, stepFrames(ii)/fixed.generalFrequency, startPos, stopPos]);
+                           
     end  
 end
 
 
- tabVarNames =  {'index', 'FBval', 'SBVal', 'FBPos', 'SBPos', 'timeDiff', 'FBStat'};
+ tabVarNames =  {'index', 'stepDur', 'startPos', 'stopPos'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
- gratTable.Properties.Description = ['span:', num2str(relSpan), ' ', 'FBWid:', fBarW, ' ', 'SBWid:', sBarW, ' ', 'speedCorr:', spCorr];
+ gratTable.Properties.Description = ['span:', num2str(relSpan), ' ', 'Wid:', barW, ' ', 'Val:', barV, ' ', 'orient:', newOrt];
  
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;
