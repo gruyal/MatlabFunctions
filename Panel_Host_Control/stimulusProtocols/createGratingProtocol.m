@@ -167,6 +167,7 @@ assert(ismember(revPhi, [0,1]), 'revPhi should be a logical')
 
 revPhi = revPhi+1;
 count = 0;
+gratingArray = [];
 
  for ii=1:numGrt
      
@@ -187,6 +188,10 @@ count = 0;
             
             gtStruct(count).position = [ones(1, statFrames)*relIniPos(ii), corrPos];
             
+            gratingArray = vertcat(gratingArray, ...
+                               [count, wid(ii), jj-1, stepFrames(kk)/fixed.generalFrequency]);
+            
+            
             if jj == 1 
                  gtStruct(count).barAtPos = 1;
             else
@@ -201,8 +206,12 @@ count = 0;
      
  end
 
- protocolStruct.gratingStruct = gtStruct;
+ tabVarNames =  {'index', 'width', 'revPhiFlag', 'stepDur'};
+ gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
+ %gratTable.Properties.Description = ['span:', num2str(relSpan), ' ', 'Wid:', barW, ' ', 'Val:', barV, ' ', 'orient:', newOrt];
  
+ protocolStruct.gratingStruct = gtStruct;
+ protocolStruct.gratingTable = gratTable;
 
   
  %% ORIENTATIONS
