@@ -44,7 +44,7 @@ close all
 
 
 assert(isfield(pStruct, 'stim'), 'pStrcut is missing stim field')
-%assert(isfield(pStruct.stim, 'data'), 'stim is missing data field')
+assert(isfield(pStruct.stim, 'data'), 'stim is missing data field')
 assert(isfield(pStruct, 'gratingTable'), 'stim is missing gratingTable field')
 
 relTable = pStruct.gratingTable;
