@@ -164,6 +164,7 @@ relRegPos = -relRegR:relRegR;
 relDiagPos = -relDiagR:relDiagR;
 
 posCell = {relRegPos, relDiagPos};
+radVec = [relRegR, relDiagR];
 
 count = 0;
 gratingArray = [];
@@ -174,6 +175,7 @@ for vv=1:length(stimB)
         
         ortPosInd = rem(newOrt(oo),2) +1;
         relPos = posCell{ortPosInd};
+        relRad = radVec(ortPosInd);
         
         for hh=1:length(maskHH)
         
@@ -192,7 +194,7 @@ for vv=1:length(stimB)
                     gtStruct(count).matSize = baseSiz;
                 
                     maskSt(count).type = maskT{1};
-                    maskSt(count).radius = [maskHW, maskHH(hh)];
+                    maskSt(count).radius = [relRad, maskHH(hh)];
                     maskSt(count).ori = newOrt(oo);
                     
                     gratingArray = vertcat(gratingArray, ...
@@ -205,7 +207,7 @@ for vv=1:length(stimB)
 end
 
 
- tabVarNames =  {'index','value', 'width', 'oriet', 'span', 'stimDur', 'height','position'};
+ tabVarNames =  {'index','value', 'width', 'orient', 'span', 'stimDur', 'height','position'};
  
  protocolStruct.gratingTable = array2table(gratingArray, 'variablenames', tabVarNames);
  protocolStruct.gratingStruct = gtStruct;

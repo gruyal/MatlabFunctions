@@ -136,7 +136,7 @@ for ii=1:numFigs
     
     for jj=1:plotSt.figPar(ii).relNumAxe
         
-        tempAxeInd = relTable{:, AxeName} == plotSt.figPar(ii).relAxeVal(jj);
+        tempAxeInd = relTable{:, axeName} == plotSt.figPar(ii).relAxeVal(jj);
         
         handles.fig(ii).axh(jj) = axes('position', posCell{relOrd(jj)});
         hold on
@@ -151,7 +151,7 @@ for ii=1:numFigs
         
         for kk=1:plotSt.figPar(ii).relNumCol
             
-            tempAxeInd = relTable{:, colName} == plotSt.figPar(ii).relColVal(kk);
+            tempColInd = relTable{:, colName} == plotSt.figPar(ii).relColVal(kk);
             
             rowInd = prod([tempFigInd, tempAxeInd, tempColInd], 2);
             gratInd = relTable{logical(rowInd), 'index'};

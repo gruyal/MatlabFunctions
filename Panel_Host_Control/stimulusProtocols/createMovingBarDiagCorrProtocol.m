@@ -211,9 +211,10 @@ for vv=1:length(stimB)
                         gtStruct(count).pos = corrPos;
                         gtStruct(count).gsLevel = gsLev; 
                         gtStruct(count).bkgdVal = bkgdVal;
+                        gtStruct(count).matSize = baseSiz;
                 
                         maskSt(count).type = maskT{1};
-                        maskSt(count).radius = [maskHW(sp), maskHH(hh)];
+                        maskSt(count).radius = [relRad, maskHH(hh)];
                         maskSt(count).ori = newOrt(oo);
                     
                         gratingArray = vertcat(gratingArray, ...

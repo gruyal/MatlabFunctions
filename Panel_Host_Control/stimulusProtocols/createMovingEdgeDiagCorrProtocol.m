@@ -211,7 +211,7 @@ for vv=1:length(stimV)
                     gtStruct(count).matSize = baseSiz;
                         
                     maskSt(count).type = maskT{1};
-                    maskSt(count).radius = [maskHW(sp), maskHH(hh)];
+                    maskSt(count).radius = [relRad, maskHH(hh)];
                     maskSt(count).ori = newOrt(oo);
                     
                     gratingArray = vertcat(gratingArray, ...

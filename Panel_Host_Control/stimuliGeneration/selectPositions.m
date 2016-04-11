@@ -25,7 +25,7 @@ end
 
 posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.02, [length(posRange)-1,length(posRange)-1]);
 
-fH = figure;
+fH = figure('position', [600, 150, 900, 800]);
 pnlH = uipanel(fH,'Title','Select Positions','FontSize',14);
                
 
@@ -49,7 +49,7 @@ end
 
 bH = uicontrol(pnlH, 'Style', 'pushbutton', 'String', 'DONE',...
                'units', 'normalized', 'Position', posCell{end, 1}, ...
-               'fontSize', 12, 'Callback', @getPos);  
+               'fontSize', 10, 'Callback', @getPos);  
 
 
 fH.Visible = 'on';

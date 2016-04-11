@@ -150,7 +150,7 @@ end
  maskT = fixed.maskType;
  
  maskSt(1).type = maskT{1};
- maskSt(1).radius = [maskHW, maskHH];
+ maskSt(1).radius = [relMaxPos, maskHH];
  maskSt(1).ori = newOrt;
 
  protocolStruct.masksStruct = maskSt;
@@ -202,7 +202,8 @@ sBarPos = sort(default.sBarPos);
 assert(isvector(sBarPos), 'sBarPos should be a 1XP2 vector')
 
 
-assert(all(ismember(abs(union(fBarPos, sBarPos)), 0:relMaxPos)), 'position values are out of range for the given span')
+assert(all(ismember(abs(union(fBarPos, sBarPos)), 0:relMaxPos)), ...
+       'position values are out of range: should be between %d to %d', -relMaxPos, relMaxPos)
 
 timeDiff = sort(default.timeDiff);
 assert(isvector(timeDiff), 'timeDiff should be a vector')
@@ -273,7 +274,7 @@ for v1=1:length(fBarV)
                 
                         gratingArray = vertcat(gratingArray, ...
                                                         [count, fBarV(v1), sBarV(v2), fBarPos(pos1), sBarPos(pos2), ...
-                                                        timeDiff(tt)/fixed.generalFrequency, pvFlag(pv)]); 
+                                                        timeDiff(tt), pvFlag(pv)]); 
                                                     
                     end
                                                 

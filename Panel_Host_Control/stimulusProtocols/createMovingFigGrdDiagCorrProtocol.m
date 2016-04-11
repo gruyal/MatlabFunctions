@@ -248,7 +248,7 @@ for vv=1:length(figV)
                 gtStruct(count).matSize = baseSiz;
                 
                 maskSt(count).type = maskT{1};
-                maskSt(count).radius = [maskHW, maskHH];
+                maskSt(count).radius = [relRad, maskHH];
                 maskSt(count).ori = newOrt(oo);
                     
                 gratingArray = vertcat(gratingArray, ...

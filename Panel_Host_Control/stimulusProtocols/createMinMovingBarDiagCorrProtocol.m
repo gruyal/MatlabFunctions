@@ -135,7 +135,7 @@ end
  maskT = fixed.maskType;
  
  maskSt(1).type = maskT{1};
- maskSt(1).radius = [maskHW, maskHH];
+ maskSt(1).radius = [relMaxPos, maskHH];
  maskSt(1).ori = newOrt;
 
  protocolStruct.masksStruct = maskSt;

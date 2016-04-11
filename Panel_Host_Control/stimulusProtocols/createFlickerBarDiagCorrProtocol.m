@@ -141,21 +141,23 @@ end
  assert(maskHH > 0, 'barHeight should be a positive number')
  
  maskT = fixed.maskType;
+ relRegR = maskHW;
+ relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+ 
+ if rem(newOrt, 2)
+     relRad = relDiagR;
+     relPosRange = -relDiagR:relDiagR;
+ else
+     relRad = relRegR;
+     relPosRange = -relRegR:relRegR;
+ end
  
  maskSt(1).type = maskT{1};
- maskSt(1).radius = [maskHW, maskHH];
+ maskSt(1).radius = [relRad, maskHH];
  maskSt(1).ori = newOrt;
  
  protocolStruct.masksStruct = maskSt;
  
- relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2))-1;
- 
- if rem(newOrt,2)
-     relPosRange = -relDiagR:relDiagR;
- else
-     relPosRange = -relRegR:relRegR;
- end
 
 %% GRATING PARAMETERS
 
