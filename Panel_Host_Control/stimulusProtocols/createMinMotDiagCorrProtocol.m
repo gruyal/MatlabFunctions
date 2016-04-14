@@ -133,7 +133,7 @@ end
  assert(maskHW > 1, 'span should be more than 1')
  
  relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+ relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
  
  if rem(newOrt,2) % if it is a diagonal orientation
      relMaxPos = relDiagR;
@@ -215,7 +215,7 @@ if length(stepDiffFrames) < length(timeDiff)
 end
 
 
-relSpan = max(2*maskHW+1, 2*maskHH+1);
+relSpan = 2*maskHW+1; %max(2*maskHW+1, 2*maskHH+1); since when using divideTotSquareToCols height is not taken into account
 count = 0;
 gratingArray = [];
 
@@ -287,7 +287,7 @@ end
 
  tabVarNames =  {'index', 'FBval', 'SBVal', 'FBPos', 'SBPos', 'timeDiff', 'FBStat'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
- gratTable.Properties.Description = ['span:', num2str(relSpan), ' ', 'FBWid:', fBarW, ' ', 'SBWid:', sBarW, ' ', 'speedCorr:', spCorr];
+ gratTable.Properties.Description = ['span:', num2str(relSpan), '; FBWid:', num2str(fBarW), '; SBWid:', num2str(sBarW), '; speedCorr:', num2str(spCorr)];
  
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;

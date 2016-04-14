@@ -80,7 +80,7 @@ barO = barStruct.ori;
 assert(ismember(barO, 0:7), 'bar orientation should be between 0-3')
 
 if rem(barO,2) % for 45 degrees rotations
-    sqDim = 2*round(sqDim/sqrt(2))-1;
+    sqDim = 2*round(sqDim/sqrt(2))+1; % was -1
     %barH = 2*round(barH/sqrt(2))-1;
 end
 
@@ -99,7 +99,8 @@ assert(prod([barPos, barW] <= sqDim) == 1, 'sqDim should be bigger/equal to widt
 barV = round(barStruct.val * maxV);
 assert(barV >= 0 && barV <= maxV, 'val should be between 0 and 1')
 
-sqInds = divideSquareToCols(sqDim, barO);
+%sqInds = divideSquareToCols(sqDim, barO);
+sqInds = divideTotSquareToCols(sqDim, barO, matSiz);
 cenInds = cellfun(@(x) x + repmat([midPoint, midPoint], size(x,1), 1), sqInds, 'uniformoutput', 0);
 
 convPos = barPos+ceil(sqDim/2);

@@ -159,7 +159,7 @@ assert(min(stimB) >=0 && max(stimB) <= 1, 'stimBar should be between 0 and 1');
 assert(isvector(stimB), 'stimBar should be a 1XN vector')
 
 relRegR = maskHW;
-relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
 relRegPos = -relRegR:relRegR;
 relDiagPos = -relDiagR:relDiagR;
 
@@ -187,7 +187,8 @@ for vv=1:length(stimB)
                     gtStruct(count).wid = 1;
                     gtStruct(count).ori = newOrt(oo);
                     gtStruct(count).val = stimB(vv);
-                    gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
+                    %gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
+                    gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
                     gtStruct(count).pos = ones(1, stimFrames(kk))* relPos(pp);
                     gtStruct(count).gsLevel = gsLev; 
                     gtStruct(count).bkgdVal = bkgdVal;

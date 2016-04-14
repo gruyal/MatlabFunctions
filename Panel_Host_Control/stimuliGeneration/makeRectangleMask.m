@@ -36,7 +36,8 @@ maskIm(cen-maskhH:cen+maskhH, cen-maskhW:cen+maskhW) = 1;
 if ori
     
     rotIm = imrotate(maskIm, 45 * ori, 'nearest', 'crop');
-    tempInds = divideSquareToCols(maxDim, ori);
+    %tempInds = divideSquareToCols(maxDim, ori);
+    tempInds = divideTotSquareToCols(2*maskhW+1, ori, matSize);
     manRotSub = cellfun(@(x) x + repmat([cen, cen], size(x,1), 1), tempInds, 'uniformoutput', 0);
     allManSub = vertcat(manRotSub{:});
     manRotInds = sub2ind([matSize, matSize], allManSub(:,1), allManSub(:,2));

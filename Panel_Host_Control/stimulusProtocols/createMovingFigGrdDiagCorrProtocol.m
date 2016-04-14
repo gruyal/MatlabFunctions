@@ -85,12 +85,12 @@ arenaSize = [96,32];
 gratingFuncHand = @generate2BarsFrameByInds;
 
 default.figBarWid = 1;
-default.grdBarWid = 2;
+default.grdBarWid = 3;
 default.figBarVal = 1;
 default.grdBarVal = 0;
 default.figGrdInt = 0;
 default.barHeight = 9;
-default.barSpan = 9;
+default.barSpan = 11;
 default.gridCenter = 'UI';
 default.contrast = 1;
 default.gsLevel = 3;
@@ -131,9 +131,6 @@ end
  % orientation is implemented internally
  protocolStruct.orientations = 0;
  
- 
-
-
   %% MASK (masks created with grating)
  
  maskHW = floor(default.barSpan/2); % rectangle mask input is half width
@@ -150,7 +147,7 @@ end
  maskT = fixed.maskType;
  
  relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+ relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
  radCell = {relRegR, relDiagR};
 
 
@@ -239,7 +236,8 @@ for vv=1:length(figV)
                 gtStruct(count).fVal = grdV(vv);
                 gtStruct(count).sVal = figV(vv);
                 gtStruct(count).ori = newOrt(oo);
-                gtStruct(count).sqDim = max(2*maskHW+1, 2*maskHH+1); % generateBarFrameByInds corrects for diagonal internally
+                %gtStruct(count).sqDim = max(2*maskHW+1, 2*maskHH+1); % generateBarFrameByInds corrects for diagonal internally
+                gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
                     
                 gtStruct(count).fPos = corrPos;
                 gtStruct(count).sPos = corrPos - (ww-1);
@@ -263,7 +261,7 @@ end
 
  tabVarNames =  {'index', 'GroundVal', 'figureVal', 'stepDur', 'posDiff', 'orient'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
- gratTable.Properties.Description = ['span:',max(2*maskHW+1, 2*maskHH+1), ' ', 'grdWid:', grdW, ' ', 'figWid:', figW, ' ', 'Height:', 2*maskHH+1];
+ gratTable.Properties.Description = ['span:', 2*maskHW+1, ' ', 'grdWid:', grdW, ' ', 'figWid:', figW, ' ', 'Height:', 2*maskHH+1];
  
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;

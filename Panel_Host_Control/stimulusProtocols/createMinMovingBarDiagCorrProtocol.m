@@ -118,7 +118,7 @@ end
  assert(maskHW > 1, 'span should be more than 1')
  
  relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+ relDiagR = round((2*relRegR+1)/sqrt(2));% was +1 (with -1 overlap with non-rotated square is too small);
  
  if rem(newOrt,2) % if it is a diagonal orientation
      relMaxPos = relDiagR;
@@ -126,7 +126,7 @@ end
      relMaxPos = relRegR;
  end
  
- minMaskR = min(maskHW);
+ minMaskR = maskHW;
  
  maskHH = floor(default.barsHeight/2);
  assert(isvector(maskHH) && length(maskHH) == 1, 'barHeight should be a single number');
@@ -176,7 +176,7 @@ assert(ismember(recFlag, [0,1]), 'recFlag should be logical')
 selPos = selectPositions(-relMaxPos:relMaxPos, recFlag);
 
 
-relSpan = max(2*maskHW+1, 2*maskHH+1);
+relSpan = 2*maskHW+1;  % since when using divideTotSquareToCols height is not taken into account
 count = 0;
 gratingArray = [];
 
@@ -213,7 +213,7 @@ end
 
  tabVarNames =  {'index', 'stepDur', 'startPos', 'stopPos'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
- gratTable.Properties.Description = ['span:', num2str(relSpan), ' ', 'Wid:', barW, ' ', 'Val:', barV, ' ', 'orient:', newOrt];
+ gratTable.Properties.Description = ['span:', num2str(relSpan), '; Wid:', num2str(barW), '; Val:', num2str(barV), '; orient:', num2str(newOrt)];
  
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;

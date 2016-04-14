@@ -130,6 +130,7 @@ end
   %% MASK (masks created with grating)
  
  maskHW = floor(default.barSpan/2); % rectangle mask input is half width
+ assert(2*maskHW < default.barSpan, 'barSpan must be an odd number')
  assert(isvector(maskHW), 'barSpan should be a single number')
  assert(length(maskHW) == 1, 'barSpan should be a single number')
  assert(maskHW > 1, 'barSpan should be a positive number')
@@ -142,7 +143,7 @@ end
  
  maskT = fixed.maskType;
  relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+ relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
  
  if rem(newOrt, 2)
      relRad = relDiagR;
@@ -182,7 +183,7 @@ relCyc = floor(flicDur./(2*stimFrames));
 
 flicPos = default.flickerPos;
 assert(isvector(flicPos), 'flickerPos should be a 1XP vector')
-assert(all(ismember(flicPos, relPosRange)), 'flicker positions out of range')
+assert(all(ismember(flicPos, relPosRange)), 'flicker positions out of range: between %d and %d', relPosRange(1), relPosRange(end))
 
 flicSt = default.flickerStart;
 assert(ismember(flicSt, [0,1]), 'flicker start should be logical')
@@ -223,7 +224,8 @@ for ii=1:length(stimFrames)
             gtStruct(count).wid = barW(jj);
             gtStruct(count).ori = newOrt;
             gtStruct(count).val = relValVec;
-            gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH+1); % generateBarFrameByInds corrects for diagonal internally
+            %gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH+1); % generateBarFrameByInds corrects for diagonal internally
+            gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
             gtStruct(count).pos = flicPos(kk);
             gtStruct(count).gsLevel = gsLev; 
             gtStruct(count).bkgdVal = bkgdVal;
