@@ -185,7 +185,7 @@ for vv=1:length(stimV)
         for sp = 1:length(maskHW)
                 
             relRegR = maskHW(sp);
-            relDiagR = round((2*relRegR+1)/sqrt(2))-1;
+            relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
             radCell = {relRegR, relDiagR};
                 
             for tt=1:length(stepFrames)
@@ -203,7 +203,8 @@ for vv=1:length(stimV)
                     gtStruct(count).wid = corrPos + (corrPos(end)+1);
                     gtStruct(count).ori = newOrt(oo);
                     gtStruct(count).val = stimV(vv);
-                    gtStruct(count).sqDim = max(2*maskHW(sp)+1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
+                    %gtStruct(count).sqDim = max(2*maskHW(sp)+1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
+                    gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
                     
                     gtStruct(count).pos = corrPos;
                     gtStruct(count).gsLevel = gsLev; 
