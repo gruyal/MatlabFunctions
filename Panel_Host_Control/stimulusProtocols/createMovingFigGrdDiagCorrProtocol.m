@@ -259,7 +259,7 @@ for vv=1:length(figV)
 end
 
 
- tabVarNames =  {'index', 'GroundVal', 'figureVal', 'stepDur', 'posDiff', 'orient'};
+ tabVarNames =  {'index', 'groundVal', 'figureVal', 'stepDur', 'posDiff', 'orient'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
  gratTable.Properties.Description = ['span:', 2*maskHW+1, ' ', 'grdWid:', grdW, ' ', 'figWid:', figW, ' ', 'Height:', 2*maskHH+1];
  
@@ -305,7 +305,7 @@ end
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(fixed.generalFrequency/4);
+     protocolStruct.intFrames = floor(fixed.generalFrequency/2.5);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;

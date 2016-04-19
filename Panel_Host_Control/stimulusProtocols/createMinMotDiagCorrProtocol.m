@@ -330,7 +330,7 @@ end
  
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(fixed.generalFrequency/4);
+     protocolStruct.intFrames = floor(fixed.generalFrequency/2.5);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
