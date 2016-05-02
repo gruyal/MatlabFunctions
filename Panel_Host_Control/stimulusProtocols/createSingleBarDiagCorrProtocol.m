@@ -76,16 +76,16 @@ gratingFuncHand = @generateBarFrameByInds;
 
 default.stimBar = 1;
 default.barHeight = 9;
-default.barSpan = 11;
+default.barSpan = 9;
 default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
 default.orientations = 'UI';
-default.stimDur = [0.04, 0.08]; 
+default.stimDur = [0.02, 0.04, 0.08, 0.16]; 
 default.gridSize = [1,1];
 default.gridOverlap = 0;
 default.intFrames = nan;
-default.repeats = 3;
+default.repeats = 5;
 default.randomize = 1;
 
 
