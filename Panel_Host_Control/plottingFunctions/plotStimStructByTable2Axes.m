@@ -169,6 +169,11 @@ for ff=1:numFigs
             
                 rowInd = prod([tempFigInd, tempAxeRowInd, tempAxeColInd, tempColInd], 2);
                 gratInd = relTable{logical(rowInd), 'index'};
+                
+                if isempty(gratInd)
+                    continue
+                end
+                
                 assert(length(gratInd) == 1, 'variable names combination does not provide unique identity in gratingTable')
             
                 plotIndsSt = getStimInds(pStruct, [gratInd, nan, nan, nan]);
