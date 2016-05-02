@@ -49,7 +49,13 @@ assert(isfield(pStruct, 'gratingTable'), 'stim is missing gratingTable field')
 
 relTable = pStruct.gratingTable;
 colTableNames = relTable.Properties.VariableNames;
-assert(all(ismember({figName, axeName, colName}, colTableNames)), 'Given name does not match variable names in table')
+
+if ~all(ismember({figName, axeName, colName}, colTableNames))
+    fprintf('relevant variable names are: \n')
+    cellfun(@(x) fprintf('%s \t', x), colTableNames)
+    fprintf('\n');
+    error('Given name does not match variable names in table')
+end
 assert(ismember('index', colTableNames), 'gratingTable is missing index variable')
 
 

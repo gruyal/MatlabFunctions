@@ -86,7 +86,7 @@ default.sBarPos = 'UI';
 default.barsHeight = 9;
 default.span = 11;
 default.stepDur = 0.04; 
-default.timeDiff = [0, 0.02, 0.04];
+default.timeDiff = [0, 0.02, 0.04, 0.08, 0.16];
 default.firstBarStat = 0;
 default.speedCor = 1;
 default.gridCenter = 'UI';
@@ -240,6 +240,7 @@ for v1=1:length(fBarV)
             
             if stepDiffFrames(tt) == 0
                 stimFrames = stepFrames;
+                combPos = [nan, nan];
             else
                 stimFrames = stepDiffFrames(tt);
             end
@@ -249,6 +250,16 @@ for v1=1:length(fBarV)
                 for pos2=1:length(sBarPos)
                     
                     corrFac = abs(fBarPos(pos1) - sBarPos(pos2)) - 1;
+                    
+                    if stepDiffFrames(tt) == 0 % getting rid of duplicates in sim presntation 
+                        tempPos = [fBarPos(pos1), sBarPos(pos2)];
+                        
+                        if ismember(fliplr(tempPos), combPos, 'rows')
+                            continue
+                        else
+                            combPos = vertcat(combPos, tempPos);
+                        end
+                    end
                     
                     for pv = 1:length(postFBVal)
                         
@@ -285,7 +296,7 @@ for v1=1:length(fBarV)
 end
 
 
- tabVarNames =  {'index', 'FBval', 'SBVal', 'FBPos', 'SBPos', 'timeDiff', 'FBStat'};
+ tabVarNames =  {'index', 'FBVal', 'SBVal', 'FBPos', 'SBPos', 'timeDiff', 'FBStat'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
  gratTable.Properties.Description = ['span:', num2str(relSpan), '; FBWid:', num2str(fBarW), '; SBWid:', num2str(sBarW), '; speedCorr:', num2str(spCorr)];
  
