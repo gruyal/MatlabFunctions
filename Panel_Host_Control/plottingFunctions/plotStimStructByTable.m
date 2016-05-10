@@ -48,6 +48,7 @@ assert(isfield(pStruct.stim, 'data'), 'stim is missing data field')
 assert(isfield(pStruct, 'gratingTable'), 'stim is missing gratingTable field')
 
 relTable = pStruct.gratingTable;
+relTable.none = ones(height(relTable),1);
 colTableNames = relTable.Properties.VariableNames;
 
 if ~all(ismember({figName, axeName, colName}, colTableNames))

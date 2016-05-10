@@ -48,6 +48,7 @@ assert(isfield(pStruct, 'stim'), 'pStrcut is missing stim field')
 assert(isfield(pStruct, 'gratingTable'), 'stim is missing gratingTable field')
 
 relTable = pStruct.gratingTable;
+relTable.none = ones(height(relTable),1);
 colTableNames = relTable.Properties.VariableNames;
 
 assert(iscell(axeNames), 'axesNames should be a 1X2 cell array')

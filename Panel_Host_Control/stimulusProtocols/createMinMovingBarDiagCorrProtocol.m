@@ -173,7 +173,7 @@ assert(barV >=0 && barV <= 1, 'barVal should be between 0 and 1');
 recFlag = default.recFlag;
 assert(ismember(recFlag, [0,1]), 'recFlag should be logical')
 
-selPos = selectPositions(-relMaxPos:relMaxPos, recFlag);
+[selPos, selPosInd] = selectPositions(-relMaxPos:relMaxPos, recFlag);
 
 
 relSpan = 2*maskHW+1;  % since when using divideTotSquareToCols height is not taken into account
@@ -205,13 +205,14 @@ for ii=1:length(stepFrames)
         gtStruct(count).pos = corrPos;
                 
         gratingArray = vertcat(gratingArray, ...
-                               [count, stepFrames(ii)/fixed.generalFrequency, startPos, stopPos]);
+                               [count, stepFrames(ii)/fixed.generalFrequency, startPos, stopPos, ...
+                               selPosInd(jj), sign(startPos-stopPos)]);
                            
     end  
 end
 
 
- tabVarNames =  {'index', 'stepDur', 'startPos', 'stopPos'};
+ tabVarNames =  {'index', 'stepDur', 'startPos', 'stopPos', 'pairInd', 'direction'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
  gratTable.Properties.Description = ['span:', num2str(relSpan), '; Wid:', num2str(barW), '; Val:', num2str(barV), '; orient:', num2str(newOrt)];
  

@@ -1,5 +1,5 @@
 
-function selectedPos = selectPositions(posRange, recFlag)
+function [selectedPos, selPosInd] = selectPositions(posRange, recFlag)
 
 % function selectedPos = selectPositions(posRange)
 %
@@ -57,17 +57,22 @@ fH.Visible = 'on';
 uiwait
 
 outPos = bH.UserData;
+outPos = sortrows(outPos);
+outPosInd = (1:size(outPos,1))';
 
 if recFlag
     tempPos = fliplr(outPos);
     outPos = vertcat(outPos, tempPos);
+    outPosInd  = vertcat(outPosInd, outPosInd);
 end
 
-% orginaizing the positions nicely
-outPos(:,3) = outPos(:,2) - outPos(:,1);
-sortedOP = sortrows(outPos, 3);
+% % orginaizing the positions nicely
+% outPos(:,3) = outPos(:,2) - outPos(:,1);
+% sortedOP = sortrows(outPos, 3);
+% selectedPos = sortedOP(:,1:2);
 
-selectedPos = sortedOP(:,1:2);
+selectedPos = outPos;
+selPosInd  = outPosInd;
 
 close(fH)
 
