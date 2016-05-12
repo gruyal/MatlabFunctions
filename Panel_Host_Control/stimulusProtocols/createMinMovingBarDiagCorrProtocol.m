@@ -206,7 +206,7 @@ for ii=1:length(stepFrames)
                 
         gratingArray = vertcat(gratingArray, ...
                                [count, stepFrames(ii)/fixed.generalFrequency, startPos, stopPos, ...
-                               selPosInd(jj), sign(startPos-stopPos)]);
+                               selPosInd(jj), sign(stopPos-startPos)]);
                            
     end  
 end
