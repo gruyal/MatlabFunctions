@@ -251,7 +251,7 @@ for v1=1:length(fBarV)
                     
                     corrFac = abs(fBarPos(pos1) - sBarPos(pos2)) - 1;
                     
-                    if stepDiffFrames(tt) == 0 % getting rid of duplicates in sim presntation 
+                    if stepDiffFrames(tt) == 0 && fBarV(v1) == sBarV(v2)% getting rid of duplicates in sim presntation 
                         tempPos = [fBarPos(pos1), sBarPos(pos2)];
                         
                         if ismember(fliplr(tempPos), combPos, 'rows')
