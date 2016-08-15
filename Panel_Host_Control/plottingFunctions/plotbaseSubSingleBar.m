@@ -1,5 +1,5 @@
 
-function varargout = plotbaseSubSingleBar(singleBarSt)
+function varargout = plotBaseSubSingleBar(singleBarSt)
 
 % plotbaseSubSingleBar(singleBarSt)
 %
@@ -29,12 +29,15 @@ for ii=1:datSiz(1)
         
         axh(ii,jj) = axes('position', posCell{ii,jj});
         
-        plot(singleBarSt(ii,jj).subData.baseSub(:,1), singleBarSt(ii,jj).subData.baseSub(:,2), 'linewidth', 3, 'color', pCol(2*jj,:))
+        plot(singleBarSt(ii,jj).subData.baseSub(:,1), singleBarSt(ii,jj).subData.baseSub(:,2), 'linewidth', 4, 'color', pCol(2*jj,:))
         hold on 
-        plot(singleBarSt(ii,jj).subData.baseSub(:,1), singleBarSt(ii,jj).subData.baseSubMed, 'linewidth', 3, 'color', pCol(2*jj-1,:))
         
-        line(xRange(jj, :), [singleBarSt(ii,jj).maxResp, singleBarSt(ii,jj).maxResp], 'color', pCol(2*jj-1, :), 'linewidth', 3)
-        line(xRange(jj, :), [singleBarSt(ii,jj).minResp, singleBarSt(ii,jj).minResp], 'color', pCol(2*jj-1, :), 'linewidth', 2)
+        plot(singleBarSt(ii,jj).resp.maxTime, singleBarSt(ii,jj).resp.maxVal, 'o', ...
+            'markeredgecolor', pCol(2*jj-1, :), 'markerfacecolor', 'k', 'markersize', 8)
+        
+        plot(singleBarSt(ii,jj).resp.minTime, singleBarSt(ii,jj).resp.minVal, 'o', ...
+            'markeredgecolor', pCol(2*jj-1, :), 'markerfacecolor', 'r', 'markersize', 8)
+        
         line(xRange(jj, :), [0, 0], 'color', [1,1,1]*0.8, 'linewidth', 2)
         hold off
     end
