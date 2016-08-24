@@ -32,11 +32,15 @@ for ii=1:datSiz(1)
         
         axh(ii,jj) = axes('position', posCell{ii, jj}); % comparing 2 directions
         
+        hold on
+        
+        if jj>2
+            plot(flickerLinSumStruct(ii,jj).linSum(:,1), flickerLinSumStruct(ii,jj).linSum(:,2), ...
+                 'linewidth', 3, 'color', pCol(2*jj-1,:))
+        end
+        
         plot(flickerLinSumStruct(ii,jj).subData.baseSub(:,1), flickerLinSumStruct(ii,jj).subData.baseSub(:,2), ...
              'linewidth', 3, 'color', pCol(2*jj,:))
-        hold on
-         plot(flickerLinSumStruct(ii,jj).linSum(:,1), flickerLinSumStruct(ii,jj).linSum(:,2), ...
-             'linewidth', 3, 'color', pCol(2*jj-1,:))
         
         if xMin > flickerLinSumStruct(ii,jj).subData.baseSub(1,1)
             xMin = flickerLinSumStruct(ii,jj).subData.baseSub(1,1);
@@ -79,7 +83,7 @@ set(axh(2:end,:), 'yticklabel', {})
 set(axh(:,1:end-1), 'xticklabel', {})
 
 
-legend(axh(datSiz(1), 1), {'Data', 'Linear sum'}, 'location', 'northeast', 'box', 'off')
+%legend(axh(datSiz(1), 4), {'Data', 'Linear sum'}, 'location', 'northeast', 'box', 'off')
 
 
 

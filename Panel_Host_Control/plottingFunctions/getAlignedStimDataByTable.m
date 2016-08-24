@@ -47,7 +47,14 @@ allPos = pStruct.stim(indsSt(1).inds(1)).data{2}(:,2);
 
 assert(ismember(posVal, allPos), 'posVal is not included in position values for the specified stim')
 
-numReps = length(indsSt(1).inds);
+tempSt = pStruct.stim(indsSt.inds);
+numRepInd = zeros(1,length(tempSt));
+for ii=1:length(tempSt)
+    numRepInd(ii) = ~isempty(tempSt(ii).data);
+end
+
+% numReps = length(indsSt(1).inds); % doesn't take into accout empty data
+numReps = find(numRepInd, 1, 'last');
 
 relPosInds = zeros(1, numReps);
 postPosLen = relPosInds;
@@ -81,10 +88,11 @@ minPost = min(postPosLen);
 
 meanData = zeros(minPre+minPost, numReps);
 meanTime = meanData;
-meanPosIndx  = zeros(size(tempPos, 1), numReps);
+meanPosIndx  = nan(size(tempPos, 1), numReps);
 
 for ii=1:numReps
     
+    posLen(ii) = size(align.rep(ii).pos, 1);
     startIdx = relPosInds(ii)-minPre+1;
     stopIdx = relPosInds(ii) + minPost;
     meanData(:, ii) = align.rep(ii).data(startIdx:stopIdx, 2);
@@ -95,6 +103,9 @@ for ii=1:numReps
     end
     meanPosIndx(1:length(tempPosAl),ii) = tempPosAl; % since for mean each repeat is chunked differently
 end
+
+posInd = find(size(meanPosIndx,1) == posLen, 1, 'first');
+tempPos = align.rep(posInd).pos;
 
 align.mean = [mean(meanTime, 2), mean(meanData, 2)];
 align.median = [mean(meanTime, 2), median(meanData, 2)];

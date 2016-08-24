@@ -19,6 +19,8 @@ datSiz = size(singleBarSt);
 posCell = generatePositionCell(0.05, 0.975, 0.025, 0.975, 0.005, 0.005, [datSiz(1), datSiz(2)]);
 
 axh = zeros(datSiz);
+posBound = floor(datSiz(1)/2);
+titLab = arrayfun(@num2str, -posBound:posBound, 'uniformoutput', 0);
 
 pCol = cbrewer('qual', 'Paired', 2*datSiz(2));
 
@@ -66,6 +68,11 @@ for ii=1:datSiz(1)
                 
                 
         end
+        
+        if jj==1
+            title(titLab{ii})
+        end
+        
         
         plot(singleBarSt(ii,jj).subData.baseSub(:,1), singleBarSt(ii,jj).subData.baseSub(:,2), 'linewidth', 3, 'color', pCol(2*jj-1,:))
         

@@ -31,7 +31,7 @@ for ii=1:height(stimTable)
     
     relTable = stimTable(ii, :);
     relVal = relTable{:, relVarName};
-    
+
     alignStruct(ii).align = getAlignedStimDataByTable(pStruct, relTable.index, relVal);
     alignStruct(ii).table = relTable;
     
