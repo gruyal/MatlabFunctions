@@ -1,4 +1,4 @@
-function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName)
+function [alignStruct, varargout] = alignProtocolDataByTableOld(pStruct, relVarName)
 
 % function alignStruct = alignProtocolDataByTable(pStruct, relVarName)
 %
@@ -44,18 +44,36 @@ end
 % excluding repeats that were too noisy
 
 allPreMean = [];
+allMean = [];
 
 for ii=1:length(alignStruct)
     for jj=1:length(alignStruct(ii).align.rep)
         allPreMean = [allPreMean, alignStruct(ii).align.rep(jj).stat(1)];
+        allMean = [allMean, alignStruct(ii).align.rep(jj).stat(2)];
     end
 end
 
 
-medAllPreMean = median(allPreMean);
 
-preMeanThresh = 7.5; % in mV empirically determined
+[countPreMean, countEdge] = histcounts(allPreMean, floor(length(allPreMean)/10));
+smCount = smooth(countPreMean, floor(length(countPreMean)/10));
+[maxVal, countMaxInd] = max(smCount);
+preVal = find(smCount(1:countMaxInd) < maxVal/2, 1, 'last');
+postVal = find(smCount(countMaxInd:end) < maxVal/2, 1, 'first') + countMaxInd -1;
 
+meanEst = mean(countEdge([preVal, postVal]));
+fwhmEst = diff(countEdge([preVal, postVal]));
+preMeanThresh = meanEst + 1.5*fwhmEst;
+
+ 
+% % estimating variability by trimmed mean - problem : if there a more than
+% % 5% noisy trials it is not robust
+% qMeans = quantile(allPreMean, [0.05, 0.95]); % added this step to reduce the effect of outlier on mean and SD calculation
+% trimMean = allPreMean(allPreMean > qMeans(1) & allPreMean < qMeans(2));
+% preMeanThresh = mean(trimMean) + sdFac*std(trimMean); % used sdFac=5
+
+ %estimated since it doesnt take into account the meanThresh criteria
+fprintf('estimated proportion above noise threshold - %.3g \n', sum(allPreMean > preMeanThresh)/length(allPreMean))
 
 meanThresh = 15; % in mV empirically determined
 
@@ -64,7 +82,7 @@ stimToCorrect = [];
 for ii=1:length(alignStruct)
     for jj=1:length(alignStruct(ii).align.rep)
         
-        if abs(alignStruct(ii).align.rep(jj).stat(1)-medAllPreMean) > preMeanThresh
+        if alignStruct(ii).align.rep(jj).stat(1) > preMeanThresh
             alignStruct(ii).exclude = [alignStruct(ii).exclude, jj];
             stimToCorrect = [stimToCorrect, ii];
         elseif diff(alignStruct(ii).align.rep(jj).stat) > meanThresh
@@ -75,7 +93,7 @@ for ii=1:length(alignStruct)
     end
 end
 
-stimToCorrect = unique(stimToCorrect); %since repeats in the same stim can appear multiple times
+stimToCorrect = unique(stimToCorrect);
 stimToCorrInds = [];
 
 for ii=1:length(stimToCorrect)

@@ -1,8 +1,10 @@
-function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
 
-% function alignStimMat = getAlignedStimDataByTable(pStruct, posVal)
+function alignMean = getAlignedStimDataByTableExclude(pStruct, gratingInd, posVal, relReps)
+
+% function alignStimMat = getAlignedStimDataByTableExclude(pStruct, posVal)
 %
-% This function is similar to getAlignedStimData only uses the preexisting gratingTable structure. 
+% This function is similar to getAlignedStimDataByTable only uses the excludes 
+% specified reps form the mean calculation.  
 % The original gratingTable needs to be augmented with variables that
 % describe the presentation frames of the stim. Data is aligned to given var 
 % so that time Zero is when alignVar frame was presented and arranges it
@@ -14,6 +16,7 @@ function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
 % posVal -              Value for position function that is reported in
 %                       data{2} of each stim. Should be the same for all
 %                       repeats. 
+% relReps -             repeats to be included in the calculation 
 %
 % Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
 % It should be enetered manually and given in the same units the controller uses (first
@@ -23,16 +26,18 @@ function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
 % 
 % align -               structure with the following fields:
 %
-% .rep
-%   .data -             stim data aligned so posVal timing is zero
-%   .pos -              posFunc values aligned so posVal timing is zero.
-%                       First column is converted from time into index of the data time
-%   .stat -             intended for QC. first number is preStimulus mean
-%                       and second is entire repeat mean
+% 
 % .mean -               mean across repeats. To generate a matrix, equal number of samples
 %                       are taken before posVal timing, and minimal after. 
 % .meanPos -            Position indices after they have been corrected for
 %                       the number of smaples dropped from each repeat (to generate the mean)
+%
+%
+%                   Note !!
+% this function is used only after getAlignedStimDataByTable is used and
+% therefore does not recalcultes the shifted individual reps, but only the
+% mean
+
 
 relCh = 3; % voltage channel
 datTomV = 10; % factor to multifpy data
@@ -49,14 +54,8 @@ allPos = pStruct.stim(indsSt(1).inds(1)).data{2}(:,2);
 
 assert(ismember(posVal, allPos), 'posVal is not included in position values for the specified stim')
 
-tempSt = pStruct.stim(indsSt.inds);
-numRepInd = zeros(1,length(tempSt));
-for ii=1:length(tempSt)
-    numRepInd(ii) = ~isempty(tempSt(ii).data);
-end
 
-
-numReps = find(numRepInd, 1, 'last');
+numReps = length(relReps);
 
 relPosInds = zeros(1, numReps);
 postPosLen = relPosInds;
@@ -64,7 +63,7 @@ postPosLen = relPosInds;
 
 for ii=1:numReps
    
-    tempAll = pStruct.stim(indsSt(1).inds(ii)).data;
+    tempAll = pStruct.stim(indsSt(1).inds(relReps(ii))).data;
     tempPos = double(tempAll{2});
     tempDat = tempAll{1};
     relTime = tempPos(tempPos(:,2) == posVal, 1);
@@ -80,13 +79,13 @@ for ii=1:numReps
     relPosInds(ii) = posInDatInd(posDat == posVal);
     postPosLen(ii) = length(dataCh) - relPosInds(ii);
     
-    align.rep(ii).data = [timeCh, dataCh];
-    align.rep(ii).pos = [posInDatInd, posDat];
-    
     preStimInd = find(timeCh > 0, 1, 'first');
     preStimDat = dataCh(1:preStimInd);
     
-    align.rep(ii).stat = [mean(preStimDat), mean(dataCh)];
+    % recalculted to minimize coding changes (I was lazy) 
+    align.rep(ii).data = [timeCh, dataCh];
+    align.rep(ii).pos = [posInDatInd, posDat];
+    align.rep(ii).stat = [mean(preStimDat), std(preStimDat)];
     
 end
 
@@ -114,8 +113,22 @@ end
 posInd = find(size(meanPosIndx,1) == posLen, 1, 'first');
 tempPos = align.rep(posInd).pos;
 
-align.mean = [mean(meanTime, 2), mean(meanData, 2)];
-align.median = [mean(meanTime, 2), median(meanData, 2)];
-align.meanPos = [round(median(meanPosIndx, 2)), tempPos(:,2)]; %since posValues are the same for all reps
+alignMean.mean = [mean(meanTime, 2), mean(meanData, 2)];
+alignMean.median = [mean(meanTime, 2), median(meanData, 2)];
+alignMean.meanPos = [round(median(meanPosIndx, 2)), tempPos(:,2)]; %since posValues are the same for all reps
+
+
+
+
+
+
+
 
 end
+
+
+
+
+
+
+

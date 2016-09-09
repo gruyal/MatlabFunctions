@@ -27,8 +27,8 @@ clear disFrame uValStimDur stimDur appear disappear ii
 
 
 
-%fAppearInd = 20;
-fAppearInd = 12;
+fAppearInd = 20;
+% fAppearInd = 12;
 stepDurUnit = 0.02;
 simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 
