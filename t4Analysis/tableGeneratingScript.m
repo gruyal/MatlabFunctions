@@ -77,12 +77,62 @@ clear barInds *Dis *App numStim spDiff relTab fAppearInd stepDurUnit simFrame ii
 
 
 
+%% Minimal motion non speed corrected (dark)
+
+
+
+fAppearInd = 20;
+% fAppearInd = 12;
+stepDurUnit = 0.02;
+simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
+
+
+relTab = protocolStruct.gratingTable;
+spDiff = abs(relTab.FBPos - relTab.SBPos);
+frameFac = relTab.timeDiff/ stepDurUnit;
+
+numStim = height(relTab);
+barInds= zeros(numStim,4); % for appearance and disappearance of both bars
+
+for ii=1:numStim
+    
+    if frameFac(ii) == 0
+        fApp = 0;
+        fDis = simFrame;
+        sApp = 0;
+        sDis = simFrame;
+    else
+        
+        
+        fApp = 0;
+        sApp = 2 * frameFac(ii);
+        
+        fDis = fApp + frameFac(ii);
+        
+        sDis = sApp + frameFac(ii);
+        
+    end
+    
+    
+   
+    barInds(ii, :)  = [fApp, fDis, sApp, sDis] + fAppearInd;
+end
+    
+protocolStruct.gratingTable.fAppear = barInds(:,1);
+protocolStruct.gratingTable.fDisappear = barInds(:,2);
+protocolStruct.gratingTable.sAppear = barInds(:,3);
+protocolStruct.gratingTable.sDisappear = barInds(:,4);
+
+clear barInds *Dis *App numStim spDiff relTab fAppearInd stepDurUnit simFrame ii frameFac
+
+
 
 %%  minMot inhibition
 
 
 
 fAppearInd = 20;
+% fAppearInd = 12;
 stepDurUnit = 0.02;
 simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 

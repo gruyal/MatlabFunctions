@@ -30,7 +30,7 @@ for ii=1:datSiz(1)
             
             relAmp = fitStruct(ii,jj).amp(kk);
             relPhase = fitStruct(ii,jj).phase(kk);
-            relMean = fitStruct(ii,jj).mean(kk);
+            relMean = fitStruct(ii,jj).dcComp(kk);
             relInds = fitStruct(ii,jj).inds(kk, :);
             
             xxFit = relDat(relInds(1):relInds(2), 1);

@@ -657,7 +657,7 @@ cn=20;
 t4Cells(cn).dir = chopNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160527_11-37/protocolStruct20160527_11-37.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
-t4Cells(cn).singleBar(1).correct = 1;
+t4Cells(cn).singleBar(1).pos = -6:6;
 % second was done half way through to make sure there was no movement
 t4Cells(cn).singleBar(2).fileName = '/SingleBarDiagCorrProtocol20160527_12-24/protocolStruct20160527_12-24.mat';
 t4Cells(cn).singleBar(2).pos = -4:4; 

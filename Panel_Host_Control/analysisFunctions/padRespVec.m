@@ -21,17 +21,30 @@ function paddeVec = padRespVec(respSt, newZeroInd, newTotLength)
 % paddedVec -       just the resp itself < respSt.subData.baseSub(:,2)>
 %                   after it had been modified/shifted
 
-                    
-oldZeroInd = respSt.subData.zeroInd;
+
+% changed the location of zeroInd in some function, so included a
+% modification to look for it at 2 separate layers
+
+if isfield(respSt, 'subData')
+    oldZeroInd = respSt.subData.zeroInd; 
+    relSt = respSt.subData;
+elseif isfield(respSt, 'zeroInd')
+    oldZeroInd = respSt.zeroInd;
+    relSt = respSt;
+else
+    error('could not locate original zeroInd')
+end
+
+
 preDiff = newZeroInd - oldZeroInd;
                 
 if preDiff > 0
-    paddeVec = padarray(respSt.subData.baseSub(:,2), [preDiff, 0], 0, 'pre');
+    paddeVec = padarray(relSt.baseSub(:,2), [preDiff, 0], 0, 'pre');
 else
-    paddeVec = respSt.subData.baseSub(abs(preDiff)+1:end,2);
+    paddeVec = relSt.baseSub(abs(preDiff)+1:end,2);
 end
 
-oldLen = respSt.subData.length + preDiff;
+oldLen = relSt.length + preDiff;
 
 postDiff = newTotLength - oldLen;
 

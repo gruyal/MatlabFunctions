@@ -121,7 +121,7 @@ for tt=1:length(uTD)
             
             for kk=1:length(uFBS)
             
-                if ii==jj || isempty(minMotSt(jj, ii, tt, kk).data)
+                if relFBInd==jj || isempty(minMotSt(jj, ii, tt, kk).data)
                     
                     continue
                     

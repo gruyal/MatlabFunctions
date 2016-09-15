@@ -57,13 +57,20 @@ assert(ismember(posVal, allPos), 'posVal is not included in position values for 
 
 numReps = length(relReps);
 
-relPosInds = zeros(1, numReps);
-postPosLen = relPosInds;
+% relPosInds = zeros(1, numReps);
+% postPosLen = relPosInds;
 
-
+count = 0;
 for ii=1:numReps
    
     tempAll = pStruct.stim(indsSt(1).inds(relReps(ii))).data;
+    
+    if isempty(tempAll)
+        fprintf('getAlignedStimDataByTableExclude: No data for stim index %d repeat %d \n', gratingInd, ii)
+        continue
+    end
+    
+    count=count+1;
     tempPos = double(tempAll{2});
     tempDat = tempAll{1};
     relTime = tempPos(tempPos(:,2) == posVal, 1);
@@ -76,27 +83,27 @@ for ii=1:numReps
         posInDatInd(jj) = find(timeCh - posTimeCh(jj) > 0, 1, 'first');
     end
     
-    relPosInds(ii) = posInDatInd(posDat == posVal);
-    postPosLen(ii) = length(dataCh) - relPosInds(ii);
+    relPosInds(count) = posInDatInd(posDat == posVal);
+    postPosLen(count) = length(dataCh) - relPosInds(count);
     
     preStimInd = find(timeCh > 0, 1, 'first');
     preStimDat = dataCh(1:preStimInd);
     
     % recalculted to minimize coding changes (I was lazy) 
-    align.rep(ii).data = [timeCh, dataCh];
-    align.rep(ii).pos = [posInDatInd, posDat];
-    align.rep(ii).stat = [mean(preStimDat), std(preStimDat)];
+    align.rep(count).data = [timeCh, dataCh];
+    align.rep(count).pos = [posInDatInd, posDat];
+    align.rep(count).stat = [mean(preStimDat), std(preStimDat)];
     
 end
 
 minPre = min(relPosInds);
 minPost = min(postPosLen);
 
-meanData = zeros(minPre+minPost, numReps);
+meanData = zeros(minPre+minPost, length(align.rep));
 meanTime = meanData;
-meanPosIndx  = nan(size(tempPos, 1), numReps);
+meanPosIndx  = nan(size(tempPos, 1), length(align.rep));
 
-for ii=1:numReps
+for ii=1:length(align.rep)
     
     posLen(ii) = size(align.rep(ii).pos, 1);
     startIdx = relPosInds(ii)-minPre+1;
