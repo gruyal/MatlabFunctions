@@ -1,6 +1,6 @@
-function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
+function align = getAlignedStimDataByTable(pStruct, gratingInd, posVals)
 
-% function alignStimMat = getAlignedStimDataByTable(pStruct, posVal)
+% function alignStimMat = getAlignedStimDataByTable(pStruct, posVal, baseVal)
 %
 % This function is similar to getAlignedStimData only uses the preexisting gratingTable structure. 
 % The original gratingTable needs to be augmented with variables that
@@ -13,7 +13,11 @@ function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
 % gratingInd -          index variable in the gratingTable to be aligned
 % posVal -              Value for position function that is reported in
 %                       data{2} of each stim. Should be the same for all
-%                       repeats. 
+%                       repeats. If posVal is of length 2 the second
+%                       position is used to calculate baseline (baseline
+%                       would be defined from first sample to appropriate
+%                       sample of second val) - used for protocols like
+%                       movingbar where to aligned var in not appear
 %
 % Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
 % It should be enetered manually and given in the same units the controller uses (first
@@ -34,6 +38,19 @@ function align = getAlignedStimDataByTable(pStruct, gratingInd, posVal)
 % .meanPos -            Position indices after they have been corrected for
 %                       the number of smaples dropped from each repeat (to generate the mean)
 
+
+
+if length(posVals) == 1
+    posVal = posVals;
+    baseVal = posVal;
+elseif length(posVals) == 2
+    posVal = posVals(1);
+    baseVal = posVals(2);
+else
+    error('posVals can be at most of length 2')
+end
+
+
 relCh = 3; % voltage channel
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
@@ -43,11 +60,11 @@ timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz)
 indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
 
 assert(length(indsSt) == 1, 'values given in getStimIndsInput are not specific to one stimulus')
-assert(length(posVal) == 1, 'posVal should be a single number')
 
 allPos = pStruct.stim(indsSt(1).inds(1)).data{2}(:,2);
 
 assert(ismember(posVal, allPos), 'posVal is not included in position values for the specified stim')
+assert(ismember(baseVal, allPos), 'baseVal is not included in position values for the specified stim')
 
 tempSt = pStruct.stim(indsSt.inds);
 numRepInd = zeros(1,length(tempSt));
@@ -74,7 +91,9 @@ for ii=1:numReps
     tempPos = double(tempAll{2});
     tempDat = tempAll{1};
     relTime = tempPos(tempPos(:,2) == posVal, 1);
+    relBaseTime = tempPos(tempPos(:,2) == baseVal, 1);
     timeCh = (tempDat(:, 1) - relTime) * timeToms;
+    relBTConv = (relBaseTime - relTime) * timeToms;
     dataCh = tempDat(:, relCh) * datTomV;
     posTimeCh = (tempPos(:, 1) - relTime) * timeToms;
     posDat = tempPos(:,2);
@@ -88,8 +107,9 @@ for ii=1:numReps
     
     align.rep(count).data = [timeCh, dataCh];
     align.rep(count).pos = [posInDatInd, posDat];
+    align.rep(count).baseTime = relBTConv;
     
-    preStimInd = find(timeCh > 0, 1, 'first');
+    preStimInd = find(timeCh > relBTConv, 1, 'first');
     preStimDat = dataCh(1:preStimInd);
     
     align.rep(count).stat = [mean(preStimDat), mean(dataCh)];
@@ -127,5 +147,6 @@ tempPos = align.rep(posInd).pos;
 align.mean = [mean(meanTime, 2), mean(meanData, 2)];
 align.median = [mean(meanTime, 2), median(meanData, 2)];
 align.meanPos = [round(median(meanPosIndx, 2)), tempPos(:,2)]; %since posValues are the same for all reps
+align.meanBaseTime = mean([align.rep.baseTime]);
 
 end

@@ -1,17 +1,14 @@
 
 
-load ./T4recordingSummaryAndAnalysis/singleBarProtocols/allSingleBarTable.mat
-allNames = unique(allSingleBarTable.cellName, 'rows');
-
-chopNames = allNames(:, 2:end-6);
+load ./T4recordingSummaryAndAnalysis/relDirNames.mat
 
 
-%%
+
 
 clear t4Cells
 
 cn=1;
-t4Cells(cn).dir = chopNames(cn,:); % associated single bar protocol
+t4Cells(cn).dir = relDirNames(cn,:); % associated single bar protocol
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160418_15-15/protocolStruct20160418_15-15.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160418_16-08/protocolStruct20160418_16-08.mat';
@@ -39,7 +36,7 @@ t4Cells(cn).notes = {'flicker data is not very useful'; ...
 
 
 cn=2;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160420_12-10/protocolStruct20160420_12-10.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160420_12-18/protocolStruct20160420_12-18.mat';
@@ -56,7 +53,7 @@ t4Cells(cn).notes = {'minMot(1): noisy but still see resp in 20ms'; ...
                      'minMot(2): too noisy to be useful'};
 
 cn=3;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160420_16-48/protocolStruct20160420_16-48.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160420_17-19/protocolStruct20160420_17-19.mat';
@@ -88,15 +85,17 @@ t4Cells(cn).grating(2).fileName = '/GratingProtocol20160420_18-03/protocolStruct
 t4Cells(cn).grating(2).revPhi = 1;
 t4Cells(cn).figGrd(1).fileName = '/MovingFigGrdDiagCorrProtocol20160420_17-28/protocolStruct20160420_17-28.mat';
 t4Cells(cn).figGrd(2).fileName = '/MovingFigGrdDiagCorrProtocol20160420_17-56/protocolStruct20160420_17-56.mat';
-t4Cells(cn).notes = {'SingleBar(1): strongest resp are about 4mV, the cell might be useless'; ...
+t4Cells(cn).notes = {'receptive field touching arena edge - some stim might be missing pixels'; ...
+                     'SingleBar(1): strongest resp are about 4mV, the cell might be useless'; ...
                      'flicker not pretty, but linFit still reasonable'; 'weak responses'; ...
                      'minMot(1): responses are weak and some repeats are fairly noisy - dont know if useful'; ...
-                     'minMot(2); not sure useful'};
+                     'minMot(2); not sure useful'; ...
+                     'movBar(3): dark bar that seem to have the opposite preferance to bright'};
 
 
 
 cn=4;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160422_16-26/protocolStruct20160422_16-26.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160422_17-32/protocolStruct20160422_17-32.mat';
@@ -131,7 +130,7 @@ t4Cells(cn).notes = {'flicker not useful'; ...
                      'minMot(3): supression near diagonal only in sim (40ms)'};
 
 cn=5;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160426_12-48/protocolStruct20160426_12-48.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -170,7 +169,7 @@ t4Cells(cn).notes = {'flicker not useful'; ...
 
 
 cn=6;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160427_12-00/protocolStruct20160427_12-00.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).ort = 0;
@@ -214,7 +213,7 @@ t4Cells(cn).notes = {'flicker: nice linComp in several positions'; 'clear respon
                      'have dark singlebar protocol for this cell but it shows no resp'};
 
 cn=7;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160428_16-28/protocolStruct20160428_16-28.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160428_16-54/protocolStruct20160428_16-54.mat';
@@ -254,7 +253,7 @@ t4Cells(cn).notes = {'flicker: perfect linComp in all positions'; 'missing flick
                      'minMot(3): speed corr, 40ms for sim and speed, nice supression in sim but not 40'};
 
 cn=8;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160502_17-40/protocolStruct20160502_17-40.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160502_18-05/protocolStruct20160502_18-05.mat';
@@ -285,7 +284,7 @@ t4Cells(cn).notes = {'flicker: clear resp in 40ms, but some good fits'; ...
 
 
 cn=9;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160504_17-24/protocolStruct20160504_17-24.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).singleBar(1).ort = 3; 
@@ -313,6 +312,7 @@ t4Cells(cn).movBar(1).fileName = '/MovingBarDiagCorrProtocol20160504_17-44/proto
 t4Cells(cn).movBar(1).stepDur = [0.04, 0.08];
 t4Cells(cn).movBar(2).fileName = '/MovingBarDiagCorrProtocol20160504_17-55/protocolStruct20160504_17-55.mat';
 t4Cells(cn).movBar(2).stepDur = [0.02, 0.16];
+t4Cells(cn).movBar(3).fileName = '/protocolStruct_combMovBar1And2.mat';
 t4Cells(cn).notes = {'flicker: good fits at slower flickers'; ...
                      'pos 3,4 on leading side show no phase lock and weak resp in 40ms'; ...
                      'their respopnses in singlebar are obvious'; ...
@@ -324,7 +324,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; ...
 
 
 cn=10;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160505_14-28/protocolStruct20160505_14-28.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160505_14-58/protocolStruct20160505_14-58.mat';
@@ -349,7 +349,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'had to remove las
 
 
 cn=11;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160510_11-41/protocolStruct20160510_11-41.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -391,7 +391,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'beautiful example
 
 
 cn=12;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160516_11-53/protocolStruct20160516_11-53.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160516_12-56/protocolStruct20160516_12-56.mat';
@@ -432,7 +432,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers for both protocols';
 
 
 cn=13;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160517_11-45/protocolStruct20160517_11-45.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160517_11-54/protocolStruct20160517_11-54.mat';
@@ -447,6 +447,10 @@ t4Cells(cn).minMot(3).fileName = '/MinMotDiagCorrProtocol20160517_12-06/protocol
 t4Cells(cn).minMot(3).fbPos = [-4:-2, 0]; % some noise at the end of 2 so repeated 
 t4Cells(cn).minMot(3).sbPos = 0;
 t4Cells(cn).minMot(3).barV = 'BB';
+t4Cells(cn).minMot(4).fileName = '/protocolStruct_combMinMot2And3.mat';
+t4Cells(cn).minMot(4).fbPos = [-4:-2, 0]; % some noise at the end of 2 so repeated 
+t4Cells(cn).minMot(4).sbPos = 0;
+t4Cells(cn).minMot(4).barV = 'BB';
 t4Cells(cn).minMov(1).fileName = '/MinMovingBarDiagCorrProtocol20160517_12-11/protocolStruct20160517_12-11.mat';
 t4Cells(cn).minMov(1).pos = [-5,0; -5,5; -3,0; -1,1; 0,3; 0,5]; 
 t4Cells(cn).movBar(1).fileName = '/MovingBarDiagCorrProtocol20160517_11-34/protocolStruct20160517_11-34.mat';
@@ -454,12 +458,12 @@ t4Cells(cn).movEdge(1).fileName = '/MovingEdgeDiagCorrProtocol20160517_11-40/pro
 t4Cells(cn).notes = {'minMot(1): spikes can be seen in some of the repeats'; ...
                      'solid responses even at 20ms; great data'; ...
                      'minMot(2)&(3): 2 was noisy so was repeated, they are combined into one protocolStruct in the parent directory'; ...
-                     'FileName: protocolStruct_combMinMot2And3.mat, results are very clean'};
+                     'FileName: protocolStruct_combMinMot2And3.mat (now minMot4), results are very clean'};
 
 
 
 cn=14;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160518_17-57/protocolStruct20160518_17-57.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160518_18-23/protocolStruct20160518_18-23.mat';
@@ -501,7 +505,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers though some useful a
 
 
 cn=15;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160520_15-47/protocolStruct20160520_15-47.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -546,7 +550,7 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'pos -3,-4 show we
                      'minMot(4): dark bar shuts off the response completely when presented close in space and sim in time'};
 
 cn=16;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160523_12-08/protocolStruct20160523_12-08.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160523_12-34/protocolStruct20160523_12-34.mat';
@@ -583,7 +587,7 @@ t4Cells(cn).notes = {'flicker: only slowest looks good'; '80 responds, but seems
                      'minMot(3): dark bar completely abolishes resp close to bright (on both side) in sim'};
 
 cn=17;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160525_11-31/protocolStruct20160525_11-31.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160525_12-02/protocolStruct20160525_12-02.mat';
@@ -615,7 +619,7 @@ t4Cells(cn).notes = {'flicker: nice resp even in 40ms'; ...
 
 
 cn=18;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160525_16-27/protocolStruct20160525_16-27.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160525_16-35/protocolStruct20160525_16-35.mat';
@@ -628,7 +632,7 @@ t4Cells(cn).notes = {'minMot(1): nice resp even in 20ms'};
 
 
 cn=19;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160526_16-01/protocolStruct20160526_16-01.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160526_16-32/protocolStruct20160526_16-32.mat';
@@ -654,7 +658,7 @@ t4Cells(cn).notes = {'flicker: only slowest looks good and even that is weak'; .
                      'minMot(2): beatiful data'};
 
 cn=20;
-t4Cells(cn).dir = chopNames(cn,:);
+t4Cells(cn).dir = relDirNames(cn,:);
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160527_11-37/protocolStruct20160527_11-37.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).singleBar(1).correct = 1;

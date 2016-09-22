@@ -34,7 +34,9 @@ end
 
 %fh = figure('Color', [1,1,1]);
 
-thetaVec = fliplr(0:pi/4:2*pi);
+% thetaVec = fliplr(0:pi/4:2*pi);
+
+thetaVec = [0:-pi/4:-3*pi/4, pi:-pi/4:0]; 
 
 matSiz = size(radMat);
 assert(matSiz(2) == 8, 'Second dimension in radMat should be equal to 8') 
@@ -84,6 +86,8 @@ else
     axh = axes();
 end
 
+cla
+
 pH = get(axh, 'parent');
 set(pH, 'color', [1,1,1])
 
@@ -131,7 +135,7 @@ end
 
 
 maxVal = max(abs([axh.XLim, axh.YLim]));
-axis equal
+axis square
 box off
 
 axh.XLim = [-maxVal, maxVal];
@@ -141,6 +145,9 @@ axh.XAxisLocation = 'origin';
 axh.YAxisLocation = 'origin';
 
 xxTick = axh.XTick;
+axh.YTick = xxTick;
+axh.XTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
+axh.YTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
 xxTick = xxTick(xxTick > 0);
 
 hold on 

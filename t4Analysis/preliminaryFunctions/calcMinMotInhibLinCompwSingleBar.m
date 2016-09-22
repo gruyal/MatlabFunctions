@@ -200,6 +200,8 @@ end
              
 for tt=1:length(uTD)
     
+    relTimeDiff = minMotSt(1,1,tt,1).data.table.fDisappear - minMotSt(1,1,tt,1).data.table.fAppear;
+    
     for ii=1:length(usPos)
         
         for jj=1:length(ufPos)
@@ -211,7 +213,7 @@ for tt=1:length(uTD)
                     continue
                     
                 else
-                
+                %                     [tt,ii,jj,kk]
                     % instead of estimating, this actually takes the mean
                     % position for the second bar appearance and find the
                     % appropriate time to copy the linSum response to
@@ -220,8 +222,25 @@ for tt=1:length(uTD)
                     relZeroInd = relSt.subData.zeroInd;
                     
                     sApInd = relSt.subData.sbInd;
-%                     [tt,ii,jj,kk]
-                    shiftedFResp = padRespVec(relSt.subData.fb, relZeroInd, totLen);
+                    
+                    if uFBS(kk) == 0
+                        shiftedFResp = padRespVec(relSt.subData.fb, relZeroInd, totLen);
+                    elseif uFBS(kk) == 1
+                        relTable = relSt.data.table;
+                        relPos = relTable.fAppear:relTimeDiff:relTable.fDisappear-relTimeDiff;
+                        
+                        relInd = relSt.data.align.meanPos(ismember(relSt.data.align.meanPos(:,2), relPos), 1);
+                        
+                        totLen = relSt.subData.length;
+                        shiftedVecs = zeros(totLen, length(relInd));
+        
+                        for pp=1:length(relInd)
+                            shiftedVecs(:,pp) = padRespVec(relSt.subData.fb, relInd(pp), totLen);
+                        end
+                        
+                        shiftedFResp = sum(shiftedVecs, 2);
+                    end
+                    
                     shiftedSResp = padRespVec(relSt.subData.sb, sApInd, totLen);
                     
                     minMotSt(jj, ii, tt, kk).linSumSB = shiftedFResp + shiftedSResp;

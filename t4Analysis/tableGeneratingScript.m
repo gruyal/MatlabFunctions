@@ -34,7 +34,7 @@ simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 
 
 relTab = protocolStruct.gratingTable;
-spDiff = abs(relTab.FBPos - relTab.SBPos);
+span = abs(relTab.FBPos - relTab.SBPos);
 frameFac = relTab.timeDiff/ stepDurUnit;
 
 numStim = height(relTab);
@@ -49,12 +49,12 @@ for ii=1:numStim
         sDis = simFrame;
     else
         
-        if spDiff(ii) == 0
+        if span(ii) == 0
             fApp = frameFac(ii);
             sApp = fApp;
         else
             fApp = 0;    
-            sApp = spDiff(ii) * frameFac(ii);
+            sApp = span(ii) * frameFac(ii);
         end
         
         fDis = fApp + frameFac(ii);
@@ -88,7 +88,7 @@ simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 
 
 relTab = protocolStruct.gratingTable;
-spDiff = abs(relTab.FBPos - relTab.SBPos);
+span = abs(relTab.FBPos - relTab.SBPos);
 frameFac = relTab.timeDiff/ stepDurUnit;
 
 numStim = height(relTab);
@@ -138,7 +138,7 @@ simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 
 
 relTab = protocolStruct.gratingTable;
-spDiff = abs(relTab.FBPos - relTab.SBPos);
+span = abs(relTab.FBPos - relTab.SBPos);
 frameFac = relTab.timeDiff/ stepDurUnit;
 fbStat = relTab.FBStat;
 
@@ -154,12 +154,12 @@ for ii=1:numStim
         sDis = simFrame;
     else
         
-        if spDiff(ii) == 0
+        if span(ii) == 0
             fApp = frameFac(ii);
             sApp = fApp;
         else
             fApp = 0;    
-            sApp = spDiff(ii) * frameFac(ii);
+            sApp = span(ii) * frameFac(ii);
         end
         
         if fbStat(ii) == 0
@@ -194,7 +194,7 @@ stepDurUnit = 0.02;
 
 
 relTab = protocolStruct.gratingTable;
-spDiff = abs(relTab.startPos - relTab.stopPos);
+span = abs(relTab.startPos - relTab.stopPos);
 frameFac = relTab.stepDur/ stepDurUnit;
 
 numStim = height(relTab);
@@ -202,7 +202,7 @@ barInds= zeros(numStim,3); % for appearance and disappearance of both bars
 
 for ii=1:numStim
     fApp = 0;    
-    fDis = (spDiff(ii)+1) * frameFac(ii);
+    fDis = (span(ii)+1) * frameFac(ii);
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
     barInds(ii,3) = frameFac(ii);
@@ -250,6 +250,48 @@ protocolStruct.gratingTable.disappear = disInd;
 
 clear relTab numStim ii tempNumStep *Inds frameFac totTime *App stepDurUnit disInd
 
+%% Moving bar 
+
+
+
+
+fAppearInd = 20;
+% fAppearInd = 12;
+stepDurUnit = 0.02;
+
+
+
+relTab = protocolStruct.gratingTable;
+span = relTab.span;
+ort = relTab.orient;
+frameFac = relTab.stepDur/ stepDurUnit;
+
+numStim = height(relTab);
+barInds= zeros(numStim,4); % for appearance and disappearance of both bars
+
+for ii=1:numStim
+    fApp = 0;    
+    
+    relSp = span(ii);
+    if rem(ort(ii),2) % to correct for diagonal movement
+        relSp = 2*round(relSp/sqrt(2))+1;
+    end
+    
+    cen = floor(relSp/2) * frameFac(ii); % since disappearing right before center is appearing in center
+    fDis = relSp * frameFac(ii);
+    
+    barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
+    barInds(ii,3) = frameFac(ii);
+    barInds(ii,4) = cen + fAppearInd;
+end
+    
+protocolStruct.gratingTable.appear = barInds(:,1);
+protocolStruct.gratingTable.disappear = barInds(:,2);
+protocolStruct.gratingTable.framePerStep = barInds(:,3);
+protocolStruct.gratingTable.center = barInds(:,4);
+
+
+clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd
 
 
 

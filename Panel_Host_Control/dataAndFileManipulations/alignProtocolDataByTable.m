@@ -1,4 +1,4 @@
-function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName)
+function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName, meanTreshFlag)
 
 % function alignStruct = alignProtocolDataByTable(pStruct, relVarName)
 %
@@ -9,9 +9,14 @@ function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName
 %
 % pStruct -             protocolStruct w/.stim, .data and .gratingTable in it
 % relVarName -          variable name in according to which data will be
-%                       aligned. 
+%                       aligned. If 2 are given, second name is used to
+%                       calculated baseline (see getAlignedStimDataByTable)
 %       Note!!      Name should come from gratingTable variable and that variable should have 
 %                   a relevant controller frame number (starting from 0) accrding to which data would be aligned
+% meanTreshFlag -       (optional). logical. If TRUE uses the high value
+%                       for response treshold. if not lower. The different values are aim the
+%                       control for stimuli that are long (moving bar) versus short pulsed type
+%                       of stim (flicker or singleBar). Default 0. 
 %
 % OUTPUT
 %
@@ -19,12 +24,15 @@ function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName
 %                       getAlignedDataByTable plus the relevant table row
 
 
-sdFac = 5; % std deviation factor by which to exclude repeats (mean + SD*sdfac)
+if nargin < 3
+    meanTreshFlag = 0;
+end
+
 assert(isfield(pStruct, 'gratingTable'), 'pStruct is missing gratingTable field')
 
 stimTable = pStruct.gratingTable;
 
-assert(ismember(relVarName, stimTable.Properties.VariableNames), 'gratingTable does not contain relVarName')
+assert(all(ismember(relVarName, stimTable.Properties.VariableNames)), 'gratingTable does not contain relVarName')
 assert(ismember('index', stimTable.Properties.VariableNames), 'gratingTable does not contain index variable')
 
 alignStruct = struct;
@@ -56,8 +64,11 @@ medAllPreMean = median(allPreMean);
 
 preMeanThresh = 7.5; % in mV empirically determined
 
-
-meanThresh = 15; % in mV empirically determined
+if meanTreshFlag
+    meanThresh = 25;
+else
+    meanThresh = 15; % in mV empirically determined
+end
 
 stimToCorrect = [];
 %finds repeats to exlucde from mean calculation
@@ -101,7 +112,12 @@ for ii=1:length(stimToCorrect)
             
         otherwise
             
-            posVal = stimTable{stimToCorrect(ii), relVarName};
+            if iscell(relVarName) && length(relVarName) > 1
+                posVal = stimTable{stimToCorrect(ii), relVarName{1}};
+            else
+                posVal = stimTable{stimToCorrect(ii), relVarName};
+            end
+                
             alignMean = getAlignedStimDataByTableExclude(pStruct, stimTable{stimToCorrect(ii), 'index'}, posVal, relReps);
             alignStruct(stimToCorrect(ii)).align.mean = alignMean.mean;
             alignStruct(stimToCorrect(ii)).align.meanPos = alignMean.meanPos;
