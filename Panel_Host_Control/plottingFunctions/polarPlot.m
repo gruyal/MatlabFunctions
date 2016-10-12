@@ -5,7 +5,7 @@ function  varargout = polarPlot(radMat, plotOptionsSt)
 %
 % INPUT
 %
-% radMat -          NX8 matrix of Rdai lengths (response magnitude) ordered from
+% radMat -          NX8(max) matrix of Rdai lengths (response magnitude) ordered from
 %                   Orientation 0 to 7. Radi from orientation zero will be 
 %                   displayed on the right, and from Ori 2 on the bottom (CW manner).
 %                   This will match an outward direction of motion.   
@@ -22,6 +22,8 @@ function  varargout = polarPlot(radMat, plotOptionsSt)
 % .legend -         logical. if true adds a legend to the plot
 % .axHand -         Optional. axes handle. If given plot rendered within
 %                   the given axes
+% .thetaVec -       If radMat input is not the full 8 orientations, the
+%                   relevant theta vector could be supplied here.
 %
 % OUTPUT
 %
@@ -34,15 +36,24 @@ end
 
 %fh = figure('Color', [1,1,1]);
 
-% thetaVec = fliplr(0:pi/4:2*pi);
+% thetaVec = fliplr(0:pi/4:2*pi); Now generated in makeDefaultPolarPlotOptionsStruct
 
-thetaVec = [0:-pi/4:-3*pi/4, pi:-pi/4:0]; 
-
-matSiz = size(radMat);
-assert(matSiz(2) == 8, 'Second dimension in radMat should be equal to 8') 
+matSiz = size(radMat); 
 
 
 %% checking input plotting parameters
+
+if isfield(plotOptionsSt, 'thetaVec')
+    thetaVec = plotOptionsSt.thetaVec;
+    assert(matSiz(2) == length(thetaVec), 'radMat and thetaVec do not have the same dimension')
+    thetaVec = [thetaVec, thetaVec(1)]; % to close the circle
+else
+    thetaVec = [0:-pi/4:-3*pi/4, pi:-pi/4:0]; 
+    assert(matSiz(2) == 8, 'if no thetaVec is given, second dimension in radMat should be equal to 8')
+end
+
+
+
 if isfield(plotOptionsSt, 'color')
     inpCol = plotOptionsSt.color;
     assert(size(inpCol, 2) == 3, 'input color field should be a MX3 matrix')
@@ -146,6 +157,7 @@ axh.YAxisLocation = 'origin';
 
 xxTick = axh.XTick;
 axh.YTick = xxTick;
+axh.XTick = xxTick;
 axh.XTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
 axh.YTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
 xxTick = xxTick(xxTick > 0);

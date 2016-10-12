@@ -1,18 +1,19 @@
-function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName, meanTreshFlag)
+function [alignStruct, varargout] = alignProtocolDataByInds(pStruct, relPosVal, meanTreshFlag)
 
-% function alignStruct = alignProtocolDataByTable(pStruct, relVarName)
+% function alignStruct = alignProtocolDataByInds(pStruct, relVarName)
 %
-% This function uses getAlignedStimDataByTable to align the entire
+% This function uses getAlignedStimData (no table) to align the entire
 % protocolStruct and outputs an aligned stucutre. 
 %
 % INPUT
 %
-% pStruct -             protocolStruct w/.stim, .data and .gratingTable in it
-% relVarName -          variable name in according to which data will be
-%                       aligned. If 2 are given, second name is used to
-%                       calculated baseline (see getAlignedStimDataByTable)
-%       Note!!      Name should come from gratingTable variable and that variable should have 
-%                   a relevant controller frame number (starting from 0) accrding to which data would be aligned
+% pStruct -             protocolStruct w/.stim, .data and .relInds in it
+% relPosVal -           since there is no gratingTable here the relevant
+%                       position value needs to be entered so that it would be aligned to. 
+%                       relPosVal coulb be entered either as a single
+%                       number (for posVal to be deemed zero) or 2 element
+%                       vector (first deemed zero second to calculate
+%                       baseline
 % meanTreshFlag -       (optional). logical. If TRUE uses the high value
 %                       for response treshold. if not lower. The different values are aim the
 %                       control for stimuli that are long (moving bar) versus short pulsed type
@@ -23,27 +24,19 @@ function [alignStruct, varargout] = alignProtocolDataByTable(pStruct, relVarName
 % alignStruct -         structure with the same fields as output of
 %                       getAlignedDataByTable plus the relevant table row
 
-
 if nargin < 3
     meanTreshFlag = 0;
 end
 
-assert(isfield(pStruct, 'gratingTable'), 'pStruct is missing gratingTable field')
+allInds = unique(vertcat(pStruct.stim.relInds), 'rows');
 
-stimTable = pStruct.gratingTable;
-
-assert(all(ismember(relVarName, stimTable.Properties.VariableNames)), 'gratingTable does not contain relVarName')
-assert(ismember('index', stimTable.Properties.VariableNames), 'gratingTable does not contain index variable')
 
 alignStruct = struct;
 
-for ii=1:height(stimTable)
-    
-    relTable = stimTable(ii, :);
-    relVal = relTable{:, relVarName};
+for ii=1:size(allInds,1)
 
-    alignStruct(ii).align = getAlignedStimDataByTable(pStruct, relTable.index, relVal);
-    alignStruct(ii).table = relTable;
+    alignStruct(ii).align = getAlignedStimDataByInds(pStruct, allInds(ii, :), relPosVal);
+    alignStruct(ii).relInds = allInds(ii, :);
     alignStruct(ii).exclude = [];
     
 end
@@ -62,7 +55,7 @@ end
 
 medAllPreMean = median(allPreMean);
 
-preMeanThresh = 10; % in mV empirically determined
+preMeanThresh = 7.5; % in mV empirically determined
 
 if meanTreshFlag
     meanThresh = 25;
@@ -112,13 +105,8 @@ for ii=1:length(stimToCorrect)
             
         otherwise
             
-            if iscell(relVarName) && length(relVarName) > 1
-                posVal = stimTable{stimToCorrect(ii), relVarName{1}};
-            else
-                posVal = stimTable{stimToCorrect(ii), relVarName};
-            end
                 
-            alignMean = getAlignedStimDataByTableExclude(pStruct, stimTable{stimToCorrect(ii), 'index'}, posVal, relReps);
+            alignMean = getAlignedStimDataByIndExclude(pStruct, allInds(stimToCorrect(ii), :), relPosVal(1), relReps);
             alignStruct(stimToCorrect(ii)).align.mean = alignMean.mean;
             alignStruct(stimToCorrect(ii)).align.meanPos = alignMean.meanPos;
             

@@ -16,7 +16,7 @@ function flickerFitSt = fitCosFlickerProtocolPiecewise(pStruct)
 % Not finilized
 
 
-% peak finding parameters
+% fit parameters
 timeFac = 20; %ms to samples
 convToMs = 1000;
 smoothWin= 250; 

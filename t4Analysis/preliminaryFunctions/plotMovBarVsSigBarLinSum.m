@@ -19,14 +19,17 @@ for ii=1:datSiz(1)
     flipFlag(ii) = movBarResultSt(ii,9).result.flipSigBarFlag;
 end
 
-assert(length(unique(flipFlag))==1, 'flipSigBarFlag field does not agree between stepDur')    
+if length(unique(flipFlag)) >  1
+    warning('flipSigBarFlag field does not agree between stepDur')    
+end
 
 relOrtInd = find(relOrt);
 assert(length(relOrtInd) == 2, 'wrong number of orientations found')
 
 % this way PD and ND will be labelled the same
-if flipFlag 
+if flipFlag(end) %last is usually more robust
     relOrtInd = fliplr(relOrtInd);
+    fprintf('flipped orientation order to make ort = %d PD \n', relOrtInd(1)-1)
 end
 
 

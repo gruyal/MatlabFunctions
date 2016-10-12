@@ -1,8 +1,8 @@
 function plotTempMovBarResult(movBarSt)
 
-function plotTempMovBarResult(movBarSt)
-
-input is the output from calcCircResultsForMovingBar
+% function plotTempMovBarResult(movBarSt)
+% 
+% input is the output from calcCircResultsForMovingBar
 
 figure
 

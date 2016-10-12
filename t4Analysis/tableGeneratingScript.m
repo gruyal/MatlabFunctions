@@ -212,7 +212,7 @@ protocolStruct.gratingTable.appear = barInds(:,1);
 protocolStruct.gratingTable.disappear = barInds(:,2);
 protocolStruct.gratingTable.framePerStep = barInds(:,3);
 
-clear barInds *Dis *App numStim spDiff relTab ii frameFac 
+clear barInds *Dis *App numStim spDiff relTab ii frameFac fAppearInd stepDurUnit
 
 %% Flickerbar 
 
@@ -253,8 +253,6 @@ clear relTab numStim ii tempNumStep *Inds frameFac totTime *App stepDurUnit disI
 %% Moving bar 
 
 
-
-
 fAppearInd = 20;
 % fAppearInd = 12;
 stepDurUnit = 0.02;
@@ -264,6 +262,7 @@ stepDurUnit = 0.02;
 relTab = protocolStruct.gratingTable;
 span = relTab.span;
 ort = relTab.orient;
+wid = relTab.width;
 frameFac = relTab.stepDur/ stepDurUnit;
 
 numStim = height(relTab);
@@ -278,7 +277,7 @@ for ii=1:numStim
     end
     
     cen = floor(relSp/2) * frameFac(ii); % since disappearing right before center is appearing in center
-    fDis = relSp * frameFac(ii);
+    fDis = relSp * frameFac(ii) + (wid(ii)-1) * frameFac(ii);
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
     barInds(ii,3) = frameFac(ii);
@@ -291,7 +290,7 @@ protocolStruct.gratingTable.framePerStep = barInds(:,3);
 protocolStruct.gratingTable.center = barInds(:,4);
 
 
-clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd
+clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid
 
 
 

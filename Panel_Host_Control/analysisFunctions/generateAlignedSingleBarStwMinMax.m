@@ -33,6 +33,7 @@ function singleBarSt = generateAlignedSingleBarStwMinMax(pStruct)
 %                       quantile max/minQ)
 %       .max/minTime -  time at which value is reached (since it is a
 %                       quantile and not really max)
+%       .maxInd -       index in which max was found (for FWHM calculation)
 %       .pre/postRespTime - used when fitting exp
 
 
@@ -44,6 +45,7 @@ maxQ = 0.999;
 minQ = 0.001;
 smWin = 1000; % smoothing window (to estimate beginning and end of rise/decay phases
 respTimeMin = 20; %in ms. if response if found to start before this time it overwrite it 
+sampToMsFac = 20; %since data was collcted @ 20KHz
 
 % checking inputs
 relTab = pStruct.gratingTable;
@@ -124,6 +126,18 @@ for ii=1:length(uPos)
             singleBarSt(ii,jj).resp.maxVal = maxResp;
             tempInd = find(relDat.baseSub(relInd:relIndEnd, 2) > maxResp, 1, 'first') + relInd - 1; 
             singleBarSt(ii,jj).resp.maxTime = relDat.baseSub(tempInd, 1);
+            singleBarSt(ii,jj).resp.maxInd = tempInd;  
+            preMaxInd = find(relDat.baseSub(1:tempInd,2) < maxResp/2, 1, 'last');
+            postMaxInd = find(relDat.baseSub(tempInd:end,2) < maxResp/2, 1, 'first') +tempInd -1;
+            
+            if isempty(postMaxInd)
+                warning('could not detect response decay in pos %d duration %d', ...
+                        uPos(ii), uDur(jj))
+            else
+                singleBarSt(ii,jj).resp.FWHM = (postMaxInd - preMaxInd)/sampToMsFac;
+                singleBarSt(ii,jj).resp.FWHMInds = [preMaxInd, postMaxInd]; 
+            end
+            
             noMax = 0;
         else
             singleBarSt(ii,jj).resp.maxVal = 0;
@@ -215,7 +229,7 @@ for ii=1:length(uPos)
     
 end
 
-
+singleBarSt = addNormMaxAndMinToSingleBarAligned(singleBarSt);
 
 end
 

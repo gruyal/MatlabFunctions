@@ -1,4 +1,4 @@
-function allResultSt = applyFunctionOnT4dataset(t4CellStruct, relProtName, funcHand)
+function allResultSt = applyFunctionOnT4dataset(t4CellStruct, relProtName, funcHand, inputOpt)
 
 % function applyFunctionOnT4dataset(t4CellStruct, relProtName, funcHand)
 %
@@ -15,6 +15,19 @@ function allResultSt = applyFunctionOnT4dataset(t4CellStruct, relProtName, funcH
 %
 % funcHand -                    function handle to be applied on relevant
 %                               protocol
+% inputOpt -                    optional. structure with fields that modify
+%                               the function application. optional fields are:
+%   relProtInds -               To be use If the function is not to be
+%                               applied on all the protocols in a cell.
+%                               This cell array should be the same length
+%                               as t4CellStruct and for each t4cell have
+%                               the index for the relevant protocol to
+%                               apply the function on (can be more than
+%                               one). If not given applied on all protocols
+%                               in that field
+%   secondFHInput -             secondary input to the function being
+%                               applied
+% 
 %
 % OUTPUT
 % allResultSt -                 Depends on the applied function. but
@@ -24,6 +37,27 @@ function allResultSt = applyFunctionOnT4dataset(t4CellStruct, relProtName, funcH
 % recordings
 
 clear protocolStruct
+
+relProtFlag = 0;
+secFHFlag = 0;
+if nargin == 4
+    usedInputOptFlag = 0;
+    if isfield(inputOpt, 'relPortInds')
+        relProtInds = inputOpt.relProtInds;
+        assert(length(t4CellStruct) == length(relProtInds), 'relProtInds is not the same length as t4CellStruct')
+        relProtFlag = 1;
+        usedInputOptFlag = usedInputOptFlag+1;
+    end
+    
+    if isfield(inputOpt, 'secondFHInput')
+        secFHInp = inputOpt.secondFHInput;
+        usedInputOptFlag = usedInputOptFlag+1;
+        secFHFlag = 1;
+    end
+    
+    fprintf('used %d fields from inputOpt \n', usedInputOptFlag)
+    
+end
 
 allFields = fieldnames(t4CellStruct);
 
@@ -42,13 +76,23 @@ for ii=1:numCells
         
         numProts = length(relField);
         
-        if isfield(relField, 'correct') % in case I already labeled the relevant protocol
-            for jj=1:numProts
-                relProt(jj) =  ~isempty(relField(jj).correct);
-                relProt = find(relProt);
+        if relProtFlag
+            if iscell(relProtInds{ii})
+                tempInds = [relProtInds{ii}{:}];
+            else
+                tempInds = relProtInds{ii};
             end
+            assert(max(tempInds) <= numProts, 'protInds for cell %d are out of range', ii)
+            relProt =  tempInds;
         else
-            relProt = 1:numProts;
+            if isfield(relField, 'correct') % in case I already labeled the relevant protocol
+                for jj=1:numProts
+                    relProt(jj) =  ~isempty(relField(jj).correct);
+                    relProt = find(relProt);
+                end
+            else
+                relProt = 1:numProts;
+            end
         end
         
         tempResCell = cell(1, length(relProt));
@@ -57,7 +101,11 @@ for ii=1:numCells
             
             load(fullfile(pwd, relDir, relField(relProt(jj)).fileName))
             
-            tempRes = feval(funcHand, protocolStruct);
+            if secFHFlag
+                tempRes = feval(funcHand, protocolStruct, secFHInp);
+            else
+                tempRes = feval(funcHand, protocolStruct);
+            end
             
             tempResCell{jj} = tempRes;
         end
