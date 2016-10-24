@@ -1,4 +1,4 @@
-function minMovSt = calcMinMovingBarBasedOnSingleBar(MinMovStruct, sigBarSt)
+function [minMovSt, varargout] = calcMinMovingBarBasedOnSingleBar(MinMovStruct, sigBarSt)
 
 % function calcMinMovingBarBasedOnSingleBar(pStruct, sigBarAlignSt)
 %
@@ -11,7 +11,31 @@ function minMovSt = calcMinMovingBarBasedOnSingleBar(MinMovStruct, sigBarSt)
 % sigBarSt -             protocol strcture from singleBar protocol. 
 %
 % OUTPUT
-% TBD
+%
+% minMovSt -            structure with the following fields for each
+%                       movement (pairInd X stepDur X direction)
+% .normParameters -     normalized positions in which movement occured
+%                       position (1,1,1) also has PD and maxExtPos os
+%                       parameters
+% .data/subData -       original data and baseline subtracted data (with
+%                       more auxiliry fields
+%
+% .linSum/recLinSum/enhLinSum/altRecLinSum - 
+%                       linear sum of the relevant positions from single
+%                       bar protocol. 
+%                       recLin is rectified (zeros all
+%                       negative baseline subtracted values)
+%                       enhLin magnified negative values (X2) 
+%                       altRecLin is rectified and width corrected - takes
+%                       the maximal response and scales it to the value in
+%                       that position (but uses the shape)
+% .stat -               structure with linear comparison calculations
+%   .table -            maxVal, maxTime, riseTime, maxInd and riseInd for
+%                       all the five conditions (data, linear sum and linear sum modifications)
+%   .xCorr -            cross correlation of modifications with data
+%   .DS -               DSI and LI for data and linear sums
+%
+% alignSBST -           (optional) single bar output from generateAlignedSingleBarStwMinMax
 
 preStimBaseWin = [-250, -50]; % ms before stim to use for baseline calculation
 
@@ -199,10 +223,14 @@ for ii=1:length(uPair)
     for jj=1:length(uDur)
         for kk=1:length(uDir)
             
-            minMovSt(ii,jj,kk).data.align = [];
+            minMovSt(ii,jj,kk).data.align.rep = [];
             
         end
     end
+end
+
+if nargout > 1
+    varargout{1} = alignSBST; 
 end
 
 

@@ -22,7 +22,7 @@ end
 
 axh = zeros(datSiz(1), datSiz(2), 4);
 fh = zeros(1, datSiz(1));
-posCell = generatePositionCell(0.05, 0.975, 0.025, 0.975, 0.02, 0.02, [4, datSiz(2)]);
+posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.02, [4, datSiz(2)]);
 
 pCol = cbrewer('qual', 'Paired', 4);
 
@@ -35,7 +35,8 @@ for ii=1:datSiz(1)
     endP = minMovLinSumStruct(ii,1,1).normParameters.stopPos;
     PI = minMovLinSumStruct(ii,1,1).data.table.pairInd;
 
-    fh(ii) = figure('name', ['pairInd: ', num2str(PI), ' from ', num2str(stP), ' to ', num2str(endP)], 'numbertitle', 'off');
+    fh(ii) = figure('name', ['pairInd: ', num2str(PI), ' from ', num2str(stP), ' to ', num2str(endP)], ...
+                    'numbertitle', 'off', 'units', 'normalized', 'position', [0.35, 0.3, 0.45, 0.55]);
     
     for jj=1:datSiz(2)
         
@@ -85,6 +86,11 @@ for ii=1:datSiz(1)
             plot(minMovLinSumStruct(ii,jj,pdInd(1)).linSum(:,1), minMovLinSumStruct(ii,jj,pdInd(1)).linSum(:,2), ...
                  'linewidth', 3, 'color', pCol(1,:))
             line([xMin, xMax], [0,0],'linestyle', '--', 'linewidth', 1, 'color', [1,1,1]*0.8)
+            
+            if jj==1
+                title(['pairInd: ', num2str(PI), ' from ', num2str(stP), ' to ', num2str(endP)], 'fontsize', 14)
+            end
+            
         end
          
         axh(ii,jj,3) = axes('position', posCell{3, jj}); % comparing 2 dir to linSum

@@ -14,7 +14,7 @@ screenposition = get(fh,'Position');
 set(fh,...
     'PaperPosition',[0 0 screenposition(3:4)],...
     'PaperSize',[screenposition(3:4)]);
-print(fh, fileName, '-dpdf', '-painters') 
+print(fh, fileName, '-dpdf', '-painters', '-r0') 
 
 
 end

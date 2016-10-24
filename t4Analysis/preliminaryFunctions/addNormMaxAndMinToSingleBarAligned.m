@@ -3,7 +3,7 @@ function sigBarSt = addNormMaxAndMinToSingleBarAligned(alignedSingleBarSt)
 % function sigBarSt = addNormMAxAndMinToSingleBarAligned(alignedSingleBarSt)
 %
 % This function takes the finished output from generateAlignedSingleBarStwMinMax
-% and adds normMax and normMin to it. For all the spped seperately and for
+% and adds normMax and normMin to it. For all the speed seperately and for
 % the total cell. It is used internally in
 % generateAlignedSingleBarStwMinMax after the alignement and max
 % calculation has been done
@@ -15,7 +15,7 @@ function sigBarSt = addNormMaxAndMinToSingleBarAligned(alignedSingleBarSt)
 %                           as its input
 % OUTPUT
 %
-% sigBarSt -                to the regualr fields htat describe each
+% sigBarSt -                to the regualr fields that describe each
 %                           position, duration combination, this function adds a numPos+1 numDur+1
 %                           subStructure that incluedes the following fields:
 %   max/min:                extracted max/min from all pos dur combintations 
@@ -24,6 +24,8 @@ function sigBarSt = addNormMaxAndMinToSingleBarAligned(alignedSingleBarSt)
 %   maxExt/inhPosInd:       position in which max excitation/inhibition was measured (normalized per speed and summed for designated speeds)
 %   maxExt/InhPosVal:       the value of that positon relative to the
 %                           center of the stimulus
+%   FWHM -                  full width half maximun at each position (if a
+%                           response is found)
 
 
 

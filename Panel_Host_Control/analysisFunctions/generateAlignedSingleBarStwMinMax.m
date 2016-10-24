@@ -35,6 +35,10 @@ function singleBarSt = generateAlignedSingleBarStwMinMax(pStruct)
 %                       quantile and not really max)
 %       .maxInd -       index in which max was found (for FWHM calculation)
 %       .pre/postRespTime - used when fitting exp
+% 
+% Note!! 
+% additional summary data is added by addNormMaxAndMinToSingleBarAligned to
+% the (end+1, end+1) position in the structure
 
 
 
