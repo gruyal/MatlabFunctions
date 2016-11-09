@@ -10,7 +10,7 @@ assert(datSiz(2)-1 == 8, 'this function is designed for 8 orientations') % since
 
 pCol = cbrewer('qual', 'Paired', 2*datSiz(1));
 
-figure
+clf
 
 posCell = generatePositionCell(0.05, 0.975, 0.4, 0.975, 0.02, 0.02, [datSiz(1), 1]);
 
@@ -90,13 +90,22 @@ for ii=1:length(xxTick)
     line(sin(cirDat) * xxTick(ii), cos(cirDat) * xxTick(ii), 'color', cirCol)
 end
 
+vecCrd = nan(datSiz(1), 2);
+
 % normalized vector magnitude
 for ii=1:datSiz(1)
     relR = movBarSt(ii,9).result.normVecatMaxVM;
-    relT = movBarSt(ii,9).result.thetacatMaxVM;
+    relT = movBarSt(ii,9).result.thetaatMaxVM;
     plot([0, relR * cos(relT)], [0, relR * sin(relT)], '-o', 'color', pCol(2*ii, :), 'markerfacecolor', pCol(2*ii, :), ...
-         'markeredgecolor', 'k', 'markersize', 8)
+         'markeredgecolor', 'k', 'markersize', 10)
+    vecCrd(ii,1) = relR * cos(relT);
+    vecCrd(ii,2) = relR * sin(relT);
 end
+
+allThetaSum = mean(vecCrd); 
+plot([0,allThetaSum(1)], [0,allThetaSum(2)], '-*', 'markerfacecolor', 'k', 'color', 'k')
+
+
 
 hold off
 set(axh(end), 'xticklabel', arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0))

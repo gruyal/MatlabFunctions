@@ -42,7 +42,7 @@ relProtFlag = 0;
 secFHFlag = 0;
 if nargin == 4
     usedInputOptFlag = 0;
-    if isfield(inputOpt, 'relPortInds')
+    if isfield(inputOpt, 'relProtInds')
         relProtInds = inputOpt.relProtInds;
         assert(length(t4CellStruct) == length(relProtInds), 'relProtInds is not the same length as t4CellStruct')
         relProtFlag = 1;

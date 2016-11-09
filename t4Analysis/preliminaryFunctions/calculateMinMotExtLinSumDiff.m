@@ -13,7 +13,19 @@ function minMotLinSt = calculateMinMotExtLinSumDiff(pStruct)
 %                   f/sDisappear). These can be added using the tableGeneratingScript
 %
 % OUTPUT
-% TBD
+% minMotLinSt -     Uses the output structure from calcMinMotExtLinComp
+%                   (which has the sum of linear responses, and adds the following fields
+% .linDiff -        a strucure computed for each bar that contain the following fields (appear only in positions where a comparison can be made - e.g. no diagonal)
+%   .totDiff -      difference between baseline subtarcted data and linear
+%                   sum (appears only for first bar)
+%   .inds -         indices upon which the calculations for each bar were
+%                   made
+%   .diff -         totDiff values between the relevant indices.
+%   .maxResp -      index and values for max data response between the
+%                   above indices
+%   .maxLinResp -   Same but for linear sum of the resposne
+%   .linInd -       linearity index: (maxResp - maxLinResp)/ maxLinResp
+
 
 
 fudgeTime = 45; %in ms , used as time between appearance of bar and actual resp; a bit bigger than beginning of resp, but intended to catch peak
@@ -34,7 +46,7 @@ for ii=1:datSiz(1)
     
     for jj=1:datSiz(2)
         
-        if ii~=jj
+%         if ii~=jj
         
             for kk=1:datSiz(3)
                 
@@ -42,47 +54,61 @@ for ii=1:datSiz(1)
                     
                     % relTime = minMotLinSt(ii,jj,kk).subData.baseSub(:,1);
                     relDat = minMotLinSt(ii,jj,kk).subData.baseSub(:,2);
-                    relSum = minMotLinSt(ii,jj,kk).linSum(:,2);
-                    relDiff = relDat - relSum;
-                
+                    
+                    
                     % getting bar appearance indices to calculate difference
                     % just there
-                
                     bFrames = minMotLinSt(ii,jj,kk).data.table{1,{'fAppear';'fDisappear';'sAppear';'sDisappear'}};
                     fbTimeInd = ismember(minMotLinSt(ii,jj,kk).data.align.meanPos(:,2), bFrames([1,2]));
                     fbSamp = minMotLinSt(ii,jj,kk).data.align.meanPos(fbTimeInd,1);
                     sbTimeInd = ismember(minMotLinSt(ii,jj,kk).data.align.meanPos(:,2), bFrames([3,4]));
                     sbSamp = minMotLinSt(ii,jj,kk).data.align.meanPos(sbTimeInd,1);
-                     
+                    
                     fbInds = [fbSamp(1) + fudgeSamp, fbSamp(2) + fudgeSamp];  
                     sbInds = [sbSamp(1) + fudgeSamp, sbSamp(2) + fudgeSamp]; 
-                
-                    minMotLinSt(ii,jj,kk).linDiff(1).totDiff = relDiff;
+                    
                     minMotLinSt(ii,jj,kk).linDiff(1).inds = fbInds;
                     minMotLinSt(ii,jj,kk).linDiff(2).inds = sbInds;
-                
-                    fbDiff = relDiff(fbInds(1):fbInds(2));
-                    sbDiff = relDiff(sbInds(1):sbInds(2));
                     
                     [fbMaxResp, fbMaxInd] = findQandInd(relDat, fbInds(1), fbInds(2), relQ);
                     [sbMaxResp, sbMaxInd] = findQandInd(relDat, sbInds(1), sbInds(2), relQ);
-                    [fbMaxLinResp, fbMaxLinInd] = findQandInd(relSum, fbInds(1), fbInds(2), relQ);
-                    [sbMaxLinResp, sbMaxLinInd] = findQandInd(relSum, sbInds(1), sbInds(2), relQ);
-                    
-                    minMotLinSt(ii,jj,kk).linDiff(1).diff = fbDiff;
-                    minMotLinSt(ii,jj,kk).linDiff(2).diff = sbDiff;
                     
                     minMotLinSt(ii,jj,kk).linDiff(1).maxResp = [fbMaxInd, fbMaxResp];
                     minMotLinSt(ii,jj,kk).linDiff(2).maxResp = [sbMaxInd, sbMaxResp];
                     
-                    minMotLinSt(ii,jj,kk).linDiff(1).maxLinResp = [fbMaxLinInd, fbMaxLinResp];
-                    minMotLinSt(ii,jj,kk).linDiff(2).maxLinResp = [sbMaxLinInd, sbMaxLinResp];
+                    if ii ~= jj
+                        
+                        relSum = minMotLinSt(ii,jj,kk).linSum(:,2);
+                        relDiff = relDat - relSum;
+                        minMotLinSt(ii,jj,kk).linDiff(1).totDiff = relDiff;
+                        
+                        fbDiff = relDiff(fbInds(1):fbInds(2));
+                        sbDiff = relDiff(sbInds(1):sbInds(2));
+                        
+                        
+                        [fbMaxLinResp, fbMaxLinInd] = findQandInd(relSum, fbInds(1), fbInds(2), relQ);
+                        [sbMaxLinResp, sbMaxLinInd] = findQandInd(relSum, sbInds(1), sbInds(2), relQ);
+                        
+                        minMotLinSt(ii,jj,kk).linDiff(1).diff = fbDiff;
+                        minMotLinSt(ii,jj,kk).linDiff(2).diff = sbDiff;
+                        
+                        minMotLinSt(ii,jj,kk).linDiff(1).maxLinResp = [fbMaxLinInd, fbMaxLinResp];
+                        minMotLinSt(ii,jj,kk).linDiff(2).maxLinResp = [sbMaxLinInd, sbMaxLinResp];
+                
+                        minMotLinSt(ii,jj,kk).linDiff(1).linInd = (fbMaxResp - fbMaxLinResp)/fbMaxLinResp;
+                        minMotLinSt(ii,jj,kk).linDiff(2).linInd = (sbMaxResp - sbMaxLinResp)/sbMaxLinResp;
+                
+                        minMotLinSt(ii,jj,kk).linDiff(1).corr = corr(relDat(fbInds(1):fbInds(2)), relSum(fbInds(1):fbInds(2)));
+                        minMotLinSt(ii,jj,kk).linDiff(2).corr = corr(relDat(sbInds(1):sbInds(2)), relSum(sbInds(1):sbInds(2)));
+                        
+                        
+                    end
                     
                 end
                 
             end
             
-        end
+        
         
     end
     

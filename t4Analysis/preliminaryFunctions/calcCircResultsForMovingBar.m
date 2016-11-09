@@ -140,7 +140,7 @@ for ii=1:numRelVar
     maxVMTime = movBarSt(ii, numOrt+1).time(maxVMInd);
     
     movBarSt(ii, numOrt+1).result.normVecatMaxVM = movBarSt(ii, numOrt+1).normVecMag(maxVMInd);
-    movBarSt(ii, numOrt+1).result.thetacatMaxVM = movBarSt(ii, numOrt+1).theta(maxVMInd);
+    movBarSt(ii, numOrt+1).result.thetaatMaxVM = movBarSt(ii, numOrt+1).theta(maxVMInd);
     movBarSt(ii, numOrt+1).result.flipSigBarFlag = movBarSt(ii, numOrt+1).theta(maxVMInd) > 0;
     movBarSt(ii, numOrt+1).result.maxVMTime = maxVMTime;
     

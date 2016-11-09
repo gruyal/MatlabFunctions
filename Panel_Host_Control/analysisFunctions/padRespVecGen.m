@@ -1,4 +1,4 @@
-function paddeVec = padRespVecGen(respSt, newZeroInd, newTotLength)
+function paddedVec = padRespVecGen(respSt, newZeroInd, newTotLength, extFlag)
 
 % function paddeVec = padRespVecGen(respSt, newZeroInd, newTotLength)
 %
@@ -18,6 +18,8 @@ function paddeVec = padRespVecGen(respSt, newZeroInd, newTotLength)
 % newZeroInd -      integer. the index to which the old zero will be
 %                   aligned to (either by prepadding zeros or clipping)
 % newTotLen -       integer. new total length 
+% extFlag -         logical (optional) if TRUE uses extrapolateShiftedVec
+%                   (default is TRUE)
 %
 % OUTPUT
 % 
@@ -25,6 +27,11 @@ function paddeVec = padRespVecGen(respSt, newZeroInd, newTotLength)
 %                   after it had been modified/shifted
 
 
+if nargin < 4
+    extFlag = 1;
+end
+
+padV = nan; % can also use zero
 
 oldZeroInd = respSt.zeroInd;
 relSt = respSt.data;
@@ -34,9 +41,9 @@ relSt = respSt.data;
 preDiff = newZeroInd - oldZeroInd;
                 
 if preDiff > 0
-    paddeVec = padarray(relSt, [preDiff, 0], 0, 'pre');
+    paddedVec = padarray(relSt, [preDiff, 0], padV, 'pre');
 else
-    paddeVec = relSt(abs(preDiff)+1:end);
+    paddedVec = relSt(abs(preDiff)+1:end);
 end
 
 oldLen = length(relSt) + preDiff;
@@ -44,12 +51,14 @@ oldLen = length(relSt) + preDiff;
 postDiff = newTotLength - oldLen;
 
 if postDiff > 0
-    paddeVec = padarray(paddeVec, [postDiff, 0], 0, 'post');
+    paddedVec = padarray(paddedVec, [postDiff, 0], padV, 'post');
 else
-    paddeVec = paddeVec(1:end-abs(postDiff));
+    paddedVec = paddedVec(1:end-abs(postDiff));
 end
 
-
+if extFlag
+    paddedVec = extrapolateShiftedVec(paddedVec);
+end
 
 
 end

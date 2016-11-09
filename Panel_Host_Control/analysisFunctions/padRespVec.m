@@ -1,4 +1,4 @@
-function paddeVec = padRespVec(respSt, newZeroInd, newTotLength)
+function paddedVec = padRespVec(respSt, newZeroInd, newTotLength)
 
 % function paddeVec = padRespVec(respSt, newZeroInd, newTotLength)
 %
@@ -39,9 +39,9 @@ end
 preDiff = newZeroInd - oldZeroInd;
                 
 if preDiff > 0
-    paddeVec = padarray(relSt.baseSub(:,2), [preDiff, 0], 0, 'pre');
+    paddedVec = padarray(relSt.baseSub(:,2), [preDiff, 0], 0, 'pre');
 else
-    paddeVec = relSt.baseSub(abs(preDiff)+1:end,2);
+    paddedVec = relSt.baseSub(abs(preDiff)+1:end,2);
 end
 
 oldLen = relSt.length + preDiff;
@@ -49,12 +49,12 @@ oldLen = relSt.length + preDiff;
 postDiff = newTotLength - oldLen;
 
 if postDiff > 0
-    paddeVec = padarray(paddeVec, [postDiff, 0], 0, 'post');
+    paddedVec = padarray(paddedVec, [postDiff, 0], 0, 'post');
 else
-    paddeVec = paddeVec(1:end-abs(postDiff));
+    paddedVec = paddedVec(1:end-abs(postDiff));
 end
 
-
+paddedVec = extrapolateShiftedVec(paddedVec);
 
 
 end
