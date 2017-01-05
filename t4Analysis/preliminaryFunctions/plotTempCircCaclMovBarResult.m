@@ -6,7 +6,7 @@ pCol = cbrewer('qual', 'Paired', 8);
 
 maxInds = zeros(1,relSiz);
 
-figure
+% figure
 
 subplot(3,1,2)
 hold on 

@@ -24,6 +24,8 @@ function  varargout = polarPlot(radMat, plotOptionsSt)
 %                   the given axes
 % .thetaVec -       If radMat input is not the full 8 orientations, the
 %                   relevant theta vector could be supplied here.
+% .maxRange -       single value. If given will determine the plot x/ylim
+%                   [ -maxRange, +maxRange]
 %
 % OUTPUT
 %
@@ -34,9 +36,6 @@ if nargin < 2
     plotOptionsSt = makeDefaultPolarPlotOptionsStruct;
 end
 
-%fh = figure('Color', [1,1,1]);
-
-% thetaVec = fliplr(0:pi/4:2*pi); Now generated in makeDefaultPolarPlotOptionsStruct
 
 matSiz = size(radMat); 
 
@@ -97,6 +96,14 @@ else
     axh = axes();
 end
 
+if isfield(plotOptionsSt, 'maxRange')
+    maxVal = plotOptionsSt.maxRange;
+    noMaxValFlag = 0;
+else
+    noMaxValFlag = 1;
+end
+
+
 cla
 
 pH = get(axh, 'parent');
@@ -121,8 +128,8 @@ end
 meanMat = (radMat(:,1:end-1) * exp(1i*thetaVec(1:end-1))')./sum(radMat(:, 1:end-1),2);
 meanMat = conj(meanMat); % since the thetas are flipped in the plot
 
-lineMSiz = 10;
-meanMSiz = 6;
+lineMSiz = 5;
+meanMSiz = 3;
 
 
 hold on 
@@ -133,21 +140,24 @@ for ii=1:matSiz(1)
     switch plotType
         case 'line'
             plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
-                 'color', relCol(ii, :), 'linewidth', 3, ...
+                 'color', relCol(ii, :), 'linewidth', 2, ...
                  'markerfacecolor', relCol(ii, :), 'Tag', 'legendTag');
         case 'mean'
             plot(axh, [0, meanMat(ii)*maxMat(ii)], '-s', 'markersize', meanMSiz, ...
                  'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
         case 'both'
             plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
-                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 3); 
+                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 2); 
             plot(axh, [0, meanMat(ii)*maxMat(ii)], '-o', 'markersize', meanMSiz, ...
                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
     end
 end
 
 
-maxVal = max(abs([axh.XLim, axh.YLim]));
+if noMaxValFlag
+    maxVal = max(abs([axh.XLim, axh.YLim]));
+end
+
 axis square
 box off
 

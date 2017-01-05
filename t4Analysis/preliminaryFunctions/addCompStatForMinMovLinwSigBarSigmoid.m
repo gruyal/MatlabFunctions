@@ -1,9 +1,10 @@
-function minMovStatSt = addCompStatForMinMovLinwSigBar(minMovSingleSt)
+function minMovStatSt = addCompStatForMinMovLinwSigBarSigmoid(minMovSingleSt)
 
-% function minMovStatSt = addCompStatForMinMovLinwSigBar(minMovSingleSt)
+% function minMovStatSt = addCompStatForMinMovLinwSigBarSigmoid(minMovSingleSt)
 %
 % This function adds measurements and stats to the linear comparison
-% between singlebar and minMov protocols
+% between singlebar and minMov protocols. It is a version of addCompStatForMinMovLinwSigBar
+% that simply does not compute rlin arlin and elin
 %
 % Function is to be used internally within calcMinMovingBarBasedOnSingleBar
 % and use its output as the input. 
@@ -25,7 +26,7 @@ for ii=1:datSiz(1)
         
         for kk=1:datSiz(3)
             
-            maxVal = zeros(5,1);
+            maxVal = zeros(3,1);
             maxInd = maxVal; maxTime = maxVal; riseTime = maxVal; riseInd = maxVal;
             
             if isempty(minMovSingleSt(ii,jj,kk).subData)
@@ -66,7 +67,7 @@ for ii=1:datSiz(1)
                 maxTime(2) = nan;
                 riseInd(2) = 2;
                 riseTime(2) = nan;
-                %maxIndL = 2;
+                
             else
                 maxVal(2) = linDat(maxIndL);
                 maxInd(2) = maxIndL;
@@ -75,65 +76,27 @@ for ii=1:datSiz(1)
                 riseTime(2) = relTime(riseInd(2));
             end
             
-            recLinDat = minMovSingleSt(ii,jj,kk).recLinSum(:,1);
-            smRecLin = smooth(recLinDat, winSiz);
-            [~, maxIndRL] = max(smRecLin);
+            wSigSumDat = minMovSingleSt(ii,jj,kk).wSigSum(:,1);
+            smSigSum = smooth(wSigSumDat, winSiz);
+            [~, maxIndWS] = max(smSigSum);
             
-            if maxIndRL < 100 % no linear resp
+            if maxIndWS < 100 % no linear resp
                 maxVal(3) = nan;
                 maxInd(3) = 2;
                 maxTime(3) = nan;
                 riseInd(3) = 2;
                 riseTime(3) = nan;
-                %maxIndL = 2;
+                
             else
-                maxVal(3) = recLinDat(maxIndRL);
-                maxInd(3) = maxIndRL;
-                maxTime(3) = relTime(maxIndRL);
-                riseInd(3) = find(recLinDat(1:maxIndRL) < recLinDat(maxIndRL)/maxPercent, 1, 'last'); % walking back from the peak
+                maxVal(3) = wSigSumDat(maxIndWS);
+                maxInd(3) = maxIndWS;
+                maxTime(3) = relTime(maxIndWS);
+                riseInd(3) = find(wSigSumDat(1:maxIndWS) < wSigSumDat(maxIndWS)/maxPercent, 1, 'last'); % walking back from the peak
                 riseTime(3) = relTime(riseInd(3));
             end
             
-            enhLinDat = minMovSingleSt(ii,jj,kk).enhLinSum(:,1);
-            smEnhLin = smooth(enhLinDat, winSiz);
-            [~, maxIndEL] = max(smEnhLin);
             
-            if maxIndEL < 100 % no linear resp
-                maxVal(4) = nan;
-                maxInd(4) = 2;
-                maxTime(4) = nan;
-                riseInd(4) = 2;
-                riseTime(4) = nan;
-                %maxIndL = 2;
-            else
-                maxVal(4) = enhLinDat(maxIndEL);
-                maxInd(4) = maxIndEL;
-                maxTime(4) = relTime(maxIndEL);
-                riseInd(4) = find(enhLinDat(1:maxIndEL) < enhLinDat(maxIndEL)/maxPercent, 1, 'last'); % walking back from the peak
-                riseTime(4) = relTime(riseInd(4));
-            end
-            
-            arLinDat = minMovSingleSt(ii,jj,kk).altRecLinSum(:,1);
-            smARLin = smooth(arLinDat, winSiz);
-            [~, maxIndAR] = max(smARLin);
-            
-            if maxIndAR < 100 % no linear resp
-                maxVal(5) = nan;
-                maxInd(5) = 2;
-                maxTime(5) = nan;
-                riseInd(5) = 2;
-                riseTime(5) = nan;
-                %maxIndL = 2;
-            else
-                maxVal(5) = arLinDat(maxIndAR);
-                maxInd(5) = maxIndAR;
-                maxTime(5) = relTime(maxIndAR);
-                riseInd(5) = find(arLinDat(1:maxIndAR) < arLinDat(maxIndAR)/maxPercent, 1, 'last'); % walking back from the peak
-                riseTime(5) = relTime(riseInd(5));
-            end
-            
-            
-            minMovStatSt(ii,jj,kk).stat.table = table(maxVal, maxTime, riseTime, maxInd, riseInd, 'rownames', {'dat'; 'lin'; 'recLin'; 'enhLin'; 'arLin'});
+            minMovStatSt(ii,jj,kk).stat.table = table(maxVal, maxTime, riseTime, maxInd, riseInd, 'rownames', {'dat'; 'lin'; 'wSig'});
             
 %% Correlation of only the rise phase - proved to be not so useful            
 %             if maxIndD+100 > length(relDat) %in responses where there is only hyperpolarization
@@ -164,7 +127,7 @@ for ii=1:datSiz(1)
 %             
              %minMovStatSt(ii,jj,kk).stat.fit = table(slope, intercept, rSq, 'rownames', {'rise'; 'decay'});
 %%          
-            linRelDat = [linDat, recLinDat, enhLinDat, arLinDat];
+            linRelDat = [linDat, wSigSumDat];
             
             maxCorr = nan(size(linRelDat, 2), 1);
             timeLag = maxCorr;
@@ -182,7 +145,7 @@ for ii=1:datSiz(1)
             
             end
             
-            minMovStatSt(ii,jj,kk).stat.xCorr = table(maxCorr, timeLag, regCorr, 'rownames', {'Lin'; 'recLin'; 'enhLin'; 'arLin'});
+            minMovStatSt(ii,jj,kk).stat.xCorr = table(maxCorr, timeLag, regCorr, 'rownames', {'Lin'; 'wSig'});
             
            
         end

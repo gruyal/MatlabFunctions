@@ -36,7 +36,7 @@ function varargout = plotStimStructByDim(pStruct, figDim, axeDim, colDim, plotPa
 
 %% verifying input correctness
 
-close all
+% close all
 
 
 assert(isfield(pStruct, 'stim'), 'pStrcut is missing stim field')
