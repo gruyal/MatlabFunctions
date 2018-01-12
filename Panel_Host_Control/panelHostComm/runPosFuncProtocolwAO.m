@@ -14,40 +14,44 @@ function protocolStructAO  = runPosFuncProtocolwAO(inpStructAO, funcHand, pStruc
 % 
 % NOTE! If not given will prompt user for input. 
 %
-% pStructAO -        protocol structure that will be fed into the function above. 
-%                        Doesn't have to have all the required fields, but the .aoVec has to be included 
-%   .aoVec -            cell array with AOvectors (-10 to 10 will be read @ 1KHz)
-%   .stimVecComb - 
-%                       matrix describing the desired stim AOvec combinations.
-%                       If not given all stim and all vec will be presented
-%                       individually, and with all the combinations. Should be given based on uniStim indexing. 
-%                       NX2 matrix with first column indexing uniStim and
-%                       second column indexing AOvec. 0 signifies no
-%                       presentation (of pattern if in first column and LED
-%                       pulse if in the second)
+% pStructAO -               protocol structure that will be fed into the function above. 
+%                           Doesn't have to have all the required fields, but the .aoVec has to be included 
+%   .aoVec -                cell array with AOvectors (-10 to 10 will be read @ 1KHz)
+%   .stimVecComb -          
+%                           matrix describing the desired stim AOvec combinations.
+%                           If not given all stim and all vec will be presented
+%                           individually, and with all the combinations. Should be given based on uniStim indexing. 
+%                           NX2 matrix with first column indexing uniStim and
+%                           second column indexing AOvec. 0 signifies no
+%                           presentation (of pattern if in first column and LED
+%                           pulse if in the second)
 %
 % OUTPUT
-% protocolStructAO -    protocol structure with all the relevant fields from
-%                       createProtocol, plus stim structure for each stimulus created which includes the following fields
-%   .inputStruct -      protocol structure that was used as the input after
-%                       it had gone throught the createProtocol function (has .stim field)
-%   .uniStim -          structure. unique stimuli from the original
-%                       protocol structure (since it is generated with the repeats - stupid,
-%                       but I am too lazy to change)
-%   .stimVecComb -      Taken form the input or generated as all the
-%                       options. Indicies for the stim are from uniStim. 
-%   .aoVec -            cell array from input
-%   .randomStimSeq -    1XN vector. The sequence by which stimuli were
-%                       presented (indicies from stimVecComb)
-%   .stim -             structure of all the presented stimuli. Contains
-%                       the following fields:
+% protocolStructAO -        protocol structure with all the relevant fields from
+%                           createProtocol, plus stim structure for each stimulus created which includes the following fields
+%   .inputStruct -          protocol structure that was used as the input after
+%                           it had gone throught the createProtocol function (has .stim field)
+%   .uniStim -              structure. unique stimuli from the original
+%                           protocol structure (since it is generated with the repeats - stupid,
+%                           but I am too lazy to change)
+%   .stimVecComb -          Taken form the input or generated as all the
+%                           options. Indicies for the stim are from uniStim. 
+%   .aoVec -                cell array from input
+%   .combGratingTable -     new table combinging gratingTable w/ aoVec
+%                           inds, changing indices to the correct stimVecComb indices and adding
+%                           stimVec comb into the matrix. Plus adding a column for aoFlag which is
+%                           1 for just pattern, 2 for just aoVec and 3 for both. 
+%   .randomStimSeq -        1XN vector. The sequence by which stimuli were
+%                           presented (indicies from stimVecComb)
+%   .stim -                 structure of all the presented stimuli. Contains
+%                           the following fields:
 %       .matCell
 %       .relInds
 %       .patVecMat
 %       .fileName
-%       .length         All the same as in runPosFuncProtocol
-%       .aoVec -        Vector that was associated with particular stim
-%       .aoVecLen -     Effective length of vector (length w/o the final stretch of zeros).
+%       .length             All the same as in runPosFuncProtocol
+%       .aoVec -            Vector that was associated with particular stim
+%       .aoVecLen -         Effective length of vector (length w/o the final stretch of zeros).
 %                       
 %       Note! the function adds empty patterns and empty aoVec for the
 %       presentation of just pattern/aoVec
@@ -74,10 +78,17 @@ end
 %% Establish panel host connection 
 [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
 
-while ~strcmpi(res(2:6), 'Panel')
-    warnh = warndlg('Panel Host is not open; Open and press OK', 'Panel Host Warning', 'modal');
-    uiwait(warnh)
-    [~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
+if ~strcmpi(res(2:6), 'Panel')
+    
+    openPH = questdlg('Press OK to open Panel Host', ...
+                        'BIAS', 'OK', 'Cancel', 'OK');
+    switch openPH
+        case 'OK'
+            !E:\Panel Host\Panel Host.exe &
+        case 'Cancel'
+            error('runPosFuncProtocolwAO aborted - Panel Host required required')      
+    end
+    
 end
 
 establishtcp = questdlg('Would you like to establish TCP connection?', ...
@@ -110,7 +121,12 @@ end
 
 assert(isfield(protocolStruct, 'stim'), 'Protocol structure is missing stim field')
 
-if protocolStruct.inputParams.freqCorrFlag 
+if isfield(protocolStruct.inputParams, 'freqCorrFlag') && protocolStruct.inputParams.freqCorrFlag
+    warning('This function does not preform frequency correction')
+    beep
+end
+
+if isfield(protocolStruct, 'freqCorrFlag') && protocolStruct.freqCorrFlag
     warning('This function does not preform frequency correction')
     beep
 end
@@ -188,8 +204,12 @@ protocolStructAO.randomStimSeq = randSeq;
 protocolStructAO.stim = protocolStructAO.uniStim(tempComb(randSeq, 1));
 for ii=1:length(randSeq)
     protocolStructAO.stim(ii).aoVec = protocolStructAO.aoVec{tempComb(randSeq(ii), 2)};
+    protocolStructAO.stim(ii).aoVecInd = tempComb(randSeq(ii), 2); 
     protocolStructAO.stim(ii).aoVecLen = aoEffLen(tempComb(randSeq(ii), 2));
     protocolStructAO.stim(ii).combInds = protocolStructAO.stimVecComb(randSeq(ii),:);
+    
+    % to conform to the regular relInds convention in runPosFunProtocol (should allow easier plotting)
+    protocolStructAO.stim(ii).combRelInds = [randSeq(ii), randSeq(ii), 1, 1]; 
 end
 
 numStim = length(protocolStructAO.stim);
@@ -197,9 +217,32 @@ numStim = length(protocolStructAO.stim);
 protocolStructAO.inputStruct = protocolStruct;
 protocolStructAO.gsLevel = protocolStruct.inputParams.gsLevel; % to be used by later functions (so they wont have to dig deep)
 
+% adds combGratingTable to the stucture
+tempTab = protocolStructAO.inputStruct.gratingTable;
+stInd = protocolStructAO.stimVecComb;
+
+emptyR = num2cell(zeros(1,width(tempTab)));
+newT = [tempTab; emptyR];
+
+allTable = [];
+for ii=1:size(stInd,1)
+    sigRowInd = newT.index == stInd(ii,1);
+    assert(sum(sigRowInd) == 1, 'more than one row matching')
+    sigRow = newT(sigRowInd, :);
+    sigRow.index = ii;
+    origInd = stInd(ii,1);
+    aoVecInd = stInd(ii,2);
+    aoFlag = sign(stInd(ii,1)) + 2*sign(stInd(ii,2));
+    allTable = [allTable; [sigRow, table(origInd, aoVecInd, aoFlag)]];
+end
+
+protocolStructAO.combGratingTable = allTable; 
+
+
+% making panel controller files
 statPat = make_vSDpattern_image(protocolStructAO);
 statPos = make_vSDposfunction_image(protocolStructAO);
-statVec = make_vSDAO_image(protocolStructAO);
+statVec = make_vSDAO_imagewInd(protocolStructAO);
 assert(statPat == 0, 'Problem creating pattern files')
 assert(statPos == 0, 'Problem creating function files')
 assert(statVec == 0, 'Problem creating AO files')
@@ -250,13 +293,14 @@ for ii=1:numStim
     
     patTime = size(protocolStructAO.stim(ii).patVecMat, 2)/relFreq;
     aoVTime = protocolStructAO.stim(ii).aoVecLen/1000; % since AO channels are always @ 1KHz
+    tempVecInd = protocolStructAO.stim(ii).aoVecInd; 
     
     stimTime = max(patTime, aoVTime);
     
     Panel_tcp_com('set_pattern_id', ii)
     Panel_tcp_com('set_position', [1 1]);
     Panel_tcp_com('set_posfunc_id', [1,ii]);
-    Panel_tcp_com('set_analog_output_function', [relCh-1, ii])
+    Panel_tcp_com('set_analog_output_function', [relCh-1, tempVecInd])
     
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
     plotMidFrame(mean(protocolStructAO.stim(ii).matCell,3), maxValforFig)

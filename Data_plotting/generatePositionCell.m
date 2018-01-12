@@ -11,6 +11,7 @@ function posMatrix = generatePositionCell(startX, endX, startY, endY, gapX, gapY
 % N = numplots(1) and M=numplots(2)
 
 
+
 if gapX >=0 && gapY < 0
     posMatrix = cell(numPlots, 1);
     widthX = (endX - startX - (numPlots-1)*gapX)/numPlots;

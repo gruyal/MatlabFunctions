@@ -20,6 +20,7 @@ function aoVec = makeAOVecForLED(pulseStruct)
 %                   (practically means #0 before the starting pulse)
 %   .padEndLen -    Number of zeros to add in the end of the pulse train
 %                   (since the panel controller plays the AO file in a cyclic manner)
+%   .amp -          pulse amplitude (to be used as non-TTL input)
 %
 % OUTPUT
 % 
@@ -46,11 +47,14 @@ assert(length(firP) == 1 && firP > 0, 'firstPulse should be a single positive nu
 assert(isfield(pulseStruct, 'padEndLen'), 'structure missing padEndLen field')
 padE = pulseStruct.padEndLen;
 assert(length(padE) == 1 && padE > 0, 'padEndLen should be a single positive number')
+assert(isfield(pulseStruct, 'amp'), 'structure missing padEndLen field')
+amp = pulseStruct.amp;
+assert(length(amp) == 1 && amp > 0, 'amplitude should be a single positive number')
 
 %constructing the vector
 vecSt = zeros(1, firP-1);
 
-pTrain = repmat([ones(1, pWid)*5, zeros(1, ipi)], 1, numP);
+pTrain = repmat([ones(1, pWid)*amp, zeros(1, ipi)], 1, numP);
 pTrain = pTrain(1:end-ipi); %get rid of last ipi that is not followed by pulse
 
 vecEnd = zeros(1, padE);
