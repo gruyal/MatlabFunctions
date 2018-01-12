@@ -1,5 +1,5 @@
 
-function varargout = plotStimCorrelations(pStruct)
+function varargout = plotStimCorrelations(pStruct, tableVar)
 
 % function plotStimCorrelations(pStruct)
 %
@@ -10,8 +10,20 @@ function varargout = plotStimCorrelations(pStruct)
 %
 % INPUT
 %
-% pStruct - structure after it contains the .stim fields (after it has
-% passed through the relevant createXXXProtocol function
+% pStruct -         structure after it contains the .stim fields (after it has
+%                   passed through the relevant createXXXProtocol function
+%
+% tableVar-         (optional). variable name from gratingTable that will be displayed
+%                   on the correlation image
+
+if nargin<2
+    tableVar = {}; 
+else
+    assert(isfield(pStruct, 'gratingTable'), 'structure is missing gratingTable field')
+    assert(ismember(tableVar, pStruct.gratingTable.Properties.VariableNames), 'No %s variable in gratingTable')
+    tableVals = pStruct.gratingTable{:, tableVar};
+end
+
 
 assert(isfield(pStruct, 'stim'), 'Structure is missing .stim field') 
 
@@ -55,6 +67,14 @@ else
 end
 
 title(['genFreq - ', protFreq])
+
+if ~isempty(tableVar)
+    for ii=1:length(tableVals)
+        text(tableVals(ii)+1, ii, '|', 'color', 'r', 'fontsize', 20) % added one to account for starting in 1 in matlab
+    end
+    
+end
+
 
 axh = gca;
 

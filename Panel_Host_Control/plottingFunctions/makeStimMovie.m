@@ -16,7 +16,7 @@ set(gcf,'Renderer','zbuffer');
 % Create movie.
 
 for ii = 1:nFrames 
-   plotMidFrame2(stimMat(:,:,ii), maxVal)
+   plotMidFrame2(fliplr(stimMat(:,:,ii)), maxVal)
    frame = getframe;
    writeVideo(writerObj,frame);
 end

@@ -76,7 +76,7 @@ for ff=1:numFigs
     plotSt.figPar(ff).relNumCol = length(colIndVals);
     plotSt.figPar(ff).axesNum = [length(axeColIndVals), length(axeRowIndVals)];
     plotSt.figPar(ff).axesOrd = 1:prod(plotSt.figPar(ff).axesNum);
-    plotSt.figPar(ff).cols = cbrewer('qual', 'Paired', 2*plotSt.figPar(ff).relNumCol); 
+    plotSt.figPar(ff).cols = cbrewer('qual', 'Paired', 2*max(plotSt.figPar(ff).relNumCol,3)); % so that it wont report a warning
     plotSt.figPar(ff).plotReps = 1;
 end
 

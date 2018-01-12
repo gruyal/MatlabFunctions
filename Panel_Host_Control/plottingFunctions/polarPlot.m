@@ -5,7 +5,7 @@ function  varargout = polarPlot(radMat, plotOptionsSt)
 %
 % INPUT
 %
-% radMat -          NX8 matrix of Rdai lengths (response magnitude) ordered from
+% radMat -          NX8(max) matrix of Radi lengths (response magnitude) ordered from
 %                   Orientation 0 to 7. Radi from orientation zero will be 
 %                   displayed on the right, and from Ori 2 on the bottom (CW manner).
 %                   This will match an outward direction of motion.   
@@ -22,6 +22,10 @@ function  varargout = polarPlot(radMat, plotOptionsSt)
 % .legend -         logical. if true adds a legend to the plot
 % .axHand -         Optional. axes handle. If given plot rendered within
 %                   the given axes
+% .thetaVec -       If radMat input is not the full 8 orientations, the
+%                   relevant theta vector could be supplied here.
+% .maxRange -       single value. If given will determine the plot x/ylim
+%                   [ -maxRange, +maxRange]
 %
 % OUTPUT
 %
@@ -32,15 +36,23 @@ if nargin < 2
     plotOptionsSt = makeDefaultPolarPlotOptionsStruct;
 end
 
-%fh = figure('Color', [1,1,1]);
 
-thetaVec = fliplr(0:pi/4:2*pi);
-
-matSiz = size(radMat);
-assert(matSiz(2) == 8, 'Second dimension in radMat should be equal to 8') 
+matSiz = size(radMat); 
 
 
 %% checking input plotting parameters
+
+if isfield(plotOptionsSt, 'thetaVec')
+    thetaVec = plotOptionsSt.thetaVec;
+    assert(matSiz(2) == length(thetaVec), 'radMat and thetaVec do not have the same dimension')
+    thetaVec = [thetaVec, thetaVec(1)]; % to close the circle
+else
+    thetaVec = [0:-pi/4:-3*pi/4, pi:-pi/4:0]; 
+    assert(matSiz(2) == 8, 'if no thetaVec is given, second dimension in radMat should be equal to 8')
+end
+
+
+
 if isfield(plotOptionsSt, 'color')
     inpCol = plotOptionsSt.color;
     assert(size(inpCol, 2) == 3, 'input color field should be a MX3 matrix')
@@ -84,6 +96,16 @@ else
     axh = axes();
 end
 
+if isfield(plotOptionsSt, 'maxRange')
+    maxVal = plotOptionsSt.maxRange;
+    noMaxValFlag = 0;
+else
+    noMaxValFlag = 1;
+end
+
+
+cla
+
 pH = get(axh, 'parent');
 set(pH, 'color', [1,1,1])
 
@@ -106,8 +128,8 @@ end
 meanMat = (radMat(:,1:end-1) * exp(1i*thetaVec(1:end-1))')./sum(radMat(:, 1:end-1),2);
 meanMat = conj(meanMat); % since the thetas are flipped in the plot
 
-lineMSiz = 6;
-meanMSiz = 6;
+lineMSiz = 5;
+meanMSiz = 3;
 
 
 hold on 
@@ -117,21 +139,26 @@ plot(axh, 0, 0, 'o', 'markersize', meanMSiz, 'markerfacecolor', 'k', 'markeredge
 for ii=1:matSiz(1)
     switch plotType
         case 'line'
-            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, 'color', relCol(ii, :), ...
-                'markerfacecolor', relCol(ii, :), 'Tag', 'legendTag');
+            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
+                 'color', relCol(ii, :), 'linewidth', 2, ...
+                 'markerfacecolor', relCol(ii, :), 'Tag', 'legendTag');
         case 'mean'
             plot(axh, [0, meanMat(ii)*maxMat(ii)], '-s', 'markersize', meanMSiz, ...
                  'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
         case 'both'
-            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :)); 
+            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
+                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 2); 
             plot(axh, [0, meanMat(ii)*maxMat(ii)], '-o', 'markersize', meanMSiz, ...
                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
     end
 end
 
 
-maxVal = max(abs([axh.XLim, axh.YLim]));
-axis equal
+if noMaxValFlag
+    maxVal = max(abs([axh.XLim, axh.YLim]));
+end
+
+axis square
 box off
 
 axh.XLim = [-maxVal, maxVal];
@@ -141,6 +168,10 @@ axh.XAxisLocation = 'origin';
 axh.YAxisLocation = 'origin';
 
 xxTick = axh.XTick;
+axh.YTick = xxTick;
+axh.XTick = xxTick;
+axh.XTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
+axh.YTickLabel = arrayfun(@num2str, abs(xxTick), 'uniformoutput', 0);
 xxTick = xxTick(xxTick > 0);
 
 hold on 
