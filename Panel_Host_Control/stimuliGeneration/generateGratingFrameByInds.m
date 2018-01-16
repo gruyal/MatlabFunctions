@@ -1,4 +1,4 @@
-function barFrame = generateGrstingFrameByInds(barStruct)
+function grtFrame = generateGratingFrameByInds(grtStruct)
 
 % function barFrame = generateGratingFrameByInds(barStruct)
 %
@@ -26,16 +26,16 @@ function barFrame = generateGrstingFrameByInds(barStruct)
 %
 %       NOTE!!!
 %       bar width is rounded without notification. 
-%       Also it should be  to sqDim
+%       Also it is not corrected if ort is odd (45deg rotation) though
+%       sqDim is 
 %
 %       NOTE!!!
-%       as long as position - width +1 is in the square, function will
-%       generate an image. Otherwise it will error
+%       phase cannot be bigger than 2*wid
 %       
 %       NOTE!!!
 %       diagonal orientations have more positions then their corresponding
 %       non-diagonal orientations. e.g. sqDim 9 will give 9 positions with
-%       ori 0 but 11 with ori 1
+%       ori 0 but 13 with ori 1
 %
 % OUTPUT 
 % barFrame -     a matSizeXmatSize matrix to be used with the relevant masks
@@ -43,16 +43,16 @@ function barFrame = generateGrstingFrameByInds(barStruct)
 % general parameters
 
 
-if isfield(barStruct, 'gsLevel')
-    gsLevel = barStruct(1).gsLevel;
+if isfield(grtStruct, 'gsLevel')
+    gsLevel = grtStruct(1).gsLevel;
     assert(ismember(gsLevel, 1:4), 'gsLEvel should be an integer between 1-4')
 else
     gsLevel = 3;
 end
 
 
-if isfield(barStruct, 'matSize')
-    matSiz = barStruct(1).matSize;
+if isfield(grtStruct, 'matSize')
+    matSiz = grtStruct(1).matSize;
     assert(matSiz/2 > floor(matSiz/2), 'matSize should be an odd number')
 else
     matSiz = 225;
@@ -60,8 +60,8 @@ end
 
 midPoint = ceil(matSiz/2);
 
-if isfield(barStruct, 'bkgdVal')
-    bkgdVal = barStruct(1).bkgdVal;
+if isfield(grtStruct, 'bkgdVal')
+    bkgdVal = grtStruct(1).bkgdVal;
     assert(bkgdVal >= 0 && bkgdVal <= 1, 'bkgdVal should be between 0 ND 1')
 else
     bkgdVal = 0.49;
@@ -69,22 +69,22 @@ end
 
 maxV = 2^gsLevel - 1;
 bkgdV = round(maxV*bkgdVal);
-barFrame = ones(matSiz) * bkgdV;
+grtFrame = ones(matSiz) * bkgdV;
 
 % bar parameters
 
-sqDim = round(barStruct.sqDim);
+sqDim = round(grtStruct.sqDim);
 assert(rem(sqDim, 2) > 0, 'sqDim must be an odd number')
 
-barO = barStruct.ori;
-assert(ismember(barO, 0:7), 'bar orientation should be between 0-3')
+grtO = grtStruct.ori;
+assert(ismember(grtO, 0:7), 'bar orientation should be between 0-3')
 
-if rem(barO,2) % for 45 degrees rotations
+if rem(grtO,2) % for 45 degrees rotations
     sqDim = 2*round(sqDim/sqrt(2))+1; % was -1
     %barH = 2*round(barH/sqrt(2))-1;
 end
 
-barW = round(barStruct.wid);
+barW = round(grtStruct.wid);
 assert(length(barW) == 1, 'width should be a single number')
 assert(barW >= 1, 'width cannot be smaller than 1')
 
@@ -92,21 +92,21 @@ assert(barW >= 1, 'width cannot be smaller than 1')
 % assert(barH >= 1, 'length cannot be smaller than 1')
 % assert(rem(barH, 2) > 0, 'length must be an odd number')
 
-grtPhase = round(barStruct.phase);
+grtPhase = round(grtStruct.phase);
 assert(length(grtPhase) == 1, 'phase should be a single number')
 assert(ismember(grtPhase, 1:2*barW) , 'phase should not exceed 2*wid')
 
 assert( barW < sqDim, 'sqDim should be bigger than width')
 
-fBarV = round(barStruct.fVal * maxV);
+fBarV = round(grtStruct.fVal * maxV);
 assert(fBarV >= 0 && fBarV <= maxV, 'fVal should be between 0 and 1')
 
-sBarV = round(barStruct.sVal * maxV);
+sBarV = round(grtStruct.sVal * maxV);
 assert(sBarV >= 0 && sBarV <= maxV, 'fVal should be between 0 and 1')
 
 assert(fBarV ~= sBarV, 'fVal and sVal should have different values')
 
-sqInds = divideTotSquareToCols(sqDim, barO, matSiz);
+sqInds = divideTotSquareToCols(sqDim, grtO, matSiz);
 cenInds = cellfun(@(x) x + repmat([midPoint, midPoint], size(x,1), 1), sqInds, 'uniformoutput', 0);
 
 convPos = grtPhase+ceil(sqDim/2)-1; % makes first bar right edge in the center when phase is 1
@@ -137,15 +137,15 @@ cenCropInds = cellfun(@(x) x(1+cropLenVal:end-cropLenVal, :), cenInds, 'uniformo
 allRelSubsF = vertcat(cenCropInds{relPosF});
 allRelSubsS = vertcat(cenCropInds{relPosS});
 
-allIndsF = sub2ind(size(barFrame), allRelSubsF(:,1), allRelSubsF(:,2));
-allIndsS = sub2ind(size(barFrame), allRelSubsS(:,1), allRelSubsS(:,2));
+allIndsF = sub2ind(size(grtFrame), allRelSubsF(:,1), allRelSubsF(:,2));
+allIndsS = sub2ind(size(grtFrame), allRelSubsS(:,1), allRelSubsS(:,2));
 
-barFrame(allIndsF) = fBarV;
-barFrame(allIndsS) = sBarV;
+grtFrame(allIndsF) = fBarV;
+grtFrame(allIndsS) = sBarV;
 
 % This allows createProtocol to distinguish between 0 create from mask and rotation
 % and 0 from the pattern. Should be dealt with in createProtocol
-barFrame(barFrame == 0) = 0.001;
+grtFrame(grtFrame == 0) = 0.001;
 
 
 end

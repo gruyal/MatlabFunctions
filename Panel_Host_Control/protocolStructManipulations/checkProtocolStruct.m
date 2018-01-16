@@ -21,7 +21,8 @@ baseImSize = [225, 225]; % size for original stimSeq and masks
 
 
     % FIELD 1 - gratingStruct
-gratingNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'};    
+gratingNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'}; 
+gratingIndsNames = {'fVal'; 'sVal'; 'ori'; 'phase'; 'sqDim'; 'gsLevel'};
 gratingConcenNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'; 'type'};    
 grating4BarNames = {'width1'; 'width2'; 'width3'; 'width4';'position'; 'barAtPos'; ...
                 'vals1St'; 'vals1End'; 'vals2St'; 'vals2End'; 'vals3St'; 'vals3End'; 'vals4St'; 'vals4End'};  
@@ -34,7 +35,11 @@ switch funcStr(9:11)
     case 'Con'
         relnames = gratingConcenNames;
     case 'Gra'
-        relnames = gratingNames;
+        if strcmp(funcStr(end-3:end), 'Inds')
+            relnames = gratingIndsNames;
+        else
+            relnames = gratingNames;
+        end
     case '4Ba'
         relnames = grating4BarNames;
     case 'Ran'

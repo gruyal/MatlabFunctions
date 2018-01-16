@@ -1,18 +1,22 @@
-function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
+function protocolStruct = createMovingGratingDiagCorrDiffPhaseProtocol(inputStruct)
 
-% function createSingleBarDiagCorrProtocol(inputStruct)
+% function createMovingGratingDiagCorrDiffPhaseProtocol(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
-% generate single bar that will in every position in the window . It has certain assumptions and therefore requires
+% generate a stationary grating that will appear in all the phases. It has certain assumptions and therefore requires
 % less inputs. 
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
+%
+% This function generates a moving grating in both directions of the given orientation 
+% with phase and anti-phase as first positions (4 stim for each grating
+% parameters)
 % 
 % ASSUMPTIONS
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations. 
 % Masks positions - [1,1] Grid is assumed.
-% gratingFuncHand - Function uses the generateBarFrameByInd to make sure
+% gratingFuncHand - Function uses the generateGrstingFrameByInds to make sure
 %                   even in diagonal the coverage is complete
 % maskType -        Due to the way the bar is generated, mask type is
 %                   always rectangle. 
@@ -26,30 +30,22 @@ function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
 % Only 2 obligatory fields are width and gridCenter
 %
 % inputStruct -     Should have the following fields
-% .stimBar -        1XN vector (0-1) normalized luminance value. { 1 }
-% .barHeight -      1XM vector. height of bar in pixels.
-% .barSpan -        single number. span along which bar will be presented (in
+% .f/sBarV -        1XN Vector. normalized luminance value for first and second bars in the grating. { 1 / 0  }
+%                   Note!! if length for fBar and sBar should be identical
+% .winHeight -      1XM vector. height of grating window in pixels.
+% .winWidth -       single number. width of grating window (in
 %                   pixels). Will be converted into the width of the
 %                   rectangular mask
-% .barWidth -       1XW (in pixels). Width of the presented bar
-%                   { 1 }
-% .posOverlap -     single logical (0 or 1). Used if barWidth is greater than 1. 
-%                   If true presents all positions, if false presents only non-overlaping positions. { 1 } 
-%                   Applied to all widths in the protoocl; 
+% .grtHWidth -      1XW vector(in pixels). Width of a bar in the grating,
+%                   effectively half the cycle { 4 }. 
+%                   For grating with width w, there are 2*w phases
 % .orientation -    single number (0-3). Since the bar isn't moving 4-7 are redundant. 
 %                   Orientations for the gratings. Applied on all inputs.
-% .stimDur -        duration in seconds in which the bar will appear 
+% .numCyc -         Single number. Number of cycles to present (a cycle is
+%                   all the phases of a grating) { 3 } 
+% .stepDur -        1XN vector. Duration in seconds for each phase of the grating 
 % .gsLevel -        gray scale level ( 3 ) 
 % .gratingMidVal -  value of the rest of the window (0.49 - bkgd level)
-% .maskPositions -  User can specify these directly as an NX2 matrix, or
-%                   use the other parameters to generate them (if this is
-%                   given other parameters are disregarded
-% .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
-%                   coordinates). { [2,2] }
-% .gridPosOverlap - Overlap between different positions on mask position grid. 
-%                   Units s are normalized maskSizes so that 0 means no overlap and no gap, 
-%                   1 means complete overlap (meaningless), and -1 means a gap of one mask
-%                   between positions. { 0 }
 % .gridCenter -     1X2 vector specifying the center of the grid in X and Y
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
@@ -76,20 +72,21 @@ function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
 
 baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
-gratingFuncHand = @generateBarFrameByInds;
+gratingFuncHand = @generateGratingFrameByInds;
 
-default.stimBar = 0;
-default.barHeight = 9;
-default.barSpan = 9;
-default.barWidth = 1;
-default.posOverlap = 1;
+default.fBarV = 1;
+default.sBarV = 0;
+default.winHeight = 9;
+default.winWidth = 9;
+default.grtHWidth = 4;
+default.numCyc = 3; 
 default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
 default.orientations = 'UI';
-default.stimDur = [0.02, 0.04, 0.08, 0.16]; 
+default.stepDur = [0.02, 0.04, 0.08, 0.16]; 
 default.intFrames = nan;
-default.repeats = 5;
+default.repeats = 3;
 default.randomize = 1;
 
 fixed.gridSize = [1,1];
@@ -124,14 +121,14 @@ end
 
   %% MASK (masks created with grating)
  
- maskHW = floor(default.barSpan/2); % rectangle mask input is half width
- assert(isvector(maskHW), 'barSpan should be a single number')
- assert(length(maskHW) == 1, 'barSpan should be a single number')
- assert(maskHW > 1, 'barSpan should be a positive number')
+ maskHW = floor(default.winWidth/2); % rectangle mask input is half width
+ assert(isvector(maskHW), 'winWidth should be a single number')
+ assert(length(maskHW) == 1, 'winWidth should be a single number')
+ assert(maskHW > 1, 'winWidth should be a positive number')
  
- maskHH = floor(default.barHeight/2);
- assert(isvector(maskHH), 'barHeight should be a 1XM vector');
- assert(min(maskHH) > 0, 'barHeight minimum should be a positive number')
+ maskHH = floor(default.winHeight/2);
+ assert(isvector(maskHH), 'winHeight should be a 1XM vector');
+ assert(min(maskHH) > 0, 'winHeight minimum should be a positive number')
  
  maskT = fixed.maskType;
 
@@ -140,15 +137,15 @@ end
 % needed to determine number of frames to appear
 protocolStruct.generalFrequency = fixed.generalFrequency;
 
-stimLen = sort(default.stimDur); 
-assert(isvector(stimLen), 'stimDur should be one a vector')
+stepLen = sort(default.stepDur); 
+assert(isvector(stepLen), 'stepDur should be one a vector')
 
-stimFrames = unique(round(stimLen * fixed.generalFrequency));
-if length(stimFrames) < length(stimLen)
-    warning('%d step durations omitted since were the same after rounding', length(stimLen) - length(stimFrames))
+stepFrames = unique(round(stepLen * fixed.generalFrequency));
+if length(stepFrames) < length(stepLen)
+    warning('%d step durations omitted since were the same after rounding', length(stepLen) - length(stepFrames))
 end
  
-assert(min(stimFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
+assert(min(stepFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
 
 gsLev = default.gsLevel;
 assert(ismember(gsLev, 1:4), 'gsLevel should be an integer between 1 and 4')
@@ -157,89 +154,93 @@ bkgdVal = default.gratingMidVal;
 assert(length(bkgdVal) == 1, 'gratingMidVal should be a single number');
 assert(bkgdVal >=0 && bkgdVal <= 1, 'gratingMidVal should be between 0 and 1')
 
-stimB = default.stimBar;
-assert(min(stimB) >=0 && max(stimB) <= 1, 'stimBar should be between 0 and 1');
-assert(isvector(stimB), 'stimBar should be a 1XN vector')
+stimFB = default.fBarV;
+assert(isvector(stimFB), 'fBarV should be a 1XN vector')
+assert(min(stimFB) >=0 && max(stimFB) <= 1, 'fBarV should be between 0 and 1');
 
-barW = default.barWidth;
+stimSB = default.sBarV;
+assert(isvector(stimSB), 'sBarV should be a 1XN vector')
+assert(min(stimSB) >=0 && max(stimSB) <= 1, 'sBarV should be between 0 and 1');
+
+assert(length(stimSB) == length(stimFB), 'fBarV and sBarV should have the same length')
+
+
+numCyc = default.numCyc;
+assert(length(numCyc) == 1 , 'numCyc should be a single number')
+assert(numCyc == round(numCyc), 'numCyc should be integer');
+assert(numCyc >= 1, 'numCyc should be positive number');
+
+barW = default.grtHWidth;
 assert(isvector(barW), 'barWidth should be a vector');
 assert(all(bsxfun(@eq, barW, round(barW))), 'barWidth should use only integers');
 
-posOv = default.posOverlap; 
-assert(length(posOv) == 1, 'posOverlap should be a single logical');
-assert(ismember(posOv, [0,1]), 'posOverlap should be 0 or 1');
-
 relRegR = maskHW;
 relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
-relRegPos = -relRegR:relRegR;
-relDiagPos = -relDiagR:relDiagR;
 
-posCell = {relRegPos, relDiagPos};
 radVec = [relRegR, relDiagR];
 
 ortPosInd = rem(newOrt,2) +1;
-preRelPos = posCell{ortPosInd};
+relRad = radVec(ortPosInd);
 
-relPos = cell(1,length(barW));
-
-% changed relPos claculation due to width
-for ww=1:length(barW)
-    if posOv == 1
-        relPos{ww} = preRelPos(1)+barW(ww)-1:preRelPos(end);
-    elseif posOv == 0
-        relPos{ww} = preRelPos(1)+barW(ww)-1:barW(ww):preRelPos(end); % takes width into account
-    end
-end
-
-
-% maxPos = max(cellfun(@max, relPos));
-
-preRelRad = radVec(ortPosInd);
-
-maxSqDim = 2*maskHW+1 + 2*floor(max(barW)/2);
+sqDim = 2*maskHW+1;
 
 count = 0;
 gratingArray = [];
     
-for vv=1:length(stimB)
-        
+
+for ss=1:length(stimFB) 
+
     for hh=1:length(maskHH)
-        
-        for kk=1:length(stimFrames)
-            
+
+        for kk=1:length(stepFrames)
+
             for ww=1:length(barW)
-                
-                relRad = preRelRad + 2*floor(barW(ww)/2);
-                
-                for pp=1:length(relPos{ww})
-                
+
+                relPhase = 1:2*barW(ww);
+                phaseMat = zeros(4, length(relPhase));
+                phaseMat(1,:) = relPhase; 
+                phaseMat(2,:) = circshift(fliplr(relPhase),[0, 1]); 
+                phaseMat(3,:) = circshift(relPhase, [0, barW(ww)]);
+                phaseMat(4,:) = circshift(fliplr(relPhase), [0, barW(ww)+1]);
+
+                for dd=1:size(phaseMat,1)
+
+                    preBasePhase = phaseMat(dd, :);
+                    basePhase = reshape(repmat(preBasePhase, stepFrames(kk), 1), 1, []);
+                    corrPhase = repmat(basePhase, 1, numCyc);
+
                     count = count+1;
                     gtStruct(count).wid = barW(ww);
                     gtStruct(count).ori = newOrt;
-                    gtStruct(count).val = stimB(vv);
-%                     gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
-%                     gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
-                    gtStruct(count).sqDim = maxSqDim; % span is a bit unique in its claculation here
-                    gtStruct(count).pos = ones(1, stimFrames(kk))* relPos{ww}(pp);
+                    gtStruct(count).fVal = stimFB(ss);
+                    gtStruct(count).sVal = stimSB(ss);
+                    gtStruct(count).sqDim = sqDim; % span is a bit unique in its claculation here
+                    gtStruct(count).phase = corrPhase;
                     gtStruct(count).gsLevel = gsLev; 
                     gtStruct(count).bkgdVal = bkgdVal;
                     gtStruct(count).matSize = baseSiz;
-                
+
                     maskSt(count).type = maskT{1};
                     maskSt(count).radius = [relRad, maskHH(hh)];
                     maskSt(count).ori = newOrt;
-                    
+
+                    direc = preBasePhase(3) - preBasePhase(2); % since there is sometimes a jump between first and second
+                    stPhase = preBasePhase(1); 
+                    if stPhase > 1
+                        stPhase = -1; % to make it comparable between diff widths
+                    end
+
                     gratingArray = vertcat(gratingArray, ...
-                                           [count, stimB(vv), barW(ww), newOrt, maxSqDim, ...
-                                            stimFrames(kk)/fixed.generalFrequency, 2*maskHH(hh)+1, relPos{ww}(pp)]); 
+                                           [count, stimFB(ss), stimSB(ss), barW(ww), newOrt, sqDim, ...
+                                            direc, stPhase, stepFrames(kk)/fixed.generalFrequency, 2*maskHH(hh)+1]); 
+
                 end
             end
-        end
-    end  
+        end  
+    end
 end
 
-
- tabVarNames =  {'index','value', 'width', 'orient', 'uSpan', 'stimDur', 'height','position'};
+ tabVarNames =  {'index','FBval', 'SBVal', 'width', 'orient', 'span', 'direction', 'startPhase', 'stimDur', 'height'};
  
  protocolStruct.gratingTable = array2table(gratingArray, 'variablenames', tabVarNames);
  protocolStruct.gratingStruct = gtStruct;
