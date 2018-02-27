@@ -81,11 +81,11 @@ arenaSize = [96, 32];
 gratingFuncHand = @generateConcentricGratingFrame;
 
 default.gridCenter = 'UI';
-default.centerBar = 1;
+default.centerBar = 0;
 default.centerProportion = 1;
 default.cenBarPropInt = 1;
 default.maskRadius = 2; 
-default.stimDur = 0.14;
+default.stimDur = 0.2;
 default.contrast = 1;
 default.orientations = 0;
 default.gsLevel = 3;

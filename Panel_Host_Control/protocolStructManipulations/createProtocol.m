@@ -60,6 +60,9 @@ function protocolStruct = createProtocol(protocolStruct)
 % .intFrames -      number of empty frames (uniform GS level as background)
 %                   between stimuli (each combination of grating, mask,
 %                   orientation and position)
+% .postIntFramesFac-(optional). Factor that allow a different number of
+%                   empty frames post the stim then before the stim
+%                   (multiplies intFrames)
 % .funcHand -       Function handle that is used in interperting the
 %                   grating structure (fed into generateGratingBaseSeq)
 % .baseParameters    (OPTIONAL). if exist should have .gsLevel and
@@ -191,8 +194,15 @@ if isfield(protocolStruct, 'randomize')
     seed = floor(now);
     protocolStruct.randomize.seed = seed;
 end
-    
 
+
+% allows the addition of empty frames at the end that are different from
+% empty frames in the beginning
+if isfield(protocolStruct, 'postIntFramesFac')
+    postNum = floor(protocolStruct.postIntFramesFac * protocolStruct.intFrames);
+else
+    postNum = protocolStruct.intFrames;
+end
 
 
 % If gratingSeq, masks, and orientation are to be matched 1 to 1
@@ -248,13 +258,14 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
+        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
         % Crop the full image so that it will appear in desired position
         
         for jj=1:maxInd
             for kk=1:numMaskPos
                 relCrds = {relRangeX(kk,:); relRangeY(kk,:)};
                 addEmpty = cat(3, emptyIntFrames, rotSeqs{jj}(relCrds{1}, relCrds{2}, :)); %adds empty frames in the beginning 
-                tempStim{jj}{kk} = cat(3, addEmpty, emptyIntFrames); % adds intFrames empty in the end
+                tempStim{jj}{kk} = cat(3, addEmpty, emptyIntFramesPost); % adds intFrames empty in the end
             end
         end
      
@@ -302,6 +313,7 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
+        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
         relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
         
         if isfield(protocolStruct.randomize, 'randWithin')
@@ -327,7 +339,7 @@ switch protocolStruct.interleave
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
                 addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
-                stimWBuffer = cat(3, addEmpty, emptyIntFrames);
+                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
                 tempStimMat{jj} = stimWBuffer;
             
             end
@@ -371,6 +383,7 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
+        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
     
         for ii=1:numReps
             
@@ -383,7 +396,7 @@ switch protocolStruct.interleave
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
                 addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
-                stimWBuffer = cat(3, addEmpty, emptyIntFrames);
+                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
                 tempStimMat{jj} = stimWBuffer;
             
             end
@@ -461,6 +474,7 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrames = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), protocolStruct.intFrames) * bkgdVal;
+        emptyIntFramesPost = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), postNum) * bkgdVal;
         
         for ii=1:numReps
             
@@ -476,7 +490,7 @@ switch protocolStruct.interleave
                     concatStim(:,:,kk) = baseStim(relCrds{1}, relCrds{2},1); %should contain only stims of length 1
                 end
                 addEmpty = cat(3, emptyIntFrames, concatStim);
-                stimWBuffer = cat(3, addEmpty, emptyIntFrames);
+                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
                 tempStimMat{jj} = stimWBuffer;
             end
         
@@ -538,6 +552,7 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrames = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), protocolStruct.intFrames) * bkgdVal;
+        emptyIntFramesPost = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), postNum) * bkgdVal;
         % Crop the full image so that it will appear in desired position
         
         finSeq = cell(numSeqs, numMaskPos);
@@ -555,7 +570,7 @@ switch protocolStruct.interleave
                     concatStim(:,:,kk) = tempStim(relCrds{1}, relCrds{2});
                 end    
                 addEmpty = cat(3, emptyIntFrames, concatStim);
-                stimWBuffer = cat(3, addEmpty, emptyIntFrames);
+                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
                 finSeq{ii, jj} = stimWBuffer;
             end
         end

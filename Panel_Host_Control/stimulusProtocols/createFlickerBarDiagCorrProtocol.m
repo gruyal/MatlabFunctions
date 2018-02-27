@@ -86,9 +86,9 @@ gratingFuncHand = @generateBarFrameByInds;
 
 default.flickerDur = 0.96; 
 default.flickerPos = 'UI';
-default.flickerStart = 0;
+default.flickerStart = 1;
 default.barHeight = 9;
-default.barWid = 1;
+default.barWid = 2;
 default.barSpan = 11;
 default.gridCenter = 'UI';
 default.gsLevel = 3;

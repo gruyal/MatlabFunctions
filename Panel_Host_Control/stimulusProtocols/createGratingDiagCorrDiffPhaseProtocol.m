@@ -67,8 +67,8 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
 gratingFuncHand = @generateGratingFrameByInds;
 
-default.fBarV = 1;
-default.sBarV = 0;
+default.fBarV = [0.49, 1, 1];
+default.sBarV = [0, 0, 0.49];
 default.winHeight = 9;
 default.winWidth = 9;
 default.grtHWidth = 4;

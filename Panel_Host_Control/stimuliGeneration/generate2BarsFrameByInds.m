@@ -123,6 +123,12 @@ cenInds = cellfun(@(x) x + repmat([midPoint, midPoint], size(x,1), 1), sqInds, '
 emptyCount= 0;
 for ii=1:length(barV)
     
+    % if bar value is the same as background it is skipped (allows for
+    % overlapping positions
+    if barV(ii) == bkgdV
+        continue
+    end
+    
     convPos = barPos(ii)+ceil(sqDim/2);
     relPos = intersect(convPos-barW(ii)+1:convPos, 1:sqDim);
     

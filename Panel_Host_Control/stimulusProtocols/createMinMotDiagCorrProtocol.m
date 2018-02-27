@@ -50,6 +50,9 @@ function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
 %                       (o/w timeDiff is used as stepDur)
 % .speedCor -           logical. If TRUE corrects for speed (dt is
 %                       multiplied by dx) { 1 }
+% .distCutoff -         Single number {defualt inf }. If distance in pixels between first and second bar 
+%                       is euqal or bigger than this number, stimuli are
+%                       not generated. If inf, all stim are generated
 % .gsLevel -            gray scale level ( 3 ) 
 % .gratingMidVal -      value of the rest of the window (0.49 - bkgd level)
 % .gridCenter -         1X2 vector specifying the center of the grid in X and Y
@@ -77,18 +80,19 @@ baseSiz = 225; % size of single frame or mask
 gratingFuncHand = @generate2BarsFrameByInds;
 
 
-default.fBarWid = 1;
-default.sBarWid = 1;
-default.fBarVal = 1;
-default.sBarVal = 1;
+default.fBarWid = 2;
+default.sBarWid = 2;
+default.fBarVal = 0;
+default.sBarVal = 0;
 default.fBarPos = 'UI';
 default.sBarPos = 'UI';
 default.barsHeight = 9;
 default.span = 11;
-default.stepDur = 0.04; 
-default.timeDiff = [0, 0.02, 0.04, 0.08, 0.16];
+default.stepDur = 0.16; 
+default.timeDiff = [0, 0.04, 0.16];
 default.firstBarStat = 0;
 default.speedCor = 1;
+default.distCutoff = inf; 
 default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
@@ -179,6 +183,9 @@ assert(ismember(fbStat, 0:2), 'firstBarStat should be a number between 0 and 2')
 spCorr = default.speedCor; 
 assert(ismember(spCorr, [0,1]), 'speedCor should be logical')
 
+distCO = default.distCutoff; 
+assert(distCO > 1, 'distCutoff should be bigger than 1') %otherwise there are no double bars
+
 fBarW = default.fBarWid;
 assert(isvector(fBarW) && length(fBarW) == 1, 'fBarW should be a single number')
 assert(fBarW > 0, 'fBarW should be a positive number')
@@ -186,6 +193,10 @@ assert(fBarW > 0, 'fBarW should be a positive number')
 sBarW = default.sBarWid;
 assert(isvector(sBarW) && length(sBarW) == 1, 'sBarW should be a single number')
 assert(sBarW > 0, 'sBarW should be a positive number')
+
+if sBarW ~= fBarW
+    warning('diagonal not corrected properly for different widths')
+end
 
 fBarV = default.fBarVal;
 assert(isvector(fBarV), 'fBarVal should be a 1XV1 vector')
@@ -217,6 +228,7 @@ end
 
 relSpan = 2*maskHW+1; %max(2*maskHW+1, 2*maskHH+1); since when using divideTotSquareToCols height is not taken into account
 count = 0;
+cutoff = 0;
 gratingArray = [];
 
     
@@ -251,6 +263,11 @@ for v1=1:length(fBarV)
                     
                     corrFac = abs(fBarPos(pos1) - sBarPos(pos2)) - 1;
                     
+                    if abs(fBarPos(pos1) - sBarPos(pos2)) >= distCO
+                        cutoff = cutoff+1;
+                        continue
+                    end
+                    
                     if stepDiffFrames(tt) == 0 && fBarV(v1) == sBarV(v2)% getting rid of duplicates in sim presntation 
                         tempPos = [fBarPos(pos1), sBarPos(pos2)];
                         
@@ -270,7 +287,21 @@ for v1=1:length(fBarV)
                         end
                         
                         count = count+1;
-                            
+                        tempFV = [ones(1,stimFrames)*fBarV(v1), ...
+                                  ones(1,stepDiffFrames(tt) * corrFac * spCorr) * postFBVal(pv), ...
+                                  ones(1,stepDiffFrames(tt))*postFBVal(pv)];    
+                        tempSV = [ones(1,stepDiffFrames(tt))*bkgdVal, ...
+                                  ones(1,stepDiffFrames(tt) * corrFac * spCorr) * bkgdVal, ...
+                                  ones(1,stimFrames)*sBarV(v2)];
+                        
+                        % to avoid 2 times the duration on the diagonal (if
+                        % values are the same (if they differ it flickers
+                        % once
+                        if fBarPos(pos1) == sBarPos(pos2) && fBarV(v1) == sBarV(v2)
+                            tempFV = tempSV; 
+                        end
+                        
+                        
                         gtStruct(count).sqDim = relSpan; % generateBarFrameByInds corrects for diagonal internally
                         gtStruct(count).gsLevel = gsLev; 
                         gtStruct(count).bkgdVal = bkgdVal;
@@ -278,8 +309,8 @@ for v1=1:length(fBarV)
                         gtStruct(count).ori = newOrt;
                         gtStruct(count).fWid = fBarW;
                         gtStruct(count).sWid = sBarW;
-                        gtStruct(count).fVal = [ones(1,stimFrames)*fBarV(v1), ones(1,stepDiffFrames(tt) * corrFac^spCorr) * postFBVal(pv), ones(1,stepDiffFrames(tt))*postFBVal(pv)];
-                        gtStruct(count).sVal = [ones(1,stepDiffFrames(tt))*bkgdVal, ones(1,stepDiffFrames(tt) * corrFac^spCorr) * bkgdVal, ones(1,stimFrames)*sBarV(v2)];
+                        gtStruct(count).fVal = tempFV;
+                        gtStruct(count).sVal = tempSV;
                         gtStruct(count).fPos = fBarPos(pos1);
                         gtStruct(count).sPos = sBarPos(pos2);
                 
@@ -303,6 +334,9 @@ end
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;
 
+ if cutoff > 0
+     fprintf('%d stimuli have been skipped since distance was larger than %d \n', cutoff, distCO)
+ end
  
  %% GRID 
      

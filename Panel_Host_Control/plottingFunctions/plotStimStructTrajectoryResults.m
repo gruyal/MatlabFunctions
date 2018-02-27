@@ -8,7 +8,7 @@ function varargout = plotStimStructTrajectoryResults(pStruct, sepColDim)
 
 close all
 
-relChannel = 3; %since the first column in the data is timeStamp
+relChannel = 2; %since the first column in the data is timeStamp
 convertXtoMSFactor = 10^3; %since clock is at 10^6;
 
 

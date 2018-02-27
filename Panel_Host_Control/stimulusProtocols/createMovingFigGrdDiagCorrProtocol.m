@@ -261,7 +261,8 @@ end
 
  tabVarNames =  {'index', 'groundVal', 'figureVal', 'stepDur', 'posDiff', 'orient'};
  gratTable = array2table(gratingArray, 'variablenames', tabVarNames);
- gratTable.Properties.Description = ['span:', 2*maskHW+1, ' ', 'grdWid:', grdW, ' ', 'figWid:', figW, ' ', 'Height:', 2*maskHH+1];
+ gratTable.Properties.Description = ['span:', num2str(2*maskHW+1), ' ', 'grdWid:', num2str(grdW), ...
+                                     ' ', 'figWid:', num2str(figW), ' ', 'Height:', num2str(2*maskHH+1)];
  
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;

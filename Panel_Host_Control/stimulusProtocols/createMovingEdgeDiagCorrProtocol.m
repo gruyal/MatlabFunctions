@@ -1,3 +1,4 @@
+
 function protocolStruct = createMovingEdgeDiagCorrProtocol(inputStruct)
 
 % function createMovingEdgeDiagCorrProtocol(inputStruct)
@@ -69,15 +70,15 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
 gratingFuncHand = @generateBarFrameByInds;
 
-default.stimVal = 1;
+default.stimVal = [0, 0, 1];
 default.barHeight = 9;
 default.barSpan = 9;
-default.bkgdVal = 0.49;
+default.bkgdVal = [0.49, 1, 0.49];
 default.stimBkgdInt = 0;
 default.gridCenter = 'UI';
 default.gsLevel = 3;
-default.orientations = 0:7;
-default.stepDur = 0.04; 
+default.orientations = 'UI';
+default.stepDur = [0.04, 0.16]; 
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
@@ -174,7 +175,8 @@ else
     assert(length(stimV) == length(bkgdV), 'when stimBkgdInt is FALSE, stimVal and bkgdVal should be the same length')
 end
        
-            
+assert(all(bsxfun(@ne, stimV - bkgdV, 0)), 'stimVal and bkgdVal are identical for one configuration')
+
 count = 0;
 gratingArray = [];
     

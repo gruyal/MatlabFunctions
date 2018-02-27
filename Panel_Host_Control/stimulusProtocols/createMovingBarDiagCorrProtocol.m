@@ -74,7 +74,7 @@ baseSiz = 225; % size of single frame or mask
 arenaSize = [96,32];
 gratingFuncHand = @generateBarFrameByInds;
 
-default.stimBar = 1;
+default.stimBar = 0;
 default.barWid = 1;
 default.barHeight = 9;
 default.barSpan = 9;
@@ -82,7 +82,7 @@ default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
 default.orientations = 0:7;
-default.stepDur = 0.04; 
+default.stepDur = 0.08; 
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;

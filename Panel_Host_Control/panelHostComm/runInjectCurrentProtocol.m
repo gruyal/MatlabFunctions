@@ -279,5 +279,7 @@ dos(['del /Q "' temp_path '\*.ao"']); %deleting ao files
 Panel_tcp_com('set_active_analog_channel', '0000')
 
 
+% reminder to avoid colleting from blind flies 
+helpdlg('Use Flashlight before proceeding')
 
 end

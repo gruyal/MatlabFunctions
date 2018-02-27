@@ -15,7 +15,7 @@ function [datMat, timMat] = getStimDataByInds(pStruct, inds)
 % datMat/timMat -   data and timestamp matrices padded with nans to allow
 %                   for mean calculations
 
-relCh = 3; %current channel
+relCh = 2; %current channel
 datToMvConv = 10;
 datToMsConv = 10^-3;
 

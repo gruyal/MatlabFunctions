@@ -56,6 +56,10 @@ function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
 %                   will not have a position in the actual center.
 % .intFrames -      number of empty intervening frames. If not given half a
 %                   second worth (based on generalFrequency)
+% .postIntFramesFac-single number. Factor by which number of intframes will
+%                   be multiplied at the after stimulus presentation (e.g.
+%                   factor of 2 will add 40 empty frames instead of 20 (for
+%                   the default of this protocol)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3}
 % .generalFrequency-Frequency with which frames from the generated protocol
 %                   will be dumped (passed on to runDumpProtocol) in position function units 
@@ -81,14 +85,15 @@ gratingFuncHand = @generateBarFrameByInds;
 default.stimBar = 0;
 default.barHeight = 9;
 default.barSpan = 9;
-default.barWidth = 1;
+default.barWidth = [1, 2];
 default.posOverlap = 1;
 default.gridCenter = 'UI';
 default.gsLevel = 3;
 default.gratingMidVal = 0.49;
 default.orientations = 'UI';
-default.stimDur = [0.02, 0.04, 0.08, 0.16]; 
+default.stimDur = [0.04, 0.16]; 
 default.intFrames = nan;
+default.postIntFramesFac = 2; 
 default.repeats = 5;
 default.randomize = 1;
 
@@ -277,6 +282,11 @@ protocolStruct.maskPositions = maskPos;
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
  end
+ 
+ intFFac = default.postIntFramesFac; 
+ assert(intFFac >= 0, 'postIntFramesFac should be a non-negative number')
+ 
+ protocolStruct.postIntFramesFac = intFFac; 
  
  protocolStruct.repeats = default.repeats;
  
