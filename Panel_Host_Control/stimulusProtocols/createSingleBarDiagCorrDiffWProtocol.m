@@ -84,8 +84,8 @@ gratingFuncHand = @generateBarFrameByInds;
 
 default.stimBar = 0;
 default.barHeight = 9;
-default.barSpan = 9;
-default.barWidth = [1, 2];
+default.barSpan = 11;
+default.barWidth = [2,4];
 default.posOverlap = 1;
 default.gridCenter = 'UI';
 default.gsLevel = 3;
@@ -194,6 +194,22 @@ for ww=1:length(barW)
     elseif posOv == 0
         relPos{ww} = preRelPos(1)+barW(ww)-1:barW(ww):preRelPos(end); % takes width into account
     end
+    
+    %limiting positions by width
+    tempPosMin = relPos{ww}(1);
+    tempPosMax = relPos{ww}(end); 
+    fprintf('wid %d pos:%d to %d \n',  barW(ww), tempPosMin,tempPosMax)
+    inpString = input('limit position range? (Y/N)', 's');
+    
+    if strcmpi(inpString, 'Y')
+        posInp = unique(input('enter relevant positions:'));
+        assert(all(ismember(posInp, relPos{ww})), 'Some seleceted positions are out of range')
+        fprintf('new positions for wid %d: \n', barW(ww))
+        fprintf('%d ', posInp)
+        fprintf('\n') 
+        relPos{ww} = posInp;
+    end
+    
 end
 
 
