@@ -1,4 +1,4 @@
-function [datMat, timMat] = getStimDataByInds(pStruct, inds)
+function [datMat, timMat] = getStimDataByInds(pStruct, inds, relCh)
 
 % function outSt = getStimDataAndMean(pStruct, inds)
 % 
@@ -10,12 +10,18 @@ function [datMat, timMat] = getStimDataByInds(pStruct, inds)
 % INPUT
 % pStruct -         regular protocol structure with .stim.data fields
 % inds -            1XN vector of requested indices
+% relCh -           optional. channel to get data from (2 for T5 3 for T4
+%                   <older data>. if not given default is 2
 %
 % OUTPUT
 % datMat/timMat -   data and timestamp matrices padded with nans to allow
 %                   for mean calculations
 
-relCh = 3; %current channel
+
+if nargin < 3
+    relCh = 2; %current channel
+end
+
 datToMvConv = 10;
 datToMsConv = 10^-3;
 

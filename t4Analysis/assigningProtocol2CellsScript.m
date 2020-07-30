@@ -1,4 +1,6 @@
+cd /Users/gruntmane/Documents/Research/ExpCodeandRes/panelController/PanelContExp/
 
+%%
 
 load ./T4recordingSummaryAndAnalysis/relDirNames.mat
 
@@ -41,6 +43,8 @@ clear t4Cells
 
 cn=1;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160420_11-52/protocolStruct20160420_11-52.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160420_11-35/protocolStructAO20160420_11-35.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160420_12-10/protocolStruct20160420_12-10.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160420_12-18/protocolStruct20160420_12-18.mat';
@@ -135,6 +139,9 @@ t4Cells(cn).notes = {'minMot(1): noisy but still see resp in 20ms'; ...
 
 cn=2;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = ''; % 3x3 [0,1] no proper protocol (D&B was done far from RF center)
+t4Cells(cn).stepData(1).fileName = '/stepData20160426_11-59/protocolStructAO20160426_11-59.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160426_13-55/protocolStructAO20160426_13-55.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160426_12-48/protocolStruct20160426_12-48.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -174,6 +181,12 @@ t4Cells(cn).notes = {'flicker not useful'; ...
 
 cn=3;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160427_11-41/protocolStruct20160427_11-41.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160427_11-36/protocolStructAO20160427_11-36.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160427_13-15/protocolStructAO20160427_13-15.mat';
+t4Cells(cn).stepData(2).type = 'ramp';
+t4Cells(cn).stepData(3).fileName = '/stepData20160427_13-16/protocolStructAO20160427_13-16.mat';
+t4Cells(cn).stepData(3).type = 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160427_12-00/protocolStruct20160427_12-00.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).ort = 0;
@@ -218,6 +231,12 @@ t4Cells(cn).notes = {'flicker: nice linComp in several positions'; 'clear respon
 
 cn=4;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160428_16-11/protocolStruct20160428_16-11.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160428_16-05/protocolStructAO20160428_16-05.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160428_16-07/protocolStructAO20160428_16-07.mat';
+t4Cells(cn).stepData(2).type = 'ramp';
+t4Cells(cn).stepData(3).fileName = '/stepData20160428_17-10/protocolStructAO20160428_17-10.mat';
+t4Cells(cn).stepData(3).type = 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160428_16-28/protocolStruct20160428_16-28.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160428_16-54/protocolStruct20160428_16-54.mat';
@@ -259,6 +278,10 @@ t4Cells(cn).notes = {'flicker: perfect linComp in all positions'; 'missing flick
 
 cn=5;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160502_17-24/protocolStruct20160502_17-24.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160502_17-18/protocolStructAO20160502_17-18.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160502_18-04/protocolStructAO20160502_18-04.mat';
+t4Cells(cn).stepData(2).type = 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160502_17-40/protocolStruct20160502_17-40.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160502_18-05/protocolStruct20160502_18-05.mat';
@@ -290,6 +313,8 @@ t4Cells(cn).notes = {'flicker: clear resp in 40ms, but some good fits'; ...
 
 cn=6;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160504_16-57/protocolStruct20160504_16-57.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160504_16-52/protocolStructAO20160504_16-52.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160504_17-24/protocolStruct20160504_17-24.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).singleBar(1).ort = 3; 
@@ -330,6 +355,9 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; ...
 
 cn=7;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160505_14-10/protocolStruct20160505_14-10.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160505_13-47/protocolStructAO20160505_13-47.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160505_14-04/protocolStructAO20160505_14-04.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160505_14-28/protocolStruct20160505_14-28.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160505_14-58/protocolStruct20160505_14-58.mat';
@@ -355,6 +383,8 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'had to remove las
 
 cn=8;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160510_11-24/protocolStruct20160510_11-24.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160510_11-18/protocolStructAO20160510_11-18.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160510_11-41/protocolStruct20160510_11-41.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -397,6 +427,8 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'beautiful example
 
 cn=9;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160516_11-37/protocolStruct20160516_11-37.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160516_11-29/protocolStructAO20160516_11-29.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160516_11-53/protocolStruct20160516_11-53.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160516_12-56/protocolStruct20160516_12-56.mat';
@@ -438,6 +470,10 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers for both protocols';
 
 cn=10;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160517_11-28/protocolStruct20160517_11-28.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160517_11-23/protocolStructAO20160517_11-23.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160517_12-10/protocolStructAO20160517_12-10.mat';
+t4Cells(cn).stepData(2).type = 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160517_11-45/protocolStruct20160517_11-45.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160517_11-54/protocolStruct20160517_11-54.mat';
@@ -469,6 +505,8 @@ t4Cells(cn).notes = {'minMot(1): spikes can be seen in some of the repeats'; ...
 
 cn=11;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160518_17-41/protocolStruct20160518_17-41.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160518_17-33/protocolStructAO20160518_17-33.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160518_17-57/protocolStruct20160518_17-57.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160518_18-23/protocolStruct20160518_18-23.mat';
@@ -511,6 +549,9 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers though some useful a
 
 cn=12;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160520_15-35/protocolStruct20160520_15-35.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160520_15-20/protocolStructAO20160520_15-20.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160520_17-05/protocolStructAO20160520_17-05.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160520_15-47/protocolStruct20160520_15-47.mat';
 t4Cells(cn).singleBar(1).pos = -5:5;
 t4Cells(cn).singleBar(1).correct = 1;
@@ -556,6 +597,10 @@ t4Cells(cn).notes = {'flicker: good fits at slower flickers'; 'pos -3,-4 show we
 
 cn=13;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160523_11-51/protocolStruct20160523_11-51.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160523_11-44/protocolStructAO20160523_11-44.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160523_12-33/protocolStructAO20160523_12-33.mat';
+t4Cells(cn).stepData(2).type = 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160523_12-08/protocolStruct20160523_12-08.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160523_12-34/protocolStruct20160523_12-34.mat';
@@ -593,6 +638,8 @@ t4Cells(cn).notes = {'flicker: only slowest looks good'; '80 responds, but seems
 
 cn=14;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160525_11-17/protocolStruct20160525_11-17.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160525_11-12/protocolStructAO20160525_11-12.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160525_11-31/protocolStruct20160525_11-31.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160525_12-02/protocolStruct20160525_12-02.mat';
@@ -626,6 +673,8 @@ t4Cells(cn).notes = {'flicker: nice resp even in 40ms'; ...
 
 cn=15;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160525_16-16/protocolStruct20160525_16-16.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160525_16-10/protocolStructAO20160525_16-10.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160525_16-27/protocolStruct20160525_16-27.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).minMot(1).fileName = '/MinMotDiagCorrProtocol20160525_16-35/protocolStruct20160525_16-35.mat';
@@ -639,6 +688,8 @@ t4Cells(cn).notes = {'minMot(1): nice resp even in 20ms'};
 
 cn=16;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160526_15-36/protocolStruct20160526_15-36.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160526_15-31/protocolStructAO20160526_15-31.mat';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160526_16-01/protocolStruct20160526_16-01.mat';
 t4Cells(cn).singleBar(1).pos = -8:8;
 t4Cells(cn).flicker(1).fileName = '/FlickerBarDiagCorrProtocol20160526_16-32/protocolStruct20160526_16-32.mat';
@@ -665,6 +716,10 @@ t4Cells(cn).notes = {'flicker: only slowest looks good and even that is weak'; .
 
 cn=17;
 t4Cells(cn).dir = relDirNames(cn,:);
+t4Cells(cn).cenSurr(1).fileName = '/CenterSurroundProtocol20160527_11-18/protocolStruct20160527_11-18.mat'; % 3x3 [0,1]
+t4Cells(cn).stepData(1).fileName = '/stepData20160527_11-11/protocolStructAO20160527_11-11.mat';
+t4Cells(cn).stepData(2).fileName = '/stepData20160527_12-32/protocolStructAO20160527_12-32.mat';
+t4Cells(cn).stepData(2).type= 'ramp';
 t4Cells(cn).singleBar(1).fileName = '/SingleBarDiagCorrProtocol20160527_11-37/protocolStruct20160527_11-37.mat';
 t4Cells(cn).singleBar(1).pos = -6:6;
 t4Cells(cn).singleBar(1).correct = 1;

@@ -41,6 +41,11 @@ for ii=1:height(stimTable)
     
     relTable = stimTable(ii, :);
     relVal = relTable{:, relVarName};
+    
+    if relVal == -1 && strcmp(relVarName, 'fAppear') % distinction for minMot protocols with First Bar being different color from second when they are presented in same position
+        relVal = relTable{:, 'sAppear'};
+        fprintf('Changed relVarName to sAppear for stim %d \n', relTable.index)
+    end
 
     alignStruct(ii).align = getAlignedStimDataByTable(pStruct, relTable.index, relVal);
     alignStruct(ii).table = relTable;
@@ -59,7 +64,7 @@ for ii=1:length(alignStruct)
     end
 end
 
-
+% maybe need to change this criteria for T5
 medAllPreMean = median(allPreMean);
 
 preMeanThresh = 10; % in mV empirically determined
@@ -70,17 +75,30 @@ else
     meanThresh = 15; % in mV empirically determined
 end
 
+fftThresh = [1.5, 0.3]; % determined empirically
+
 stimToCorrect = [];
 %finds repeats to exlucde from mean calculation
 for ii=1:length(alignStruct)
     for jj=1:length(alignStruct(ii).align.rep)
         
-        if abs(alignStruct(ii).align.rep(jj).stat(1)-medAllPreMean) > preMeanThresh
+        test1 = abs(alignStruct(ii).align.rep(jj).stat(1) - medAllPreMean);
+        test2 = diff(alignStruct(ii).align.rep(jj).stat); 
+        
+        alignStruct(ii).align.rep(jj).testStat = [test1, test2];
+        
+        if test1 > preMeanThresh
+            
             alignStruct(ii).exclude = [alignStruct(ii).exclude, jj];
             stimToCorrect = [stimToCorrect, ii];
-        elseif diff(alignStruct(ii).align.rep(jj).stat) > meanThresh
+        elseif test2 > meanThresh
+            
             alignStruct(ii).exclude = [alignStruct(ii).exclude, jj];
             stimToCorrect = [stimToCorrect, ii];
+        elseif any(alignStruct(ii).align.rep(jj).statFFT - fftThresh > 0)
+            alignStruct(ii).exclude = [alignStruct(ii).exclude, jj];
+            stimToCorrect = [stimToCorrect, ii];
+            warning('Stim %d rep %d has high freq noise', ii,jj)
         end
         
     end
@@ -104,7 +122,7 @@ for ii=1:length(stimToCorrect)
             
         case 1
             
-            warning('Stim %d has one valid repeat', stimToCorrect(ii))
+            warning('Stim %d has one valid repeat \n', stimToCorrect(ii))
             
             alignStruct(stimToCorrect(ii)).align.mean = alignStruct(stimToCorrect(ii)).align.rep(relReps).data;
             alignStruct(stimToCorrect(ii)).align.meanPos = alignStruct(stimToCorrect(ii)).align.rep(relReps).pos;

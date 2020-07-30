@@ -58,6 +58,8 @@ uTD = unique(relTab.timeDiff);
 
 assert(all(ufPos == usPos), 'FBPos must be equal to SBPos')
 
+% alignSt = alignProtocolDataByTable(pStruct, 'sAppear'); % not compatible
+% with later functions
 alignSt = alignProtocolDataByTable(pStruct, 'fAppear');
 
 % orginizing mean data
@@ -106,6 +108,7 @@ for tt=1:length(uTD)
         fbTemp = minMotSt(ii, ii, tt);
         
         for jj=1:length(usPos)
+            
             
             sbTemp = minMotSt(jj, jj, tt);
             

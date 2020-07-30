@@ -39,7 +39,7 @@ function alignMean = getAlignedStimDataByTableExclude(pStruct, gratingInd, posVa
 % mean
 
 
-relCh = 3; % voltage channel
+relCh = 2; % voltage channel
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
 
@@ -120,7 +120,7 @@ end
 posInd = find(size(meanPosIndx,1) == posLen, 1, 'first');
 tempPos = align.rep(posInd).pos;
 
-alignMean.mean = [mean(meanTime, 2), mean(meanData, 2)];
+alignMean.mean = [nanmean(meanTime, 2), nanmean(meanData, 2)];
 alignMean.median = [mean(meanTime, 2), median(meanData, 2)];
 alignMean.meanPos = [round(median(meanPosIndx, 2)), tempPos(:,2)]; %since posValues are the same for all reps
 

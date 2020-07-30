@@ -16,6 +16,9 @@ allSB = unique(pStruct.gratingTable.SBPos);
 calcMinMotExtSt = calcMinMotExtLinComp(pStruct);
 
 datSiz = size(calcMinMotExtSt);
+if length(datSiz) == 2
+    datSiz = [datSiz, 1]; 
+end
 
 posCell = generatePositionCell(0.05, 0.975, 0.025, 0.975, 0.02, 0.02, [datSiz(1), datSiz(2)]);
 

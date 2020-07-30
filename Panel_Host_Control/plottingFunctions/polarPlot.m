@@ -128,27 +128,27 @@ end
 meanMat = (radMat(:,1:end-1) * exp(1i*thetaVec(1:end-1))')./sum(radMat(:, 1:end-1),2);
 meanMat = conj(meanMat); % since the thetas are flipped in the plot
 
-lineMSiz = 5;
-meanMSiz = 3;
+lineMSiz = 10;
+meanMSiz = 8;
 
 
 hold on 
 
-plot(axh, 0, 0, 'o', 'markersize', meanMSiz, 'markerfacecolor', 'k', 'markeredgecolor', 'k') %just to make origin black
+plot(axh, 0, 0, '.', 'markersize', meanMSiz, 'markerfacecolor', 'k', 'markeredgecolor', 'k') %just to make origin black
 
 for ii=1:matSiz(1)
     switch plotType
         case 'line'
-            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
+            plot(axh, xx(ii, :), yy(ii, :), 'marker', '.', 'markersize', lineMSiz, ...
                  'color', relCol(ii, :), 'linewidth', 2, ...
                  'markerfacecolor', relCol(ii, :), 'Tag', 'legendTag');
         case 'mean'
-            plot(axh, [0, meanMat(ii)*maxMat(ii)], '-s', 'markersize', meanMSiz, ...
+            plot(axh, [0, meanMat(ii)*maxMat(ii)], 'marker', 's', 'markersize', meanMSiz, ...
                  'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
         case 'both'
-            plot(axh, xx(ii, :), yy(ii, :), '-o', 'markersize', lineMSiz, ...
+            plot(axh, xx(ii, :), yy(ii, :), 'marker', '.', 'markersize', lineMSiz, ...
                  'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 2); 
-            plot(axh, [0, meanMat(ii)*maxMat(ii)], '-o', 'markersize', meanMSiz, ...
+            plot(axh, [0, meanMat(ii)*maxMat(ii)], 'marker', '.', 'markersize', meanMSiz, ...
                 'color', relCol(ii, :), 'markerfacecolor', relCol(ii, :), 'linewidth', 4, 'Tag', 'legendTag');
     end
 end

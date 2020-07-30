@@ -1,10 +1,10 @@
 
 function varargout = plotBaseSubSingleBar(singleBarSt)
 
-% plotbaseSubSingleBar(singleBarSt)
-%
-% this function takes the output of generateAlignedSingleBarSt and plots it
-% together with response estimate
+plotbaseSubSingleBar(singleBarSt)
+
+this function takes the output of generateAlignedSingleBarSt and plots it
+together with response estimate
 
 
 

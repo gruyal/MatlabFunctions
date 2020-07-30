@@ -33,6 +33,10 @@ function align = getAlignedStimDataByTable(pStruct, gratingInd, posVals)
 %                       First column is converted from time into index of the data time
 %   .stat -             intended for QC. first number is preStimulus mean
 %                       and second is entire repeat mean
+%   .statFFT -          results from calcFreqPowerInRelSpectra to eliminate
+%                       repeats with high frequency noise. Each number is
+%                       the max power within the range of frequencies
+%                       given (in fftRanges). 
 % .mean -               mean across repeats. To generate a matrix, equal number of samples
 %                       are taken before posVal timing, and minimal after. 
 % .meanPos -            Position indices after they have been corrected for
@@ -51,10 +55,15 @@ else
 end
 
 
-relCh = 3; % voltage channel
+relCh = 2; % voltage channel (was 3 in old data)
+% relCh = 3; % voltage channel (was 3 in old data)
+
+% fprintf('extracting data from channel %d \n', relCh)
+
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
 
+fftRanges = [58, 62; 3680, 3720]; % empirically found to be 2 ranges for noise (don't know where the second range is coming from
 
 
 indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
@@ -62,6 +71,7 @@ indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
 assert(length(indsSt) == 1, 'values given in getStimIndsInput are not specific to one stimulus')
 
 allPos = pStruct.stim(indsSt(1).inds(1)).data{2}(:,2);
+
 
 assert(ismember(posVal, allPos), 'posVal is not included in position values for the specified stim')
 assert(ismember(baseVal, allPos), 'baseVal is not included in position values for the specified stim')
@@ -112,7 +122,10 @@ for ii=1:numReps
     preStimInd = find(timeCh > relBTConv, 1, 'first');
     preStimDat = dataCh(1:preStimInd);
     
+    fftRes = calcFreqPowerInRelSpectra(dataCh, fftRanges);
+    
     align.rep(count).stat = [mean(preStimDat), mean(dataCh)];
+    align.rep(count).statFFT = fftRes;  
     
 end
 
@@ -127,7 +140,7 @@ meanData = zeros(minPre+minPost, length(align.rep));
 meanTime = meanData;
 meanPosIndx  = nan(size(tempPos, 1), length(align.rep));
 
-for ii=1:length(align.rep) % again, in case theere is an empty rep
+for ii=1:length(align.rep) % again, in case there is an empty rep
     
     posLen(ii) = size(align.rep(ii).pos, 1);
     startIdx = relPosInds(ii)-minPre+1;

@@ -74,7 +74,7 @@ for ii=1:length(uPos)
         relInd = ismember(relTab{:, {'position'; 'stimDur'}}, [uPos(ii), uDur(jj)], 'rows');
         
         singleBarSt(ii, jj).data = alignSt(relInd);
-                
+%         [ii,jj]        
         relDat = singleBarSt(ii, jj).data.align.mean;
         relDatMed = singleBarSt(ii, jj).data.align.median;
         baseInds = arrayfun(@(x) find(relDat(:,1) > x, 1, 'first'), preStimBaseWin);
@@ -92,6 +92,7 @@ for ii=1:length(uPos)
         singleBarSt(ii, jj).subData.length = size(baseSubResp, 1);
         
         allBaseline = vertcat(allBaseline, baseVals);
+
         
     end
     
@@ -101,6 +102,8 @@ end
 
 % since sometimes baseline moved a bit and re-stabilized, this might be a
 % more stable version for std estimation
+
+allBaseline = allBaseline(allBaseline < -10 ); % since some trials are empty (and therefore it adds baseline close to zero)
 
 [binCount, binEdge] = histcounts(allBaseline);
 gaussFit = fit(binEdge(2:end)', binCount', 'gauss1'); % bin edge is not exactly centered, but only std is estimated so it doesn't count
@@ -112,6 +115,7 @@ baseSD = gaussFit.c1 / sqrt(2);  % divide by sqrt(2) due to the default matlab f
 for ii=1:length(uPos)
     
     for jj=1:length(uDur)
+        
         
         relDat = singleBarSt(ii,jj).subData;
         %smoothing the data for a better derivative

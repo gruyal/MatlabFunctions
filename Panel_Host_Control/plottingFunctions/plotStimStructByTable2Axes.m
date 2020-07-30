@@ -42,7 +42,7 @@ function varargout = plotStimStructByTable2Axes(pStruct, figName, axeNames, colN
 
 %% verifying input correctness
 
-close all
+% close all
 
 
 assert(isfield(pStruct, 'stim'), 'pStrcut is missing stim field')

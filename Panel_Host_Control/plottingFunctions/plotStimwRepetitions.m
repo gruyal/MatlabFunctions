@@ -13,18 +13,24 @@ function plotStimwRepetitions(pStruct, getStimIndsInput)
 
 indsSt = getStimInds(pStruct, getStimIndsInput);
 
-close all
-linCol = [1,1,1]*0.6;
-
+relCh = 2; 
 
 for ii=1:length(indsSt)
     
     figure
+   
     set(gcf, 'NumberTitle', 'off','Name', num2str(indsSt(ii).val))
     hold on
-    for jj=1:length(indsSt(ii).inds)
-        plot(pStruct.stim(indsSt(ii).inds(jj)).data{1}(:,3), 'color', linCol);
+    
+    numRep = length(indsSt(ii).inds);
+    linCol = cbrewer('seq', 'Greys', numRep+2); 
+    
+    for jj=1:numRep
+        plot(pStruct.stim(indsSt(ii).inds(jj)).data{1}(:,relCh), 'color', linCol(jj+1, :));
     end
+    
+    legend(arrayfun(@num2str, indsSt(ii).inds, 'uniformoutput', 0))
+    
 end
 
 

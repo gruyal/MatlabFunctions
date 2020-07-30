@@ -1,4 +1,4 @@
-function [alignStruct, varargout] = alignProtocolDataByInds(pStruct, relPosVal, meanTreshFlag)
+function [alignStruct, varargout] = alignProtocolDataByInds(pStruct, relPosVal, meanTreshFlag, relCh)
 
 % function alignStruct = alignProtocolDataByInds(pStruct, relVarName)
 %
@@ -18,11 +18,18 @@ function [alignStruct, varargout] = alignProtocolDataByInds(pStruct, relPosVal, 
 %                       for response treshold. if not lower. The different values are aim the
 %                       control for stimuli that are long (moving bar) versus short pulsed type
 %                       of stim (flicker or singleBar). Default 0. 
+% relCh -               optional. Channel in which relevant data is in.
+%                       Defualt is 3. (old version) 
 %
 % OUTPUT
 %
 % alignStruct -         structure with the same fields as output of
 %                       getAlignedDataByTable plus the relevant table row
+
+if nargin < 4
+    relCh = 3; 
+end
+
 
 if nargin < 3
     meanTreshFlag = 0;
@@ -35,7 +42,7 @@ alignStruct = struct;
 
 for ii=1:size(allInds,1)
 
-    alignStruct(ii).align = getAlignedStimDataByInds(pStruct, allInds(ii, :), relPosVal);
+    alignStruct(ii).align = getAlignedStimDataByInds(pStruct, allInds(ii, :), relPosVal, relCh);
     alignStruct(ii).relInds = allInds(ii, :);
     alignStruct(ii).exclude = [];
     
@@ -106,7 +113,7 @@ for ii=1:length(stimToCorrect)
         otherwise
             
                 
-            alignMean = getAlignedStimDataByIndExclude(pStruct, allInds(stimToCorrect(ii), :), relPosVal(1), relReps);
+            alignMean = getAlignedStimDataByIndExclude(pStruct, allInds(stimToCorrect(ii), :), relPosVal(1), relReps, relCh);
             alignStruct(stimToCorrect(ii)).align.mean = alignMean.mean;
             alignStruct(stimToCorrect(ii)).align.meanPos = alignMean.meanPos;
             

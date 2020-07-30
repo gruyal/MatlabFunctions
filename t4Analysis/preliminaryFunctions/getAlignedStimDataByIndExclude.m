@@ -1,5 +1,5 @@
 
-function alignMean = getAlignedStimDataByIndExclude(pStruct, allIndRow, posVal, relReps)
+function alignMean = getAlignedStimDataByIndExclude(pStruct, allIndRow, posVal, relReps, relCh)
 
 % function alignStimMat = getAlignedStimDataByIndExclude(pStruct, posVal)
 %
@@ -13,6 +13,8 @@ function alignMean = getAlignedStimDataByIndExclude(pStruct, allIndRow, posVal, 
 %                       data{2} of each stim. Should be the same for all
 %                       repeats. 
 % relReps -             repeats to be included in the calculation 
+% relCh =               optional. channel with the relevant data. default
+%                       is 3 (old version)
 %
 % Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
 % It should be enetered manually and given in the same units the controller uses (first
@@ -35,7 +37,10 @@ function alignMean = getAlignedStimDataByIndExclude(pStruct, allIndRow, posVal, 
 % mean
 
 
-relCh = 3; % voltage channel
+if nargin < 5
+    relCh = 3; % voltage channel
+end
+
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
 

@@ -1,4 +1,4 @@
-function align = getAlignedStimDataByInds(pStruct, allIndsRow, posVals)
+function align = getAlignedStimDataByInds(pStruct, allIndsRow, posVals, relCh)
 
 % function alignStimMat = getAlignedStimDataByInds(pStruct, posVal, baseVal)
 %
@@ -18,6 +18,8 @@ function align = getAlignedStimDataByInds(pStruct, allIndsRow, posVals)
 %                       would be defined from first sample to appropriate
 %                       sample of second val) - used for protocols like
 %                       movingbar where to aligned var in not appear
+% relCh -               optional. Channel in which relevant data is in.
+%                       Defualt is 3. 
 %
 % Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
 % It should be enetered manually and given in the same units the controller uses (first
@@ -51,8 +53,10 @@ else
     error('posVals can be at most of length 2')
 end
 
-
-relCh = 3; % voltage channel
+if nargin < 4
+    relCh = 3; % voltage channel
+end
+    
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
 

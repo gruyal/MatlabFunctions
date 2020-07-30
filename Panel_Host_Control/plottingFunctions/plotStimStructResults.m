@@ -7,7 +7,7 @@ function varargout = plotStimStructResults(pStruct, sepFigDim, sepColDim)
 % (dimensions refers to the relInds component of the stim structure)
 
 close all
-relChannel = 3; %since the first column in the data is timeStamp
+relChannel = 2; %since the first column in the data is timeStamp
 % Choosing colors that will make sense (be able to see progression)
 %relCols = repmat(linspace(1, 0, 64), 3, 1)'; % gray scale
 relCols = jet;
