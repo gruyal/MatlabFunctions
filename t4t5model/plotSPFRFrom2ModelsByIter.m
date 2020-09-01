@@ -1,24 +1,26 @@
-function varargout = plotSPFRModelByIter(modelDirAndType, cellNum, iter, ncFlag, modelString)
+function varargout = plotSPFRFrom2ModelsByIter(cellNum, modelFuncName, modelDirAndIterSt, ncFlag)
 
-% function plotSPFRModelByIter(cellT, iter)
+% function plotSPFRFrom2ModelsByIter(cellNum, iter, ncFlag, modelString)
 %
+% This function is a modification of plotSPFRModelByIter. And is designed for plotting results from different fits of the same model. 
 % This function plots the modeling results (from Pablo) together with the original data
 % Based on plotMovModelByIter 
 % 
 % Inputs
 %
-% modelDirAndType -     String. model diretory and type (file name) which includes the the cell type (T4 or
-%                       T5) and the type of model implemented
-%                       (classic/delta/etc). Directory is appended to the
-%                       defDir
+% modelDirAndIterSt -   Struct. Contians Several fields:
+% .modelDir -           String. model diretory and type where model results are saved
+% .iter -               Integer. model iteration to implement from the above results 
+%                      
 % cellNum-              for T4 17 or 18 for T5 19 or 20 (nondiagonal and
 %                       diagonal in both cases)
 % iter -                1XN vector. model iterations to present (will be
-%                       overlaid on top of data)
+%                       overlaid on top of data). one iteration per
+%                       modelDir
 % ncFlag -              (optional) logical. Flag to indicate if
 %                       non-preferred contrast is used (defualt)
-% modelString -         (optional) if model function name is different from
-%                       model type the function can be entered here as a string
+% modelFuncName -       String. model function name. can be different from
+%                       model type the function.
 % 
 % Note!!! Use "" for modelDirAndType - otherwise split does not work. And
 % no trailing /
@@ -32,22 +34,12 @@ assert(ismember(ncFlag, [0,1]), 'ncFlag should be logical')
 
 defMDir = '/Users/gruntmane/Documents/Research/ExpCodeandRes/panelController/PanelContExp/T4recordingSummaryAndAnalysis2/pabloModAna/modelFiles';
 
-load(fullfile(defMDir, modelDirAndType), 'data_struct')
-spRes = split(string(modelDirAndType), "/");
-
-modelType = spRes{end};
-
-if nargin < 5
-    modelFH = str2func(modelType);
-else
-    modelFH = str2func(modelString);
-end
-
+modelFH = str2func(modelFuncName);
 
 allWid = [1,2,4];
 allDur = [40,160];
 
-cellT = str2double(modelType(2));
+cellT = str2double(modelFuncName(2));
 
 if cellT == 4
     dataDir = '/Users/gruntmane/Documents/Research/ExpCodeandRes/panelController/PanelContExp/T4recordingSummaryAndAnalysis2/pabloModAna/dataFiles/T4_spfr_structs/';
@@ -72,9 +64,17 @@ elseif cellT == 5
     assert(ismember(cellNum, [19,20]), 'for T5 cellNum should be either 19 or 20')
 end
 
-paramTab = data_struct{cellNum}.T; 
+relParams = [];
+iters = zeros(length(modelDirAndIterSt), 1);
+for ii=1:length(modelDirAndIterSt)
 
-[~, relParams] = extract_params2(paramTab(iter, :)); 
+    load(fullfile(defMDir, modelDirAndIterSt(ii).modelDir), 'data_struct')
+    paramTab = data_struct{cellNum}.T; 
+
+    [~, tempParams] = extract_params2(paramTab(modelDirAndIterSt(ii).iter, :)); 
+    relParams = [relParams; tempParams];
+    iters(ii) = modelDirAndIterSt(ii).iter;
+end
 
 
 
@@ -107,7 +107,7 @@ end
 prePosCell = generatePositionCell(0.05, 0.95, 0.05, 0.95, -0.03, 0.02, length(allDur) * length(allWid));
 axhCell = cell(size(prePosCell));
 
-pCol = cbrewer('qual', 'Set1', length(iter));
+pCol = cbrewer('qual', 'Set1', length(iters));
 pCol = [[1,1,1] * 0.6; pCol];
 
 
@@ -119,7 +119,7 @@ else
     yyLim = [-10, 25];
 end
 
-figure('position', [30, 400, 1600, 700], 'name', num2str(iter))
+figure('position', [30, 400, 1600, 700])
 
 for ii=1:height(spfrCondTab)
     
@@ -141,15 +141,14 @@ for ii=1:height(spfrCondTab)
     % parsing position responses
     stimStInd = find(spfr_ds.stimIdx == 1);
     stimInds = [stimStInd, [stimStInd(2:end) - 1; length(spfr_ds.stimIdx)]];
-%     stimInds = stimInds(2:end-1,:);
 
     relDat = spfr_ds;
 
     dataVec = relDat.baseSub; 
     timeVec = relDat.time; 
     
-    modelVec = zeros(length(iter), length(dataVec));
-    for jj=1:length(iter)
+    modelVec = zeros(length(modelDirAndIterSt), length(dataVec));
+    for jj=1:length(modelDirAndIterSt)
         modelVec(jj, :) = feval(modelFH, relParams(jj,:), relDat);
     end
 
@@ -177,7 +176,7 @@ for ii=1:height(spfrCondTab)
         plotTim = timeVec(stimInds(pp,1):stimInds(pp,2)) - timeVec(stimInds(pp,1));
         
         plot(plotTim, plotDat, 'linewidth', 1, 'color', pCol(1, :))
-        for jj=1:length(iter)
+        for jj=1:length(iters)
             plot(plotTim, plotMod(jj,:), 'linewidth', 2, 'color', pCol(jj+1, :))
         end
         
@@ -189,10 +188,11 @@ for ii=1:height(spfrCondTab)
 
 
 end
+    
 
-preLeg = arrayfun(@num2str, iter, 'uniformoutput', 0);
-legLab = cell(1, length(iter)+1);
-for ll = 1:length(iter)
+preLeg = arrayfun(@num2str, iters, 'uniformoutput', 0);
+legLab = cell(1, length(iters)+1);
+for ll = 1:length(modelDirAndIterSt)
     legLab{ll+1} = preLeg{ll};
 end
 legLab{1} = 'Data';

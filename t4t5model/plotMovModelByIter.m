@@ -1,4 +1,4 @@
-function varargout = plotMovModelByIter(modelDirAndType, cellNum, iter, ncFlag)
+function varargout = plotMovModelByIter(modelDirAndType, cellNum, iter, ncFlag, modelString)
 
 % function plotMovModelByIter(cellT, iter)
 %
@@ -15,6 +15,9 @@ function varargout = plotMovModelByIter(modelDirAndType, cellNum, iter, ncFlag)
 % iter -                integer. model iteration to present
 % ncFlag -              (optional) logical. Flag to indicate if
 %                       non-preferred contrast is used (defualt)
+% modelString -         (optional) if model function name is different from
+%                       model type the function can be entered here as a string
+% 
 % 
 % Note!!! Use "" for modelDirAndType - otherwise split does not work. And
 % no trailing /
@@ -32,8 +35,11 @@ load(fullfile(defMDir, modelDirAndType), 'data_struct')
 spRes = split(string(modelDirAndType), "/");
 
 modelType = spRes{end};
-modelFH = str2func(modelType);
-
+if nargin < 5
+    modelFH = str2func(modelType);
+else
+    modelFH = str2func(modelString);
+end
 
 
 allWid = [1,2,4];
@@ -64,7 +70,7 @@ elseif cellT == 5
 end
 
 paramTab = data_struct{cellNum}.T; 
-[paramN, relParams] = extract_params(paramTab(iter, :)); 
+[paramN, relParams] = extract_params2(paramTab(iter, :)); 
 
 
 allFiles = dir(dataDir);
