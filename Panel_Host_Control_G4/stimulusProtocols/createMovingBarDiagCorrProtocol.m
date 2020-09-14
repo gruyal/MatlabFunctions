@@ -200,7 +200,7 @@ for vv=1:length(stimB)
                         relRad = radCell{ortPosInd};
 
                         relPos = -relRad:relRad+barW(ww)-1;
-                        corrPos = reshape(repmat(relPos, stepFrames(kk), 1), 1, []);
+%                         corrPos = reshape(repmat(relPos, stepFrames(kk), 1), 1, []);
 
                         gtStruct(count).wid = barW(ww);
                         gtStruct(count).ori = newOrt(oo);
@@ -208,7 +208,8 @@ for vv=1:length(stimB)
                         %gtStruct(count).sqDim = max(2*maskHW(sp)+1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
                         gtStruct(count).sqDim = 2*maskHW(sp)+1; % since when using divideTotSquareToCols height is not taken into account
 
-                        gtStruct(count).pos = corrPos;
+                        gtStruct(count).pos = relPos;
+                        gtStruct(count).stepFrames = stepFrames(kk);
                         gtStruct(count).gsLevel = gsLev;
                         gtStruct(count).bkgdVal = bkgdVal;
                         gtStruct(count).matSize = baseSiz;
@@ -291,7 +292,7 @@ end
  %% Creating protocl
 
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

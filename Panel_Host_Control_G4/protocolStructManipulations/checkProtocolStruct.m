@@ -12,6 +12,8 @@ function outStruct = checkProtocolStruct(protStruct)
 % (.interleave and or .randomize and its parts)
 
 
+fprintf('need to change position to pos in all protocols \n')
+
 outStruct = protStruct;
 
 arenaSize = [192,48];  % in pixels, in spatial coordinates 
@@ -23,7 +25,7 @@ baseImSize = [445, 445]; % size for original stimSeq and masks
     % FIELD 1 - gratingStruct
 gratingNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'}; 
 gratingIndsNames = {'fVal'; 'sVal'; 'ori'; 'phase'; 'sqDim'; 'gsLevel'};
-gratingConcenNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'; 'type'};    
+gratingConcenNames = {'widthON'; 'widthOFF'; 'pos'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'; 'type'};    
 grating4BarNames = {'width1'; 'width2'; 'width3'; 'width4';'position'; 'barAtPos'; ...
                 'vals1St'; 'vals1End'; 'vals2St'; 'vals2End'; 'vals3St'; 'vals3End'; 'vals4St'; 'vals4End'};  
 randomDotNames = {'dotSize'; 'valON'; 'valOFF'; 'propON'; 'propOFF'; 'gsLevel'; 'bkgdVal'; 'relFrameSize'; 'rngSeed'}; 

@@ -240,7 +240,8 @@ for vv=1:length(stimB)
 %                     gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
 %                     gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
                     gtStruct(count).sqDim = maxSqDim; % span is a bit unique in its claculation here
-                    gtStruct(count).pos = ones(1, stimFrames(kk))* relPos{ww}(pp);
+                    gtStruct(count).pos = relPos{ww}(pp);
+                    gtStruct(count).stepFrames = stimFrames(kk);
                     gtStruct(count).gsLevel = gsLev;
                     gtStruct(count).bkgdVal = bkgdVal;
                     gtStruct(count).matSize = baseSiz;
@@ -313,7 +314,7 @@ protocolStruct.maskPositions = maskPos;
  %% Creating protocl
 
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

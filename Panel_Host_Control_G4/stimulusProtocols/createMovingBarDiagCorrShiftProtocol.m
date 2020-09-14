@@ -304,18 +304,20 @@ for vv=1:length(stimB)
                     end
 
 
-                    corrPos = reshape(repmat(relPos, stepFrames(kk), 1), 1, []);
+%                     corrPos = reshape(repmat(relPos, stepFrames(kk), 1), 1, []);
 
                     gtStruct(count).wid = barW(ww);
                     gtStruct(count).ori = newOrt;
                     gtStruct(count).val = stimB(vv);
                     gtStruct(count).sqDim = 2*relSqDim+1; % since when using divideTotSquareToCols height is not taken into account
 
-                    gtStruct(count).pos = corrPos;
+                    gtStruct(count).pos = relPos;
                     gtStruct(count).gsLevel = gsLev;
                     gtStruct(count).bkgdVal = bkgdVal;
                     gtStruct(count).matSize = baseSiz;
-
+                    
+                    gtStruct(count).stepFrames = stepFrames(kk); % used in the generation of posFunc in createProtocolG4
+                    
                     maskSt(count).type = maskT{1};
                     maskSt(count).radius = [relMaskHW, maskHH];
                     maskSt(count).ori = newOrt;
@@ -400,7 +402,7 @@ end
  %% Creating protocl
 
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

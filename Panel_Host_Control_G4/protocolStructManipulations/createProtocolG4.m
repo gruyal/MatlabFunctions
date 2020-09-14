@@ -2,6 +2,11 @@ function protocolStruct = createProtocolG4(protocolStruct)
 
 % function protocolStruct = createProtocolG4(protocolStruct)
 %
+% This function is a modification of createProtocol and converts it to work
+% with the G4 version by using position function instead of generating
+% repeated frames (since the frame are bigger here and it takes longer).
+%
+%
 % This function uses the data within protocolStruct to add a field with the
 % data required for presenting the stim to the same structure.
 % base on createProtocol and modified to G4 (mainly moving all the change
@@ -100,6 +105,7 @@ protocolStruct = checkProtocolStruct(protocolStruct);
 
 %Generating the grating sequences
 stimSeqCell = cell(1, length(protocolStruct.gratingStruct));
+stimPosFunCell = cell(1, length(protocolStruct.gratingStruct));
 if protocolStruct.freqCorrFlag
     tempFreqCorr = zeros(1, length(stimSeqCell));
 else
@@ -117,11 +123,14 @@ end
 
 for ii=1:length(protocolStruct.gratingStruct)
     stimSeqCell{ii} = generateGratingBaseSeq(protocolStruct.gratingStruct(ii), protocolStruct.funcHand);
+    stimPosFunCell{ii} = reshape(repmat((1:length(protocolStruct.gratingStruct(ii).pos)) + 1, ... % +1 since an empty frame is going to be added later
+                                 protocolStruct.gratingStruct(ii).stepFrames, 1), 1, []);
     if ~isempty(tempFreqCorr)
         tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
     end
 end
 protocolStruct.stimSeqCell = stimSeqCell;
+protocolStruct.stimPosFunCell = stimPosFunCell;
 
 % This can be used to correct for temporal freqeuncy changes associated
 % with spatial freqency changes (e.g. slow down narrower grating frames by
@@ -142,6 +151,7 @@ end
 numReps = protocolStruct.repeats;
 
 mats = cell(1,numReps);
+posFuncs = mats;
 relInds = mats;
 freqCorr = mats;
 
@@ -294,6 +304,7 @@ switch protocolStruct.interleave
         assert(numSeqs == numMasks, 'For interleave 1, gratingSeqs and masks should be of same length')
 
         rotSeqs = cell(numSeqs, numOrt);
+        rotPosFuns = cell(numSeqs, numOrt); % to keep track of the right indices
 
         for ii=1:numSeqs
             tempSeq = protocolStruct.stimSeqCell{ii};
@@ -307,12 +318,19 @@ switch protocolStruct.interleave
                 end
             end
         end
+        
+        for ii=1:numSeqs
+            tempPosFun = protocolStruct.stimPosFunCell{ii};
+            for kk=1:numOrt
+                rotPosFuns{ii, kk} = tempPosFun; % assumes no steps are added in rotation
+            end
+        end
 
 
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
-        emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
-        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
+        emptyIntFrame = ones(size(relRangeX, 2), size(relRangeY, 2)) * bkgdVal;
+%         emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
         relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
 
         if isfield(protocolStruct.randomize, 'randWithin')
@@ -326,6 +344,7 @@ switch protocolStruct.interleave
             stimInds = randomizeMatrixInds([numSeqs, numOrt], relRand, randWithinF);
 
             tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
+            tempPosFunCell = arrayfun(@(x) rotPosFuns{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
 
         % Changed rand flag for tempStimCell to 0 - might need to do that in the rest
 
@@ -334,18 +353,20 @@ switch protocolStruct.interleave
             tempRelRand = min(relRand);
             secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [tempRelRand, protocolStruct.randomize.maskPositions]);
             tempStimMat = cell(1, size(secStimInd, 1)); %size of secStimInd is the actual number of individual stimuli after they have been combined
-
+            tempPosFunMat = cell(1, size(secStimInd, 1)); 
+            
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
-                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
-                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
+                addEmpty = cat(3, emptyIntFrame, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                stimWBuffer = cat(3, addEmpty, emptyIntFrame);
                 tempStimMat{jj} = stimWBuffer;
-
+                tempPosFunMat{jj} = [ones(1,protocolStruct.intFrames), tempPosFunCell{secStimInd(jj,1)}, ones(1,postNum)];
             end
 
             presentedInd = [stimInds(secStimInd(:,1), [1,1,2]), secStimInd(:,2)]; % since gratingSeqs and masks have the same ind
 
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
+            posFuncs{ii} = tempPosFunMat;
             relInds{ii} = presentedInd;
             if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
@@ -599,6 +620,7 @@ switch protocolStruct.interleave
 end
 
 totMats = [mats{:}]';
+totPosFunc = [posFuncs{:}]';
 totRelInds = vertcat(relInds{:});
 if protocolStruct.freqCorrFlag == 1
     totFreqCorr = vertcat(freqCorr{:});
@@ -611,8 +633,10 @@ end
 stimPresEst = zeros(1, size(totRelInds, 1));
 for ii=1:size(totRelInds, 1)
     protocolStruct.stim(ii).matCell = totMats{ii};
+    protocolStruct.stim(ii).posFuncCell = totPosFunc{ii};
     protocolStruct.stim(ii).relInds = totRelInds(ii,:);
     protocolStruct.stim(ii).freqCorr = totFreqCorr(ii);
+    
     stimPresEst(ii) = size(totMats{ii},3) * (1/totFreqCorr(ii));
 end
 

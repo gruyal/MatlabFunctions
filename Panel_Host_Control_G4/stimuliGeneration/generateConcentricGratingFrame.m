@@ -9,7 +9,7 @@ function gtFrame = generateConcentricGratingFrame(gtStruct)
 % INPUT
 % gtSeqStruct - structure with the following fields
 % .WidthON/OFF  -           width of each of the bars
-% .position -               position of the bar specified in barAtPos relative to the center.
+% .pos -               position of the bar specified in barAtPos relative to the center.
 %                           0 mean the left edge side of the bar is centered (can be
 %                           negative)
 % .barAtPos -               logical [0,1]. Whether the bar in the center should be dark (0) or
@@ -31,6 +31,8 @@ function gtFrame = generateConcentricGratingFrame(gtStruct)
 %
 % NOTE! in the current calculation the very edges of the frame in the
 % circle mode are not perfect
+%
+% Changed position to pos for consistency with other protocols
 
 
 gsLevel = 4;
@@ -67,7 +69,7 @@ end
 
 numCyc = ceil(matSiz/(2*cycWid)); % since only need half the values
 baseVals = repmat(relVals, 1, numCyc);
-crsfVals = circshift(baseVals, [0, gtStruct.position]);
+crsfVals = circshift(baseVals, [0, gtStruct.pos]);
 finVals = crsfVals(1:((matSiz+1)/2));
 
 % to facilitate circle and squares, start in middle, remove indices that

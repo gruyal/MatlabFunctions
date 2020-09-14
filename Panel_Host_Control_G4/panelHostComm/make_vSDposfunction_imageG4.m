@@ -1,5 +1,11 @@
 function totStat = make_vSDposfunction_imageG4(pStruct, saveDir)
 
+
+% function totStat = make_vSDposfunction_imageG4(pStruct, saveDir)
+%
+% This function was changed to generate a position function from the
+% pStruct field 'posFuncCell' - instead of the previous version that simply
+% generated a 1:len posFunc (changed Sep 2020)
 % this is the change of make_function_image where the vel function part was
 % taken out and the input was changed from fileNames to protocol structure
 % with .stim field.
@@ -38,8 +44,8 @@ pos_func_counter = 0;
 stat = zeros(1, num_functions);
 
 for ii = 1:num_functions
-    relLen = size(pStruct.stim(ii).matCell, 3);
-    func = [1:relLen, ones(1, frameBuffer)]; % shifts to zero when saved
+    relFun = pStruct.stim(ii).posFuncCell;
+    func = [relFun, ones(1, frameBuffer)]; % shifts to zero when saved
     param.type = 'pfn';
     param.ID = ii;
     param.dur = relLen / stimFreq;
