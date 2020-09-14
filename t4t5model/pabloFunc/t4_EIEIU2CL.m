@@ -1,11 +1,11 @@
-function [V,ge,gi,g_mat,s_mat,num,den] = t5_EIEIU2CL(params,spfr_data)
+function [V,ge,gi,g_mat,s_mat,num,den] = t4_EIEIU2CL(params,spfr_data)
 
-if spfr_data.val == 0                   %all params stored in "rows" of 4, 
+if spfr_data.val == 1                   %all params stored in "rows" of 4, 
     mu_p  = params(1:4);
     sig_p = params(5:8);
     amp_p = params(9:12);
-    tr_p  = params(13:16)*10;
-    td_p  = params(17:20)*10;
+    tr_p  = params([13:16])*10;
+    td_p  = params([17:20])*10;
     be_p  = params(23)*.01;
     bi_p  = params(24)*.01;
     ti_p  = params(26)*10;
@@ -35,33 +35,18 @@ stimIdx = false(size(spfr_data.stimIdx));
 stimIdx(tmp+d) = true;
 stim_time = fix(spfr_data.time(stimIdx));
 
-M = 1:(length(spfr_data.pos_vect));
-%x = sort(spfr_data.pos_vect,'ascend');
-x = min(pos_vect):max(pos_vect);
+buffer = 5;
+M = 1:(length(spfr_data.pos_vect)+2*buffer);
+x = M+min(spfr_data.pos_vect)-buffer;
 
-%if moving bar, we need to tag stims to end of pos_vect
-if ~spfr_data.cat_flag
-    dd = mean(diff(pos_vect)) > 0; %if diff >1, then it's PD, if it's less than 1 it's ND
-    if dd && width > 0
-        pos_vect = [pos_vect, pos_vect(end)+(1:(width))]; %append stim positions to PD side of pos_vect
-    elseif ~dd && width > 0
-        pos_vect = [pos_vect(1)+((width):-1:1), pos_vect];
-
-    end
-else %if spfr, we dont want a window
-    x =  [x(1)+(-width:-1), x];
-end
-    
 Ie = zeros(length(stim_time),length(M));
 Ii = zeros(length(stim_time),length(M));
 
-%pos_vect defines leadingedge of stimulated position. x defines valid
-%positions in window
 for i = 1:length(pos_vect)
-    idx = x <= pos_vect(i) & x >= pos_vect(i)-width;
+    pos = pos_vect(i) - min(pos_vect)+buffer;
 
-     Ie(i,idx) = 1;
-     Ii(i,idx) = 1;
+     Ie(i,pos-width:pos) = 1;
+     Ii(i,pos-width:pos) = 1;
 
 end
 
@@ -105,6 +90,7 @@ end
 %regardless of contrast, both linear
 p.be2 = effDur*be_p;
 p.bi2 = effDur*bi_p;
+
 
 p.Tid = ti_p;
 
@@ -176,38 +162,54 @@ if spfr_data.cat_flag
         s_mat = {mue2,mui2,mue,mui;...
                  sige2,sigi2,sige,sigi};
     end
+    
 else
-    %subtract delay from ending index to not encroach on subsequent SPFR
+ %subtract delay from ending index to not encroach on subsequent SPFR
     %spfr_data.time = spfr_data.time - spfr_data.time(t_ind(1)); %because our analytical solutions assume t0 = 0
     t_tot = spfr_data.time;
-    t_on = t_ind(1);
-    t_off= s_ind(1);
+    
+    t_ind = [t_ind(1)*ones(width,1);t_ind];
+    effDur = spfr_data.stimDur;
+    effDur = effDur*sum(p.Ie,1); %if moving, then also account for width 
+    fe_tmp = zeros(length(unique(effDur)),length(t_tot));
+    fi_tmp = zeros(length(unique(effDur)),length(t_tot));
+    fe2_tmp = zeros(length(unique(effDur)),length(t_tot));
+    fi2_tmp = zeros(length(unique(effDur)),length(t_tot));
 
-    fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-    fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
-    
-    fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-    fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
-    
-    %after solving for conductances at each time, we can now shift back
-    %to non-delayed frame to fill vector
-    t_ind = t_ind-d;
-    s_ind = s_ind-d;
-    
-    
-    for i = 1:size(p.Ie,2)
-        fe(i,t_ind(i):end) = fe_tmp(1:end-t_ind(i)+1);
-        fi(i,t_ind(i):end) = fi_tmp(1:end-t_ind(i)+1);
-        fe2(i,t_ind(i):end) = fe2_tmp(1:end-t_ind(i)+1);
-        fi2(i,t_ind(i):end) = fi2_tmp(1:end-t_ind(i)+1);
+    counter2 = 0;
+    for effDuri = unique(effDur)
+            counter2 = counter2+1;
+                        
+            be2 = effDuri*be_p; %if PC, deltas are constants.
+            bi2 = effDuri*bi_p; 
+                  
+            [~,s] = min(abs(spfr_data.time - spfr_data.time(t_ind(1)) - effDuri));
+            t_on = t_ind(1);
+            t_off = s;
+            fe_tmp(1 + effDuri/p.stimDur,:) = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
+            fi_tmp(1 + effDuri/p.stimDur,:) = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+            fe2_tmp(1 + effDuri/p.stimDur,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, be2);
+            fi2_tmp(1 + effDuri/p.stimDur,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, bi2);        
     end
     
-    dd = mean(diff(pos_vect)) > 0;
-    if ~dd %if ND, we need to reverse order
-        fe = flipud(fe);
-        fi = flipud(fi);
-        fe2 = flipud(fe2);
-        fi2 = flipud(fi2);
+    t_ind = t_ind - t_ind(1)+1;
+    ii = 0;
+    for i = 1:size(p.Ie,2)
+        if ~any(p.Ie(:,i),1)
+            continue
+        end
+        ii = ii+1;  
+        fe(i,t_ind(ii):end)  =  fe_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+        fi(i,t_ind(ii):end)  =  fi_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+        fe2(i,t_ind(ii):end) = fe2_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+        fi2(i,t_ind(ii):end) = fi2_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+    end
+    
+    if mean(diff(pos_vect)) < 0 %if ND, we need to reverse order
+        fe(any(fe,2),:) = flipud(fe(any(fe,2),:));
+        fi(any(fi,2),:) = flipud(fi(any(fi,2),:));
+        fe2(any(fe2,2),:) = flipud(fe2(any(fe2,2),:));
+        fi2(any(fi2,2),:) = flipud(fi2(any(fi2,2),:));
     end
     
     fe = fe(:,1:size(spfr_data.time,1));
@@ -216,17 +218,20 @@ else
     fi2 = fi2(:,1:size(spfr_data.time,1));
     
     %caluclate conductances and steady state voltage
+   
     ge  = p.ae*fe + p.ae2*fe2;
-    gi  = p.ai*fi + p.ai2*fi2;
+    gi  = p.ai*fi + p.ai2*fi2;  
+    
     V = ((p.Vr + ge*p.Ve + gi*p.Vi)./(1+ge+gi))';
-    V = V(1:size(spfr_data.time,1));
+    V = [zeros(length(spfr_data.baseSub) - length(V),1);V]; %because of delay, add bad time with zeros
+
     num = (p.Vr + ge*p.Ve + gi*p.Vi);
     den = (1+ge+gi);
     ge1 = (p.ae*fe).*(65-V)';
     gi1 = (p.ai*fi).*(10+V)';
     ge2 = (p.ae2*fe2).*(65-V)';
     gi2 = (p.ai2*fi2).*(10+V)';
-    if spfr_data.val == 0
+    if spfr_data.val == 1
         g_mat = {ge1,gi1,ge2,gi2};
         s_mat = {mue,mui,mue2,mui2;...
                  sige,sigi,sige2,sigi2};
@@ -239,7 +244,10 @@ end
 
 
     function f = fc_sol(t_tot, t_on, t_off, Tr, Td)
-
+        if Tr == Td
+            Tr = Tr + 1e-7; %add a step size smaller than step tolerance of optimizer but avoids discontinuity
+        end
+        
         t0 = t_tot(t_on);
         t_tot = t_tot - t0; %shift everything so t0 is 0
         t1 = t_tot(t_off);  %so now t1 is effDur
@@ -247,6 +255,11 @@ end
         %solve where t0 = 0, so shift everything over
         F1 = @(t) (Td - Tr + Tr.*exp(-t./Tr))./(Td - Tr) - (Td.*exp(-t./Td))./(Td - Tr);
         F2 = @(t) exp(t1./Td).*exp(-t./Td).*((Td - Tr + Tr.*exp(-t1./Tr))./(Td - Tr) - (Td.*exp(-t1./Td))./(Td - Tr) + (Tr.*exp(t1./Td - t1./Tr).*exp(-t1./Td).*(exp(t1./Tr) - 1))./(Td - Tr)) - (Tr.*exp(t./Td - t./Tr).*exp(-t./Td).*(exp(t1./Tr) - 1))./(Td - Tr);
+%         if Tr == Td
+%             F1 = @(t) (Tr.*exp(-t./Tr).*(2.*Ti - Tr))./(Ti - Tr)^2 + (exp(-t./Tr).*(Tr.*t + Tr.*exp(t./Tr).*(Ti - Tr) - (Ti^2.*Tr.*exp((t.*(Ti - Tr))./(Ti.*Tr)))./(Ti - Tr)))./(Tr.*(Ti - Tr));
+%             F2 = @(t) (exp(-t./Tr).*(Tr^2.*exp(t1./Tr) + 2.*Ti.*Tr - Tr^2 + Ti.*t1.*exp(t1./Tr) - Tr.*t1.*exp(t1./Tr) - 2.*Ti.*Tr.*exp(t1./Tr)))./(Ti - Tr)^2 + (exp(-t./Tr).*(Tr.*t - Tr.*t.*exp(t1./Tr) + (Ti^2.*Tr.*exp((Ti.*t - Tr.*t + Tr.*t1)./(Ti.*Tr)))./(Ti - Tr) - (Ti^2.*Tr.*exp((t.*(Ti - Tr))./(Ti.*Tr)))./(Ti - Tr)))./(Tr.*(Ti - Tr));
+%         end       
+        
         f = [zeros(size(t_tot(1:t_on-1)));F1(t_tot(t_on:t_off-1));F2(t_tot(t_off:end))]';
 
         if any(isnan(f) | isinf(f))
@@ -286,7 +299,9 @@ end
     end
 
     function f = fd_sol(t_tot, t_on, t_off, Ti, Tr, Td, b)
-
+        if Tr == Td
+            Tr = Tr + 1e-7; %add a step size smaller than step tolerance of optimizer but avoids discontinuity
+        end
         t0 = t_tot(t_on);
         t_tot = t_tot - t0;
         t1 = t_tot(t_off);
@@ -297,6 +312,10 @@ end
         t1 = 0;
 
         F2 = @(t) - (exp(-t./Td).*((A.*Td.*Ti^2.*exp(t./Td - t./Ti))./(Td - Ti) - (A.*Td.*Ti.*Tr.*exp(t./Td - t./Tr))./(Td - Tr)))./(Td.*Ti - Td.*Tr) - (A.*Td.*Ti.*exp(-t./Td))./(Td.*Ti + Td.*Tr - Ti.*Tr - Td^2);
+%         if Tr == Td
+%            F2 = @(t) -(A.*Ti.*exp(-t./Tr).*(Ti.*Tr + Ti.*t - Tr.*t - Ti.*Tr.*exp((t.*(Ti - Tr))./(Ti.*Tr))))./(Tr.*(Ti - Tr)^2);
+%         end
+        
         f = [zeros(size(t_tot(1:t_off-1)));F2(t_tot(t_off:end))]';
 
         if any(isnan(f) | isinf(f))

@@ -1,4 +1,4 @@
-function [V,ge,gi,g_mat,s_mat,num,den] = t5_EIEIU2CL(params,spfr_data)
+function [V,ge,gi,g_mat,s_mat,num,den] = t5_EIEIU2CLI(params,spfr_data)
 
 if spfr_data.val == 0                   %all params stored in "rows" of 4, 
     mu_p  = params(1:4);
@@ -6,18 +6,23 @@ if spfr_data.val == 0                   %all params stored in "rows" of 4,
     amp_p = params(9:12);
     tr_p  = params(13:16)*10;
     td_p  = params(17:20)*10;
-    be_p  = params(23)*.01;
-    bi_p  = params(24)*.01;
-    ti_p  = params(26)*10;
+    me_p  = params(23)*.01;
+    mi_p  = params(24)*.01;
+    be_p  = params(27);
+    bi_p  = params(28);
+%     bi_p  = -80*mi_p;
+    ti_p  = params(30)*10;
 else
     mu_p  = params([3:4,1:2]); %if NC, flip order of all param sets (seconds always fed into delta)
     sig_p = params([7:8,5:6]);
     amp_p = params([11:12,9:10]);
     tr_p  = params([15:16,13:14])*10;
     td_p  = params([19:20,17:18])*10;
-    be_p  = params(21)*.01;
-    bi_p  = params(22)*.01;
-    ti_p  = params(25)*10;
+    me_p  = params(21)*.01;
+    mi_p  = params(22)*.01;
+    be_p  = params(25);
+    bi_p  = params(26);
+    ti_p  = params(29)*10;
 end
 
 p.Vr = 0;
@@ -102,9 +107,9 @@ if ~spfr_data.cat_flag
     effDur = effDur*spfr_data.width; %if moving, then also account for width 
 end
 
-%regardless of contrast, both linear
-p.be2 = effDur*be_p;
-p.bi2 = effDur*bi_p;
+%both contrasts are linear
+p.be2 = max(0,effDur*me_p + be_p);
+p.bi2 = max(0,effDur*mi_p + bi_p);
 
 p.Tid = ti_p;
 
@@ -150,7 +155,7 @@ if spfr_data.cat_flag
         fe2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fe2_tmp,sum(p.Ii(i,:)),1);
         fi2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fi2_tmp,sum(p.Ii(i,:)),1);
     end
-    
+        
     fe = fe(:,1:size(spfr_data.time,1));
     fi = fi(:,1:size(spfr_data.time,1));
     fe2 = fe2(:,1:size(spfr_data.time,1));
@@ -161,7 +166,7 @@ if spfr_data.cat_flag
     gi  = p.ai*fi + p.ai2*fi2;
     V = ((p.Vr + ge*p.Ve + gi*p.Vi)./(1+ge+gi))';
     V = V(1:size(spfr_data.time,1));
-    num = (p.Vr + ge*p.Ve + gi*p.Vi);
+        num = (p.Vr + ge*p.Ve + gi*p.Vi);
     den = (1+ge+gi);
     ge1 = (p.ae*fe).*(65-V)';
     gi1 = (p.ai*fi).*(10+V)';
@@ -176,6 +181,7 @@ if spfr_data.cat_flag
         s_mat = {mue2,mui2,mue,mui;...
                  sige2,sigi2,sige,sigi};
     end
+    
 else
     %subtract delay from ending index to not encroach on subsequent SPFR
     %spfr_data.time = spfr_data.time - spfr_data.time(t_ind(1)); %because our analytical solutions assume t0 = 0
@@ -210,16 +216,11 @@ else
         fi2 = flipud(fi2);
     end
     
-    fe = fe(:,1:size(spfr_data.time,1));
-    fi = fi(:,1:size(spfr_data.time,1));
-    fe2 = fe2(:,1:size(spfr_data.time,1));
-    fi2 = fi2(:,1:size(spfr_data.time,1));
-    
-    %caluclate conductances and steady state voltage
     ge  = p.ae*fe + p.ae2*fe2;
-    gi  = p.ai*fi + p.ai2*fi2;
+    gi  = p.ai*fi + p.ai2*fi2;  
+    
     V = ((p.Vr + ge*p.Ve + gi*p.Vi)./(1+ge+gi))';
-    V = V(1:size(spfr_data.time,1));
+    V = [zeros(length(spfr_data.baseSub) - length(V),1);V]; %because of delay, add bad time with zeros
     num = (p.Vr + ge*p.Ve + gi*p.Vi);
     den = (1+ge+gi);
     ge1 = (p.ae*fe).*(65-V)';
