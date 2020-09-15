@@ -1,6 +1,6 @@
-function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
+function protocolStruct = createMinMotDiagCorrProtocolG4(inputStruct)
 
-% function createMinMotDiagCorrProtocol(inputStruct)
+% function createMinMotDiagCorrProtocolG4(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate minimal motion stimulus. It has certain assumptions and therefore requires
@@ -65,6 +65,8 @@ function protocolStruct = createMinMotDiagCorrProtocol(inputStruct)
 % .generalFrequency-    Frequency with which frames from the generated protocol
 %                       will be dumped (passed on to runDumpProtocol) in position function units
 %                       (frames per second on the controller). fixed at 500 for gsLevel 4
+% .relGtStName -        Field name in gtStruct that will be used to
+%                       generate the position function (used for length)
 %
 % OUTPUT
 %
@@ -179,7 +181,7 @@ fbStat = default.firstBarStat;
 assert(ismember(fbStat, 0:2), 'firstBarStat should be a number between 0 and 2')
 
 spCorr = default.speedCor;
-assert(ismember(spCorr, [0,1]), 'speedCor should be logical')
+assert(ismember(spCorr, [0,1]), 'speedCor should be single logical')
 
 distCO = default.distCutoff;
 assert(distCO > 1, 'distCutoff should be bigger than 1') %otherwise there are no double bars
@@ -249,10 +251,14 @@ for v1=1:length(fBarV)
         for tt=1:length(stepDiffFrames)
 
             if stepDiffFrames(tt) == 0
-                stimFrames = stepFrames;
+%                 stimFrames = stepFrames;
                 combPos = [nan, nan];
+                frameBase = stepFrames;
+                removeFac = 0; % removes the frames for independent presentation of bar, when it is sim
             else
-                stimFrames = stepDiffFrames(tt);
+%                 stimFrames = stepDiffFrames(tt);
+                frameBase = stepDiffFrames(tt);
+                removeFac = 1;
             end
 
             for pos1=1:length(fBarPos)
@@ -266,7 +272,7 @@ for v1=1:length(fBarV)
                         continue
                     end
 
-                    if stepDiffFrames(tt) == 0 && fBarV(v1) == sBarV(v2)% getting rid of duplicates in sim presntation
+                    if stepDiffFrames(tt) == 0 && fBarV(v1) == sBarV(v2) % getting rid of duplicates in sim presntation
                         tempPos = [fBarPos(pos1), sBarPos(pos2)];
 
                         if ismember(fliplr(tempPos), combPos, 'rows')
@@ -285,12 +291,12 @@ for v1=1:length(fBarV)
                         end
 
                         count = count+1;
-                        tempFV = [ones(1,stimFrames)*fBarV(v1), ...
-                                  ones(1,stepDiffFrames(tt) * corrFac * spCorr) * postFBVal(pv), ...
-                                  ones(1,stepDiffFrames(tt))*postFBVal(pv)];
-                        tempSV = [ones(1,stepDiffFrames(tt))*bkgdVal, ...
-                                  ones(1,stepDiffFrames(tt) * corrFac * spCorr) * bkgdVal, ...
-                                  ones(1,stimFrames)*sBarV(v2)];
+                        tempFV = [fBarV(v1), ...
+                                  ones(1, removeFac * corrFac * spCorr) * postFBVal(pv), ...
+                                  ones(1, removeFac) *  postFBVal(pv)];
+                        tempSV = [ones(1, removeFac) * bkgdVal, ...
+                                  ones(1,removeFac * corrFac * spCorr) * bkgdVal, ...
+                                  sBarV(v2)];
 
                         % to avoid 2 times the duration on the diagonal (if
                         % values are the same (if they differ it flickers
@@ -311,6 +317,7 @@ for v1=1:length(fBarV)
                         gtStruct(count).sVal = tempSV;
                         gtStruct(count).fPos = fBarPos(pos1);
                         gtStruct(count).sPos = sBarPos(pos2);
+                        gtStruct(count).stepFrames = frameBase; 
 
                         gratingArray = vertcat(gratingArray, ...
                                                         [count, fBarV(v1), sBarV(v2), fBarPos(pos1), sBarPos(pos2), ...
@@ -331,6 +338,7 @@ end
 
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;
+ protocolStruct.relGtStName = 'fVal'; 
 
  if cutoff > 0
      fprintf('%d stimuli have been skipped since distance was larger than %d \n', cutoff, distCO)
@@ -389,7 +397,7 @@ end
  %% Creating protocl
 
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

@@ -1,6 +1,6 @@
-function protocolStruct = createMovingLinearObjectProtocol(inputStruct)
+function protocolStruct = createMovingLinearObjectProtocolG4(inputStruct)
 
-% function createMovingLinearObjectProtocol(inputStruct)
+% function createMovingLinearObjectProtocolG4(inputStruct)
 %
 % This function uses makeLinearTrajectoriesGrid function and concentric gratings to
 % generate moving center surround objects. It has certain assumptions and therefore requires
@@ -53,6 +53,8 @@ function protocolStruct = createMovingLinearObjectProtocol(inputStruct)
 % .numTraj -        non-negative integer. Number of trajectories for each
 %                   direction (sperated by trajStepSize pixels in the
 %                   orthogonal direction) { 3 }
+% .maskStepDur -    Single number, in secs. Duration of step between mask
+%                   changing position (object moving)
 % .intFrames -      number of empty intervening frames. If not given half a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3}
@@ -94,6 +96,7 @@ default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 default.freqCorrFlag = 1;
+default.maskStepDur = 0.04; % mask step since in this protocol the mask is moving
 
 % Fixed parameters
 fixed.gsLevel = 4;
@@ -120,6 +123,10 @@ end
 
  %% MASK
 
+ stepLen = default.maskStepDur; 
+ mStepFrames = round(stepLen * fixed.generalFrequency);
+ assert(length(mStepFrames) == 1 && mStepFrames > 0, 'maskStepDur should be a single positive number')
+ 
  maskT = default.maskType;
 
  if ischar(maskT)
@@ -173,6 +180,8 @@ end
 
  % might change after startBar is read in
  numMasks = length(maskSt);
+ 
+ protocolStruct.mStepFrames = mStepFrames; 
 
  %% GRATING PARAMETERS
 
@@ -226,7 +235,7 @@ end
              gtStruct(count).widthON  = maskSt(ii).radius;
              gtStruct(count).widthOFF = ceil(maskSt(ii).radius * cenProp(jj))+1;
          end
-         gtStruct(count).position = ceil(maskSt(ii).radius * cenProp(jj))+1;
+         gtStruct(count).pos = ceil(maskSt(ii).radius * cenProp(jj))+1;
          gtStruct(count).barAtPos = cenBar(jj);
          if strcmp(maskSt(ii).type, 'square')
              gtStruct(count).type = 1;
@@ -244,6 +253,7 @@ end
 
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = maskSt(maskTempInd);
+ protocolStruct.relGtStName = '';
 
  %% Mask Positions
 
@@ -314,7 +324,7 @@ end
 
  %% Creating protocl
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

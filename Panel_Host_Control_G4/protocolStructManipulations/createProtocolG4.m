@@ -120,11 +120,18 @@ if isempty(widthCell)
     warning('No width information in gratingStructure - freqCorr is irrelevant')
 end
 
+% finds the field according to posFunc length is determined
+relFieldName = protocolStruct.relGtStName;
 
 for ii=1:length(protocolStruct.gratingStruct)
     stimSeqCell{ii} = generateGratingBaseSeq(protocolStruct.gratingStruct(ii), protocolStruct.funcHand);
-    stimPosFunCell{ii} = reshape(repmat((1:length(protocolStruct.gratingStruct(ii).pos)) + 1, ... % +1 since an empty frame is going to be added later
+    
+    if ~isempty(relFieldName) % not necessary for interleave 3
+        relField = getfield(protocolStruct.gratingStruct(ii), relFieldName);
+        stimPosFunCell{ii} = reshape(repmat((1:length(relField)) + 1, ... % +1 since an empty frame is going to be added later
                                  protocolStruct.gratingStruct(ii).stepFrames, 1), 1, []);
+    end
+    
     if ~isempty(tempFreqCorr)
         tempFreqCorr(ii) = sum(cellfun(@(x) getfield(protocolStruct.gratingStruct(ii), x), widthCell));
     end
@@ -180,7 +187,7 @@ if isfield(protocolStruct, 'baseParameters')
     bkgdL = protocolStruct.baseParameters.background;
 else
     gsL = 4;
-    bkgdL = 0.49; %so it would be rounded to 3 in gs3
+    bkgdL = 0.49; %so it would be rounded to 3 in gs3 / 7 in gs4
 end
 
 bkgdVal = round(bkgdL * (2^gsL-1));
@@ -330,7 +337,6 @@ switch protocolStruct.interleave
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
         emptyIntFrame = ones(size(relRangeX, 2), size(relRangeY, 2)) * bkgdVal;
-%         emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
         relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
 
         if isfield(protocolStruct.randomize, 'randWithin')
@@ -379,8 +385,11 @@ switch protocolStruct.interleave
 
 
         rotSeqs = cell(numSeqs, numMasks, numOrt);
+        rotPosFuns = cell(numSeqs, numMasks, numOrt);
+        
         for ii=1:numSeqs
              tempSeq = protocolStruct.stimSeqCell{ii};
+             tempPosFun = protocolStruct.stimPosFunCell{ii};
             for jj=1:numMasks
                  tempMask = protocolStruct.masksMat(:,:,jj);
                 for kk=1:numOrt
@@ -394,6 +403,9 @@ switch protocolStruct.interleave
                         tempStim(tempStim == 0) = bkgdVal;
                         rotSeqs{ii, jj, kk}(:,:,mm) = round(tempStim);
                     end
+                    
+                    rotPosFuns{ii, jj, kk} = tempPosFun; % assumes no steps are added in rotation
+                    
                 end
             end
         end
@@ -402,28 +414,32 @@ switch protocolStruct.interleave
         relRandInd = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.masks, protocolStruct.randomize.orientations];
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
-        emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
-        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
+        emptyIntFrame = ones(size(relRangeX, 2), size(relRangeY, 2)) * bkgdVal;
+%         emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
 
         for ii=1:numReps
 
             stimInds = randomizeMatrixInds2([numSeqs, numMasks, numOrt], relRandInd);
 
             tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2), stimInds(x,3)}, 1:size(stimInds,1), 'uniformoutput', 0);
+            tempPosFunCell = arrayfun(@(x) rotPosFuns{stimInds(x,1), stimInds(x,2), stimInds(x,3)}, 1:size(stimInds,1), 'uniformoutput', 0);
             secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [max(relRandInd), protocolStruct.randomize.maskPositions]); % changed since forced randomization
             tempStimMat = cell(1, size(secStimInd, 1));  %size of secStimInd is the actual number of individual stimuli after they have been combined
+            tempPosFunMat = cell(1, size(secStimInd, 1)); 
 
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
-                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
-                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
+                addEmpty = cat(3, emptyIntFrame, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                stimWBuffer = cat(3, addEmpty, emptyIntFrame);
                 tempStimMat{jj} = stimWBuffer;
+                tempPosFunMat{jj} = [ones(1,protocolStruct.intFrames), tempPosFunCell{secStimInd(jj,1)}, ones(1,postNum)];
 
             end
 
             presentedInd = [stimInds(secStimInd(:,1), :), secStimInd(:,2)];
 
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
+            posFuncs{ii} = tempPosFunMat;
             relInds{ii} = presentedInd;
             if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
@@ -434,7 +450,9 @@ switch protocolStruct.interleave
         end
 
     case 3  % GRATINGSEQ OF LENGTH 1 INTERLEAVED WITH MASKS AND ORIENTAITONS APPLIED TO EVERY MASKPOSITION CELL (TRAJECTORY)
-
+        
+        
+        relStepFrames = protocolStruct.mStepFrames;
         % make sure each stimSeq contains only one frame
         stimLengths = cellfun(@(x) size(x, 3), protocolStruct.stimSeqCell);
         assert(prod(stimLengths) == 1, 'If interleave equals 3, each gratingSeq should be just one frame')
@@ -483,8 +501,8 @@ switch protocolStruct.interleave
         for ii=1:maxVal
              tempSeq = protocolStruct.stimSeqCell{ssI(ii)};
              tempMask = protocolStruct.masksMat(:,:,mkI(ii));
-             tempOri = 45*protocolStruct.orientations(orI(ii));
-             tempStim = tempSeq(:,:,1).*tempMask; % since it was already verified that tempSeq is 1 frame long
+             tempOri = 45 * protocolStruct.orientations(orI(ii));
+             tempStim = tempSeq(:,:,1) .* tempMask; % since it was already verified that tempSeq is 1 frame long
              tempStim = imrotate(tempStim, tempOri, 'nearest', 'crop');
              %  sets background to desired level
              tempStim(tempStim == 0) = bkgdVal;
@@ -493,13 +511,14 @@ switch protocolStruct.interleave
 
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransform(protocolStruct.maskPositions);
-        emptyIntFrames = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), protocolStruct.intFrames) * bkgdVal;
-        emptyIntFramesPost = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), postNum) * bkgdVal;
+        emptyIntFrame = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2)) * bkgdVal;
+%         emptyIntFramesPost = ones(size(relRangeX{1}, 2), size(relRangeY{1}, 2), postNum) * bkgdVal;
 
         for ii=1:numReps
 
             stimInds = randomizeMatrixInds([maxVal, numMaskPos], [relRand, protocolStruct.randomize.maskPositions]);
             tempStimMat = cell(1, size(stimInds, 1)); %size of stimInd is the actual number of individual stimuli after they have been combined
+            tempPosFunMat = cell(1, size(stimInds, 1)); 
 
             for jj=1:size(stimInds, 1)
                 concatStim = zeros(size(relRangeX{1}, 2), size(relRangeY{1}, 2), ...
@@ -509,14 +528,20 @@ switch protocolStruct.interleave
                     relCrds = {relRangeX{stimInds(jj,2)}(kk,:); relRangeY{stimInds(jj,2)}(kk,:)};
                     concatStim(:,:,kk) = baseStim(relCrds{1}, relCrds{2},1); %should contain only stims of length 1
                 end
-                addEmpty = cat(3, emptyIntFrames, concatStim);
-                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
+                
+                prePosMat = reshape(repmat((1:size(concatStim, 3)) + 1, relStepFrames, 1), 1, []); 
+                
+                addEmpty = cat(3, emptyIntFrame, concatStim);
+                stimWBuffer = cat(3, addEmpty, emptyIntFrame);
                 tempStimMat{jj} = stimWBuffer;
+                
+                tempPosFunMat{jj} = [ones(1,protocolStruct.intFrames), prePosMat, ones(1,postNum)];
             end
 
             presentedInd = [ssI(stimInds(:,1)), mkI(stimInds(:,1)), orI(stimInds(:,1)), stimInds(:,2)];
 
             mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
+            posFuncs{ii} = tempPosFunMat;
             relInds{ii} = presentedInd;
             if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);

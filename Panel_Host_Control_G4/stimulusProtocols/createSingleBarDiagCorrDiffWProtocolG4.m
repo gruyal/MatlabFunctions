@@ -1,6 +1,6 @@
-function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
+function protocolStruct = createSingleBarDiagCorrDiffWProtocolG4(inputStruct)
 
-% function createSingleBarDiagCorrProtocol(inputStruct)
+% function createSingleBarDiagCorrProtocolG4(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate single bar that will in every position in the window . It has certain assumptions and therefore requires
@@ -265,6 +265,7 @@ end
  protocolStruct.gratingTable = array2table(gratingArray, 'variablenames', tabVarNames);
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = maskSt;
+ protocolStruct.relGtStName = 'pos';
 
  %% GRID
 

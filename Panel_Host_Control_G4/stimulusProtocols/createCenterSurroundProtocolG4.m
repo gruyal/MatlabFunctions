@@ -1,6 +1,6 @@
-function protocolStruct = createCenterSurroundProtocol(inputStruct)
+function protocolStruct = createCenterSurroundProtocolG4(inputStruct)
 
-% function createCenterSurroundProtocol(inputStruct)
+% function createCenterSurroundProtocolG4(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate center surround stimuli. It has certain assumptions and therefore requires
@@ -278,6 +278,7 @@ end
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = maskSt(maskTempInd);
+ protocolStruct.relGtStName = 'pos';
 
  %% GRID
 

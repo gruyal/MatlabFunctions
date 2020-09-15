@@ -1,16 +1,14 @@
-function protocolStruct = createFlickerBarDiagCorrProtocol(inputStruct)
+function protocolStruct = createMovingBarDiagCorrProtocolG4(inputStruct)
 
-% function createFlickerBarDiagCorrProtocol(inputStruct)
+% function createMovingBarDiagCorrProtocolG4(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
-% generate single bar that will in flicker every input position.
-% It has certain assumptions and therefore requires
+% generate single bar moving through the window . It has certain assumptions and therefore requires
 % less inputs.
 % If function is called with no inputStruct, it prompt the user for
 % relevant input and allows to change the default
 %
 % ASSUMPTIONS
-% Width -           1 for all stim
 % Randomize -       everything is randomized (so that if several gratings appear
 %                   they appear in all positions and in all oreintations.
 % Masks positions - [1,1] Grid is assumed.
@@ -18,8 +16,7 @@ function protocolStruct = createFlickerBarDiagCorrProtocol(inputStruct)
 %                   even in diagonal the coverage is complete
 % maskType -        Due to the way the bar is generated, mask type is
 %                   always rectangle.
-% grtMaskInt -      one mask to allgrating . Set to 2. Since limited to one ori and one height
-% grid -            [1,1] grid is fixed
+% grtMaskInt -      one to one grating and mask. Set to 1. Since mask need to change orientation also
 %
 %   NOTE!!! to correct small problems with diagonal line orientation is
 %   implemented here and not in createProtocol
@@ -29,33 +26,26 @@ function protocolStruct = createFlickerBarDiagCorrProtocol(inputStruct)
 % Only 2 obligatory fields are width and gridCenter
 %
 % inputStruct -     Should have the following fields
-% .flickerDur -     Single number. Duration (in secs) for a single flicker
-%                   stim { 1 }
-% .flickerPos -     1XP vector. postions within the reference frame in
-%                   which to flicker (0 is center)
-%
-%                   NOTE!! for orientations that are 180 deg apart,
-%                   positions are flipped
-%
-% .flickerStart -   single number. logical. if TRUE starts bright { 0 }
-% .barHeight -      Single number. height of bar in pixels.
-% .barWid -         1XW vector. Bar width in pixels (rounded)
-% .barSpan -        single number. span along which bar will be presented (in
+% .barWid -         1XW vector of width of bar in pixels
+% .stimBar -        1XN vector (0-1) normalized luminance value.
+% .barHeight -      1XM vector. height of bar in pixels.
+% .barSpan -        1XS vector. span along which bar will move (in
 %                   pixels). Will be converted into the width of the
 %                   rectangular mask
-% .orientation -    Single number. Since the bar isn't moving 4-7 are redundant.
+% .orientation -    Vector (0-3). Since the bar isn't moving 4-7 are redundant.
 %                   Orientations for the gratings. Applied on all inputs.
-%
-%                   Note!!  orientation is applied outside of
-%                   createProtocol.
-%
-% .stimDur -        1XT vector. Duration in seconds for half a flicker
-%                   cycle (how long shall the bar remain the same)
+% .stepDur -        duration in seconds in which the bar will appear
 % .gsLevel -        gray scale level ( fixed at 4 )
 % .gratingMidVal -  value of the rest of the window (0.49 - bkgd level)
 % .maskPositions -  User can specify these directly as an NX2 matrix, or
 %                   use the other parameters to generate them (if this is
 %                   given other parameters are disregarded
+% .gridSize  -      1X2 vector specifying size of grid in X and Y (spatial
+%                   coordinates). { [2,2] }
+% .gridPosOverlap - Overlap between different positions on mask position grid.
+%                   Units s are normalized maskSizes so that 0 means no overlap and no gap,
+%                   1 means complete overlap (meaningless), and -1 means a gap of one mask
+%                   between positions. { 0 }
 % .gridCenter -     1X2 vector specifying the center of the grid in X and Y
 %                   (sptial coordinates in pixels <for an 8X4 arena its 96X32). If one dimension of
 %                   grid is even, grid will be presented around center but
@@ -63,7 +53,9 @@ function protocolStruct = createFlickerBarDiagCorrProtocol(inputStruct)
 % .intFrames -      number of empty intervening frames. If not given half a
 %                   second worth (based on generalFrequency)
 % .repeats -        scalar. number of times the whole protocol repeats (passed into createProtocol) {3}
-% .generalFrequency-in G4 fixed at 500Hz for gsLevel 4
+% .generalFrequency-Frequency with which frames from the generated protocol
+%                   will be dumped (passed on to runDumpProtocol) in position function units
+%                   (frames per second on the controller). fixed at 500 for gsLevel 4
 % .freqCorrFlag -   Also passed on to runDumpProtocol. Logical flag to
 %                   indicate whether different stimuli should be run with temporal frequency
 %                   correction { 1 }.
@@ -82,25 +74,24 @@ baseSiz = 445; % size of single frame or mask
 arenaSize = [192,48];
 gratingFuncHand = @generateBarFrameByInds;
 
-default.flickerDur = 0.96;
-default.flickerPos = 'UI';
-default.flickerStart = 1;
+default.stimBar = 1;
+default.barWid = [1,2];
 default.barHeight = 9;
-default.barWid = 2;
-default.barSpan = 11;
+default.barSpan = 9;
 default.gridCenter = 'UI';
 default.gratingMidVal = 0.49;
-default.orientations = 'UI';
-default.stimDur = [0.02, 0.04, 0.08, 0.16];
+default.orientations = 0:7;
+default.stepDur = 0.08;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 
+
 fixed.gsLevel = 4;
-fixed.generalFrequency = 500; %for gsLevel 4
+fixed.generalFrequency = 500;
 fixed.maskType = {'rectangle'};
 fixed.freqCorrFlag = 0;
-fixed.grtMaskInt = 2;
+fixed.grtMaskInt = 1;
 fixed.gridSize = [1,1];
 fixed.gridOverlap = 0;
 
@@ -115,86 +106,59 @@ end
  %% ORIENTATIONS
 
  ort = default.orientations;
- assert(isvector(ort) && length(ort) == 1, 'Orientation should be 1XM vector')
- assert(ismember(ort, 0:3), 'Orientation values should be between 0 and 3')
+ assert(isvector(ort), 'Orientation should be 1XM vector')
+ assert(prod(ismember(ort, 0:7)) == 1, 'Orientation values should be between 0 and 7')
 
  newOrt = ort; %(ismember(ort, 0:3));
+
 
  % orientation is implemented internally
  protocolStruct.orientations = 0;
 
 
+
+
   %% MASK (masks created with grating)
 
  maskHW = floor(default.barSpan/2); % rectangle mask input is half width
- assert(2*maskHW < default.barSpan, 'barSpan must be an odd number')
- assert(isvector(maskHW), 'barSpan should be a single number')
- assert(length(maskHW) == 1, 'barSpan should be a single number')
- assert(maskHW > 1, 'barSpan should be a positive number')
+ assert(isvector(maskHW), 'barSpan should be a 1XS vector')
+ assert(min(maskHW) > 0, 'barSpan should be positive')
 
- minMaskR = maskHW;
+
+ minMaskR = min(maskHW);
 
  maskHH = floor(default.barHeight/2);
- assert(isvector(maskHH) && length(maskHH) == 1, 'barHeight should be a single number');
- assert(maskHH > 0, 'barHeight should be a positive number')
+ assert(isvector(maskHH), 'barHeight should be a 1XM vector');
+ assert(min(maskHH) > 0, 'barHeight minimum should be a positive number')
 
  maskT = fixed.maskType;
- relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2)); % was +1 (with -1 overlap with non-rotated square is too small);
 
- if rem(newOrt, 2)
-     relRad = relDiagR;
-     relPosRange = -relDiagR:relDiagR;
- else
-     relRad = relRegR;
-     relPosRange = -relRegR:relRegR;
- end
-
- maskSt(1).type = maskT{1};
- maskSt(1).radius = [relRad, maskHH];
- maskSt(1).ori = newOrt;
-
- protocolStruct.masksStruct = maskSt;
-
+%  maskCount = 0;
+%  for ii=1:length(maskHH)
+%      maskCount = maskCount+1;
+%      maskSt(maskCount).type = maskT{1};
+%      maskSt(maskCount).radius = [maskHW, maskHH(ii)];
+%  end
+%
+%
+%  numMasks = length(maskSt);
+%
+%  protocolStruct.masksStruct = maskSt;
 
 %% GRATING PARAMETERS
 
 % needed to determine number of frames to appear
 protocolStruct.generalFrequency = fixed.generalFrequency;
 
-stimLen = sort(default.stimDur);
-assert(isvector(stimLen), 'stimDur should be one a vector')
+stepLen = default.stepDur;
+assert(isvector(stepLen), 'stepDur should be one a vector')
 
-stimFrames = unique(round(stimLen * fixed.generalFrequency));
-if length(stimFrames) < length(stimLen)
-    warning('%d step durations omitted since were the same after rounding', length(stimLen) - length(stimFrames))
+stepFrames = unique(round(stepLen * fixed.generalFrequency));
+if length(stepFrames) < length(stepLen)
+    warning('%d step durations omitted since were the same after rounding', length(stepLen) - length(stepFrames))
 end
 
-assert(min(stimFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
-
-flicDur = default.flickerDur * fixed.generalFrequency;
-assert(isvector(flicDur) && length(flicDur) == 1, 'flickerDur should be a single number')
-assert(2*max(stimFrames) <= flicDur, 'longest stimDur cycle is longer than flicker duration')
-
-relCyc = floor(flicDur./(2*stimFrames));
-
-flicPos = default.flickerPos;
-assert(isvector(flicPos), 'flickerPos should be a 1XP vector')
-assert(all(ismember(flicPos, relPosRange)), 'flicker positions out of range: between %d and %d', relPosRange(1), relPosRange(end))
-
-flicSt = default.flickerStart;
-assert(ismember(flicSt, [0,1]), 'flicker start should be logical')
-
-if flicSt
-    baseVec = [1,0];
-else
-    baseVec = [0,1];
-end
-
-barW = round(default.barWid);
-assert(isvector(barW), 'barWid should be a 1XW vector')
-assert(min(barW) > 0, 'barWid should be a positive number')
-assert(max(barW) < 2*maskHW+1, 'barWid is bigger than mask width')
+assert(min(stepFrames) > 0, 'stimulus can not be presented for such a short duration. Minimal duration is 20ms')
 
 gsLev = fixed.gsLevel;
 
@@ -202,44 +166,76 @@ bkgdVal = default.gratingMidVal;
 assert(length(bkgdVal) == 1, 'gratingMidVal should be a single number');
 assert(bkgdVal >=0 && bkgdVal <= 1, 'gratingMidVal should be between 0 and 1')
 
+stimB = default.stimBar;
+assert(min(stimB) >=0 && max(stimB) <= 1, 'stimBar should be between 0 and 1');
+assert(isvector(stimB), 'stimBar should be a 1XN vector')
+
+barW = default.barWid;
+assert(isvector(barW), 'barW should be a 1XW vector')
+assert(min(barW) > 0, 'barW should be a positive number')
+
 
 count = 0;
 gratingArray = [];
 
-for ii=1:length(stimFrames)
+for vv=1:length(stimB)
 
-    relBaseVec = reshape(repmat(baseVec, stimFrames(ii), 1), 1, []);
-    relValVec = repmat(relBaseVec, 1, relCyc(ii));
+    for ww=1:length(barW)
 
-    for jj=1:length(barW)
+        for hh=1:length(maskHH)
 
-        for kk=1:length(flicPos)
+            for sp = 1:length(maskHW)
 
-            count = count+1;
+                relRegR = maskHW(sp);
+                relDiagR = round((2*relRegR+1)/sqrt(2));% was +1 (with -1 overlap with non-rotated square is too small);
+                radCell = {relRegR, relDiagR};
 
-            gtStruct(count).wid = barW(jj);
-            gtStruct(count).ori = newOrt;
-            gtStruct(count).val = relValVec;
-            %gtStruct(count).sqDim = max(2*maskHW +1, 2*maskHH+1); % generateBarFrameByInds corrects for diagonal internally
-            gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
-            gtStruct(count).pos = flicPos(kk);
-            gtStruct(count).gsLevel = gsLev;
-            gtStruct(count).bkgdVal = bkgdVal;
-            gtStruct(count).matSize = baseSiz;
+                for kk=1:length(stepFrames)
 
-            gratingArray = vertcat(gratingArray, ...
-                                   [count, barW(jj), max(2*maskHW +1, 2*maskHH+1), 2*maskHH+1, ...
-                                   (2*stimFrames(ii))/fixed.generalFrequency, flicPos(kk)]);
+                    for oo=1:length(newOrt)
+
+                        count = count+1;
+
+                        ortPosInd = rem(newOrt(oo),2) +1;
+                        relRad = radCell{ortPosInd};
+
+                        relPos = -relRad:relRad+barW(ww)-1;
+%                         corrPos = reshape(repmat(relPos, stepFrames(kk), 1), 1, []);
+
+                        gtStruct(count).wid = barW(ww);
+                        gtStruct(count).ori = newOrt(oo);
+                        gtStruct(count).val = stimB(vv);
+                        %gtStruct(count).sqDim = max(2*maskHW(sp)+1, 2*maskHH(hh)+1); % generateBarFrameByInds corrects for diagonal internally
+                        gtStruct(count).sqDim = 2*maskHW(sp)+1; % since when using divideTotSquareToCols height is not taken into account
+
+                        gtStruct(count).pos = relPos;
+                        gtStruct(count).stepFrames = stepFrames(kk);
+                        gtStruct(count).gsLevel = gsLev;
+                        gtStruct(count).bkgdVal = bkgdVal;
+                        gtStruct(count).matSize = baseSiz;
+
+                        maskSt(count).type = maskT{1};
+                        maskSt(count).radius = [relRad, maskHH(hh)];
+                        maskSt(count).ori = newOrt(oo);
+
+                        gratingArray = vertcat(gratingArray, ...
+                                                    [count, stimB(vv), barW(ww), 2*maskHW(sp)+1, ...
+                                                    stepFrames(kk)/fixed.generalFrequency, 2*maskHH(hh)+1, newOrt(oo)]);
+
+                    end
+                end
+            end
         end
     end
 end
 
 
- tabVarNames =  {'index', 'width', 'span', 'height', 'cycDur', 'position'};
+ tabVarNames =  {'index', 'value', 'width', 'span', 'stepDur', 'height', 'orient'};
 
  protocolStruct.gratingTable = array2table(gratingArray, 'variablenames', tabVarNames);
  protocolStruct.gratingStruct = gtStruct;
-
+ protocolStruct.masksStruct = maskSt;
+ protocolStruct.relGtStName = 'pos'; 
 
  %% GRID
 
@@ -253,7 +249,6 @@ end
  gdCen = default.gridCenter;
  assert(isvector(gdCen), 'gridCenter should be a 1X2 vector')
  assert(length(gdCen)==2, 'gridCenter should be a 1X2 vector')
-
 
  stCrds = gdCen - space*(gridSt.gridSize-1)/2;
  if stCrds(1) < 1
@@ -272,6 +267,7 @@ end
  protocolStruct.maskPositions = maskPos;
 
 
+
  %% Misc parameters
 
  protocolStruct.freqCorrFlag = fixed.freqCorrFlag;
@@ -281,7 +277,7 @@ end
 
  intF = default.intFrames;
  if isnan(intF)
-     protocolStruct.intFrames = floor(fixed.generalFrequency/2);
+     protocolStruct.intFrames = floor(fixed.generalFrequency/2.5);
  else % if user gave a number
     assert(intF >= 0, 'intFrames should be a non-negative number')
     protocolStruct.intFrames = intF;
@@ -297,7 +293,7 @@ end
  %% Creating protocl
 
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

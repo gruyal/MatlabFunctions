@@ -1,6 +1,6 @@
-function protocolStruct = createMovingBarDiagCorrShiftProtocol(inputStruct)
+function protocolStruct = createMovingBarDiagCorrShiftProtocolG4(inputStruct)
 
-% function createMovingBarDiagCorrShiftProtocol(inputStruct)
+% function createMovingBarDiagCorrShiftProtocolG4(inputStruct)
 %
 % This function uses the inputStruct and createProtocol function to
 % generate single bar moving through the window . It has certain assumptions and therefore requires
@@ -345,6 +345,7 @@ end
  protocolStruct.gratingTable = tmpTab;
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = maskSt;
+ protocolStruct.relGtStName = 'pos';
 
  %% GRID
 
