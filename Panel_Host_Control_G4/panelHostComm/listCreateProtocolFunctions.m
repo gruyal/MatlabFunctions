@@ -8,7 +8,7 @@ function funcHand = listCreateProtocolFunctions
 
 protocolsDir = 'E:\ExpCodeandRes\MatlabFunctions\Panel_Host_Control_G4\stimulusProtocols';
 
-dirRes = dir(fullfile(protocolsDir, '*Protocol.m'));
+dirRes = dir(fullfile(protocolsDir, '*ProtocolG4.m'));
 
 fprintf(' \n Available createXXXProtocol functions: \n')
 

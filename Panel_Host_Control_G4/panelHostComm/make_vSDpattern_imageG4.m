@@ -12,6 +12,8 @@ function totStat = make_vSDpattern_imageG4(pStruct, saveDir)
 % saveDir -     string. name of directory where the files will be saved
 %
 % output is simply the sum of fclose status
+%
+% NOTE! this function disables arena pitch correction
 
 if ~isfolder(saveDir)
   error('%s folder does not exsit', saveDir)
@@ -43,6 +45,7 @@ for ii = 1:num_patterns
     param.stretch = zeros(size(Pats,3), 1); % would have to change to use this feature
     param.gs_val = gs_val;
     param.ID =  ii;
+    param.arena_pitch = 0;  % disabling arena pitch correction
     stat(ii) = save_pattern_G4(Pats, param, [saveDir, '\Patterns'], ['Pattern_' num2str(param.ID, '%04d') '_G4.mat']);
 
 end

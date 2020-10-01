@@ -45,6 +45,7 @@ stat = zeros(1, num_functions);
 
 for ii = 1:num_functions
     relFun = pStruct.stim(ii).posFuncCell;
+    relLen = length(relFun);
     func = [relFun, ones(1, frameBuffer)]; % shifts to zero when saved
     param.type = 'pfn';
     param.ID = ii;
