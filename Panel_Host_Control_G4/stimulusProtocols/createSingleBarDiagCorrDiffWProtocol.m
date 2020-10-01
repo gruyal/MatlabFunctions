@@ -1,3 +1,4 @@
+
 function protocolStruct = createSingleBarDiagCorrDiffWProtocol(inputStruct)
 
 % function createSingleBarDiagCorrProtocol(inputStruct)

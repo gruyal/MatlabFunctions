@@ -43,7 +43,7 @@ for ii = 1:num_patterns
     param.stretch = zeros(size(Pats,3), 1); % would have to change to use this feature
     param.gs_val = gs_val;
     param.ID =  ii;
-    stat(ii) = save_pattern_G4(Pats, param, [saveDir, '\Patterns'], ['Pattern_' num2str(param.ID, '%04d') '_G4.mat']);
+    stat(ii) = save_pattern_G4(Pats, param, [saveDir, '\Patterns'], ['Pattern_', num2str(param.ID, '%04d'), '_G4.mat']);
 
 end
 

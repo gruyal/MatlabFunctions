@@ -105,7 +105,7 @@ for ii=1:numStim
     stimTime = size(protocolStruct.stim(ii).matCell, 3)/relFreq;
 
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
-    plotMidFrame(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
+    plotMidFrameG4(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
     tH = title(num2str(protocolStruct.stim(ii).relInds));
     tH.VerticalAlignment = 'top';
 

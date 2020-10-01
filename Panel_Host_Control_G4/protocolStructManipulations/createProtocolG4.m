@@ -1,4 +1,4 @@
-function protocolStruct = createProtocol(protocolStruct)
+function protocolStruct = createProtocolG4(protocolStruct)
 
 % function protocolStruct = createProtocol(protocolStruct)
 %
@@ -141,6 +141,7 @@ numReps = protocolStruct.repeats;
 mats = cell(1,numReps);
 relInds = mats;
 freqCorr = mats;
+poss = mats;
 
 
 frameSize = size(stimSeqCell{1}(:,:,1));
@@ -285,27 +286,31 @@ switch protocolStruct.interleave
     case 1  % GRATINGSEQ AND MASKS ARE NOT INTERLEAVED (ONE TO ONE) BUT THE COMBINATIONS ARE INTERLEAVED WITH ALL ORIENTATIONS
 
         assert(numSeqs == numMasks, 'For interleave 1, gratingSeqs and masks should be of same length')
+        assert(numOrt == 1, 'For interleave 1 in G4 Ort is dealt with internally in createXXXProtocol')
+        assert(protocolStruct.orientations == 0, 'For interleave 1 in G4 Ort is dealt with internally in createXXXProtocol')
 
-        rotSeqs = cell(numSeqs, numOrt);
+        rotSeqs = cell(numSeqs, 1);
+        rotPosFun = rotSeqs;
 
         for ii=1:numSeqs
             tempSeq = protocolStruct.stimSeqCell{ii};
+            basePosFunc = 1:size(tempSeq, 3);
+            rotPosFun{ii} = reshape(repmat(basePosFunc, protocolStruct.posFunFac(ii), 1), 1, []);
             for jj=1:size(tempSeq, 3)
                 tempStim = tempSeq(:,:,jj).*protocolStruct.masksMat(:,:,ii);
-                for kk=1:numOrt
-                    tempStim2 = imrotate(tempStim, 45*protocolStruct.orientations(kk), 'nearest', 'crop');
-                    %sets background to desired level
-                    tempStim2(tempStim2 == 0) = bkgdVal;
-                    rotSeqs{ii, kk}(:,:,jj) = round(tempStim2);
-                end
+                % sets background to desired level
+                tempStim(tempStim == 0) = bkgdVal;
+                rotSeqs{ii}(:,:,jj) = round(tempStim);
+                
             end
         end
 
 
         % mapping to arena and randomizing
         [relRangeX, relRangeY] = getArenaMaskTransformG4(protocolStruct.maskPositions);
-        emptyIntFrames = ones(size(relRangeX, 2), size(relRangeY, 2), protocolStruct.intFrames) * bkgdVal;
-        emptyIntFramesPost = ones(size(relRangeX, 2), size(relRangeY, 2), postNum) * bkgdVal;
+        emptyFrame = ones(size(relRangeX, 2), size(relRangeY, 2), 1) * bkgdVal;
+        preEmptyNum = protocolStruct.intFrames;
+        postEmptyNum = postNum;
         relRand = [protocolStruct.randomize.gratingSeq, protocolStruct.randomize.orientations]; % since gratingSeq and masks are not interleaved
 
         if isfield(protocolStruct.randomize, 'randWithin')
@@ -317,28 +322,32 @@ switch protocolStruct.interleave
         for ii=1:numReps
 
             stimInds = randomizeMatrixInds([numSeqs, numOrt], relRand, randWithinF);
-
             tempStimCell = arrayfun(@(x) rotSeqs{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
+            tempPosFCell = arrayfun(@(x) rotPosFun{stimInds(x,1), stimInds(x,2)}, 1:size(stimInds,1), 'uniformoutput', 0);
 
-        % Changed rand flag for tempStimCell to 0 - might need to do that in the rest
+            % Changed rand flag for tempStimCell to 0 - might need to do that in the rest
 
-        % changed back to 1 since centerSurround was not randomized
-        % properly
+            % changed back to 1 since centerSurround was not randomized
+            % properly
             tempRelRand = min(relRand);
             secStimInd = randomizeMatrixInds([length(tempStimCell), numMaskPos], [tempRelRand, protocolStruct.randomize.maskPositions]);
             tempStimMat = cell(1, size(secStimInd, 1)); %size of secStimInd is the actual number of individual stimuli after they have been combined
+            tempPosFMat = tempStimMat;
 
             for jj=1:size(secStimInd, 1)
                 relCrds = {relRangeX(secStimInd(jj,2),:); relRangeY(secStimInd(jj,2),:)};
-                addEmpty = cat(3, emptyIntFrames, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
-                stimWBuffer = cat(3, addEmpty, emptyIntFramesPost);
+                addEmpty = cat(3, emptyFrame, tempStimCell{secStimInd(jj,1)}(relCrds{1}, relCrds{2},:));
+                stimWBuffer = cat(3, addEmpty, emptyFrame);
                 tempStimMat{jj} = stimWBuffer;
-
+                
+                tempPosFMat{jj} = [zeros(1, preEmptyNum), tempPosFCell{secStimInd(jj,1)}, zeros(1, postEmptyNum)];
+                
             end
 
             presentedInd = [stimInds(secStimInd(:,1), [1,1,2]), secStimInd(:,2)]; % since gratingSeqs and masks have the same ind
 
-            mats{ii} = cellfun(@(x) addBlinker(x, gsL), tempStimMat, 'uniformoutput', 0);
+            mats{ii} = tempStimMat;
+            poss{ii} = tempPosFMat;
             relInds{ii} = presentedInd;
             if ~isempty(tempFreqCorr)
                 freqCorr{ii} = reshape(tempFreqCorr(presentedInd(:,1)), [],1);
@@ -592,6 +601,7 @@ switch protocolStruct.interleave
 end
 
 totMats = [mats{:}]';
+totPoss = [poss{:}]';
 totRelInds = vertcat(relInds{:});
 if protocolStruct.freqCorrFlag == 1
     totFreqCorr = vertcat(freqCorr{:});
@@ -604,6 +614,7 @@ end
 stimPresEst = zeros(1, size(totRelInds, 1));
 for ii=1:size(totRelInds, 1)
     protocolStruct.stim(ii).matCell = double(totMats{ii}); % revert back to double since it is required by make_pattern_vector_g4
+    protocolStruct.stim(ii).posFunc = totPoss{ii};
     protocolStruct.stim(ii).relInds = totRelInds(ii,:);
     protocolStruct.stim(ii).freqCorr = totFreqCorr(ii);
     stimPresEst(ii) = size(totMats{ii},3) * (1/totFreqCorr(ii));

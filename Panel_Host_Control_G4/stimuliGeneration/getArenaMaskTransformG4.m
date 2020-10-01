@@ -1,4 +1,4 @@
-function [xcrds, ycrds] = getArenaMaskTransform(requiredPos, maskSize, arenaSize)
+function [xcrds, ycrds] = getArenaMaskTransformG4(requiredPos, maskSize, arenaSize)
 
 % function [xcrds ycrds] = getArenaMaskTransform(maskSize, requiredPos)
 %
@@ -10,14 +10,14 @@ function [xcrds, ycrds] = getArenaMaskTransform(requiredPos, maskSize, arenaSize
 % INPUT
 %
 % maskSize -        (optional) scalar. The vertex size of the matrix used
-%                   to generate the mask. Defualt is 193.
+%                   to generate the mask. Defualt is 445.
 % requiredPos =     NX2 matrix or a Cellarray of NiX2 matrices (for trajectories). The Arena X and Y position on which the center
 %                   of the mask will appear. X is the physical horizontal
 %                   axis of the arena with 1 being the left most pixel. Y
 %                   is the vertical with 1 being the bottom most pixel.
 %                   Negative values are allowed. N is for multiple
 %                   positions.
-% arenaSize -       (optional) if not given [32,96] is assumed <set in
+% arenaSize -       (optional) if not given [48,192] is assumed <set in
 %                   controller coordinates
 %
 % OUTPUT
@@ -60,7 +60,8 @@ for ii=1:numPos
         yTrans = center-requiredPos{ii}(jj,2);
         % Flip between x and y (spatial vs controller)
         ycrds{ii}(jj,:) = (1:arenaSize(2)) + xTrans;
-        xcrds{ii}(jj,:) = (arenaSize(1):-1:1) + yTrans;
+        % xcrds{ii}(jj,:) = (arenaSize(1):-1:1) + yTrans;
+        xcrds{ii}(jj,:) = (1:arenaSize(1)) + yTrans;
     end
 
 end

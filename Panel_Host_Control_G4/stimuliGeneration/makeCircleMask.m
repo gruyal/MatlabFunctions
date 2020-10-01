@@ -19,7 +19,7 @@ assert(maskR >= 0 && maskR < 18, 'maskR must be between 1 and 17')
 assert(matSize > 0,'matSize should be a positive number')
 assert(matSize/2 ~= floor(matSize/2), 'matSize should be odd to avoid rotation distortions')
 
-maskIm = zeros(matSize);
+maskIm = zeros(matSize, 'single');
 
 circleComb = [0, 2; 1, 5; 2, 11; 3, 15; 4, 41; 5, 29; 7, 45; 9, 77; 10, 131; 12, 101; 15, 133; 17, 141]; 
 

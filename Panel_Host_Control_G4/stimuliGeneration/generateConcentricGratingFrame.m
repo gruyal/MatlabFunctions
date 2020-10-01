@@ -37,7 +37,7 @@ gsLevel = 4;
 
 % size of the total image
 matSiz = 445;
-gtFrame = zeros(matSiz, matSiz);
+gtFrame = zeros(matSiz, matSiz, 'single');
 
 
 valsON = [gtStruct.valsONSt, gtStruct.valsONEnd];

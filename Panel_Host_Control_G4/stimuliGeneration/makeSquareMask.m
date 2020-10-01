@@ -20,7 +20,7 @@ assert(matSize > 0,'matSize should be a positive number')
 assert(matSize/2 ~= floor(matSize/2), 'matSize should be odd to avoid rotation distortions')
 
 cen=ceil(matSize/2); 
-maskIm = zeros(matSize);
+maskIm = zeros(matSize, 'single');
 
 
 maskIm(cen-maskhE:cen+maskhE, cen-maskhE:cen+maskhE) = 1;

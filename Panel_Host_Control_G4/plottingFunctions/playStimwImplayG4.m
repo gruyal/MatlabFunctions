@@ -1,9 +1,9 @@
-function varargout = playStimwImplay(stimSeq)
+function varargout = playStimwImplayG4(stimSeq)
 
 % this function uses implay and sets some defaults automatically
 
 
-pHand = implay(stimSeq, 100);
+pHand = implay(flip(stimSeq,1), 100);
 
 pHand.Visual.Axes.Position = [1 70 410 136];
 

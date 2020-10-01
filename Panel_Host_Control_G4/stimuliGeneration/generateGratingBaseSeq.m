@@ -61,9 +61,10 @@ for ii=1:length(fnames)
 end
 
 
-gtSeq = zeros(matSiz,matSiz, vecLen);
+gtSeq = zeros(matSiz,matSiz, vecLen, 'single');
 
-for ii=1:vecLen
+
+for ii=1:vecLen 
     gtSeq(:,:,ii) = feval(gratingFrameFunH, gtSeqStruct(ii));
 end
 
