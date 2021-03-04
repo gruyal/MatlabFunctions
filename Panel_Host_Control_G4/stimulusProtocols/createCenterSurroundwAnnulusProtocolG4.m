@@ -1,4 +1,4 @@
-function protocolStruct = createCenterSurroundwAnnulusProtocol(inputStruct)
+function protocolStruct = createCenterSurroundwAnnulusProtocolG4(inputStruct)
 
 % function createCenterSurroundProtocol2(inputStruct)
 %
@@ -89,13 +89,12 @@ default.orientations = 0;
 default.maskInt = 1;
 default.gridSize = [1,1];
 default.gridOverlap = 0;
-default.grtMaskInt = 1;
 default.gratingMidVal = 0.49;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 
-
+fixed.grtMaskInt = 1;
 fixed.gsLevel = 4;
 fixed.generalFrequency = 500; % for gsLevel 4 
 fixed.freqCorrFlag = 0;
@@ -251,7 +250,7 @@ end
                 gtStruct(count).widthON  = maskSt(ii).radius(end);
                 gtStruct(count).widthOFF = ceil(maskSt(ii).radius(end) * cenProp(jj))+1;
             end
-            gtStruct(count).position = ones(1, stimFrames(kk)) * (ceil(maskSt(ii).radius(end) * cenProp(jj))+1);
+            gtStruct(count).pos = ceil(maskSt(ii).radius(end) * cenProp(jj))+1;
             gtStruct(count).barAtPos = cenBar(jj);
             if strcmp(maskSt(ii).type, 'square')
                 gtStruct(count).type = 1;
@@ -268,6 +267,8 @@ end
                 innR = 0;
                 outR = maskSt(ii).radius;
             end
+            
+            gtStruct(count).stepFrames  = stimFrames(kk);
 
             gratingArray = vertcat(gratingArray, ...
                                    [count, innR, outR, round((2^gsLev-1) * onVal(ii)), round((2^gsLev-1) * offVal(ii)), ...
@@ -290,6 +291,7 @@ end
  protocolStruct.gratingTable = gratTable;
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = tempMask;
+ protocolStruct.relGtStName = 'pos';
 
  %% GRID
 
@@ -346,7 +348,7 @@ end
  protocolStruct.freqCorrFlag = fixed.freqCorrFlag;
 
  protocolStruct.funcHand = gratingFuncHand;
- protocolStruct.interleave = default.grtMaskInt;
+ protocolStruct.interleave = fixed.grtMaskInt;
 
 intF = default.intFrames;
  if isnan(intF)
@@ -365,7 +367,7 @@ intF = default.intFrames;
 
  %% Creating protocl
 
- protocolStruct = createProtocol(protocolStruct);
+ protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
 

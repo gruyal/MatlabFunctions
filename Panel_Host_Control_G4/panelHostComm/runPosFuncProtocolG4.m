@@ -102,7 +102,7 @@ for ii=1:numStim
     Panel_com('set_pattern_id', ii)
     Panel_com('set_pattern_func_id', ii)
     Panel_com('set_position_x', 1);
-    stimTime = size(protocolStruct.stim(ii).matCell, 3)/relFreq;
+    stimTime = length(protocolStruct.stim(ii).posFuncCell)/relFreq;
 
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
     plotMidFrameG4(mean(protocolStruct.stim(ii).matCell,3), maxValforFig)
@@ -113,7 +113,7 @@ for ii=1:numStim
     pause(stimTime)
 
     Panel_com('stop_log');
-    pause(0.01)
+    pause(0.1)
 
     logDirs = dir([folderName, '\Log Files']);
     lgDrI = [logDirs.isdir] & cellfun(@length, {logDirs.name}) > 3; % gets rid of files or reference directories

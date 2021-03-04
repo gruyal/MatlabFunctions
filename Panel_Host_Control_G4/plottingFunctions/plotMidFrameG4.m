@@ -19,7 +19,7 @@ cmap = [zeros(64,1), linspace(0,1,64)', zeros(64,1)];
 
 clf
 axh = axes('position', [0.05, 0.05, 0.9, 0.9]);
-imagesc(frame, [0, maxVal])
+imagesc(flipud(frame), [0, maxVal]) % flips up down due to the change in arena orientation for the G4 setup
 
 for ii=0:panSiz:fsiz(2)
     line([ii, ii], [0, fsiz(1)], 'color', 'r')

@@ -39,7 +39,7 @@ end
 for ii=1:length(protocolStruct.stim)
 
     fname = ['G4_TDMS_Logs_', protocolStruct.stim(ii).dirName];
-    if isempty(fname)
+    if isempty(protocolStruct.stim(ii).dirName)
         fprintf('No file for stimulus %d \n', ii)
         continue
     end

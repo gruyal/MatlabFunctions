@@ -7,6 +7,9 @@ function protocolStruct = createProtocolG4(protocolStruct)
 % repeated frames (since the frame are bigger here and it takes longer).
 %
 %
+% Note! this version flips matCell up down to match the orientation on the
+% arena
+%
 % This function uses the data within protocolStruct to add a field with the
 % data required for presenting the stim to the same structure.
 % base on createProtocol and modified to G4 (mainly moving all the change
@@ -130,6 +133,8 @@ for ii=1:length(protocolStruct.gratingStruct)
         relField = getfield(protocolStruct.gratingStruct(ii), relFieldName);
         stimPosFunCell{ii} = reshape(repmat((1:length(relField)) + 1, ... % +1 since an empty frame is going to be added later
                                  protocolStruct.gratingStruct(ii).stepFrames, 1), 1, []);
+    elseif protocolStruct.interleave ~= 3
+        error('missing relFieldName to determine posFunc length')
     end
     
     if ~isempty(tempFreqCorr)
@@ -657,7 +662,7 @@ end
 
 stimPresEst = zeros(1, size(totRelInds, 1));
 for ii=1:size(totRelInds, 1)
-    protocolStruct.stim(ii).matCell = totMats{ii};
+    protocolStruct.stim(ii).matCell = flipud(totMats{ii}); % flipped since the G4 arena is flipped compared to G3
     protocolStruct.stim(ii).posFuncCell = totPosFunc{ii};
     protocolStruct.stim(ii).relInds = totRelInds(ii,:);
     protocolStruct.stim(ii).freqCorr = totFreqCorr(ii);
