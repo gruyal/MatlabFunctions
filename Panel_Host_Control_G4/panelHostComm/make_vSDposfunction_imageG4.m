@@ -22,14 +22,6 @@ if ~isfolder(saveDir)
   error('%s folder does not exsit', saveDir)
 end
 
-if isfield(pStruct, 'gsLevel')
-    gs_val = pStruct.gsLevel; % deals with protocolStructComb
-elseif isfield(pStruct, 'gratingStruct')
-    gs_val = pStruct.gratingStruct(1).gsLevel; % assumes they all have the same gsLevel
-else
-    error('Missing gsLevel field')
-end
-num_patterns = length(pStruct.stim);
 
 % make sure folder is empty (should have no files in Functions folder)
 if isfolder(fullfile(saveDir, 'Functions'))
@@ -40,7 +32,6 @@ else
   mkdir(fullfile(saveDir, 'Functions'))
 end
 
-pos_func_counter = 0;
 stat = zeros(1, num_functions);
 
 for ii = 1:num_functions

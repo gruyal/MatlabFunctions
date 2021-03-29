@@ -1,11 +1,14 @@
-function protocolStructAO  = runPosFuncProtocolwAO(inpStructAO, funcHand, pStruct)
+function protocolStructAO  = runPosFuncProtocolwAOG4(inpStructAO, funcHand, pStruct)
 
-% function data  = runPosFuncProtocolwAO(pStructAOComb, funcHand, pStruct)
+% function data  = runPosFuncProtocolwAO(inpStructAO, funcHand, pStruct)
 %
 % This function uses the function handle and the given protocol structure
 % to generate the required stimuli and run them into the new panel controller (use tcp connection)
 % It uses pStructAOComb to combine the pStruct generated stimuli with AO
 % functions. 
+%
+% Note! not designed for stimuli that use different mask positions like
+% centerSurround protocol
 %
 % INPUTS
 % 
@@ -15,8 +18,11 @@ function protocolStructAO  = runPosFuncProtocolwAO(inpStructAO, funcHand, pStruc
 % NOTE! If not given will prompt user for input. 
 %
 % pStructAO -               protocol structure that will be fed into the function above. 
-%                           Doesn't have to have all the required fields, but the .aoVec has to be included 
-%   .aoVec -                cell array with AOvectors (-10 to 10 will be read @ 1KHz)
+%                           Doesn't have to have all the required fields, 
+%                           
+%   .aoVec -                cell array with AOvectors (-10 to 10 will be
+%                           read @ 1KHz). if not included currently a single vector will be
+%                           generated (user inputs)
 %   .stimVecComb -          
 %                           matrix describing the desired stim AOvec combinations.
 %                           If not given all stim and all vec will be presented
@@ -62,52 +68,21 @@ fudgeT = 0.25; % adds to session time to make sure pattern presentation is done
 degPerPix = 2.25; % since my arena is 180deg and 96pix (X axis)
 relCh = 2; % AO channel by panel host definition
 protocolStructAO = struct;
-
-
-% getting last file in the log file directory
-load logDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
-
-oldFileSt = dir(fullfile(logDir, '*.tdms'));
-[~, oldInd] = max([oldFileSt.datenum]);
-if ~isempty(oldInd)
-    newestOldFileName = oldFileSt(oldInd).name;
-else
-    newestOldFileName = [];
-end
+bkgdNum = floor((2^4-1)/2); % G4 works with either gslevel 4 or 1
 
 %% Establish panel host connection 
-[~ , res] = system('tasklist /fi "imagename eq Panel Host.exe" /fo table /nh');
-
-if ~strcmpi(res(2:6), 'Panel')
-    
-    openPH = questdlg('Press OK to open Panel Host', ...
-                        'BIAS', 'OK', 'Cancel', 'OK');
-    switch openPH
-        case 'OK'
-            !E:\Panel Host\Panel Host.exe &
-        case 'Cancel'
-            error('runPosFuncProtocolwAO aborted - Panel Host required required')      
-    end
-    
-end
-
-establishtcp = questdlg('Would you like to establish TCP connection?', ...
-                        'TCP Comm', 'Yes', 'No', 'No');
-switch establishtcp
-    case 'Yes'
-        init_tcp;
-        fprintf('TCP initiated \n')
-    case 'No'
-        fprintf('Verify TCP is initiated \n')
-end
-
+connectHost;
 
 % Sets arena to mid GS level and switches half off (with the second config
-% file
-Panel_tcp_com('set_config_id', 3)
-Panel_tcp_com('g_level_7')
+% file (not necessary for G4)
+% Panel_com('set_config_id', 3)
+% Panel_com('g_level_7')
 
 %% run the desired function to generate the 32X96XN matrix to be presented
+
+if nargin < 1
+    inpStructAO.aoVec{1} = makeAOVecForLED;
+end
 
 if nargin < 2 
     funcHand = listCreateProtocolFunctions;
@@ -120,6 +95,7 @@ else
 end
 
 assert(isfield(protocolStruct, 'stim'), 'Protocol structure is missing stim field')
+assert(size(protocolStruct.maskPositions,1) == 1, 'the function is not designed for protocols with multiple mask positions')
 
 if isfield(protocolStruct.inputParams, 'freqCorrFlag') && protocolStruct.inputParams.freqCorrFlag
     warning('This function does not preform frequency correction')
@@ -147,6 +123,7 @@ for ii=1:length(stimInd)
         protocolStructAO.uniStim(ii).matCell = protocolStruct.stim(stimInd(ii)).matCell;
         protocolStructAO.uniStim(ii).relInds = uniInds(ii,:);
         protocolStructAO.uniStim(ii).length = size(protocolStruct.stim(stimInd(ii)).matCell, 3); 
+        protocolStructAO.uniStim(ii).posFuncCell = protocolStruct.stim(stimInd(ii)).posFuncCell; 
 end
 
 numUStim = length(protocolStructAO.uniStim);
@@ -177,7 +154,7 @@ protocolStructAO.aoVec = inpStructAO.aoVec;
 protocolStructAO.stimVecComb = inpStructAO.stimVecComb;
 protocolStructAO.aoVec{numAOVec+1} = zeros(1, 1000); % one sec of nothing
 protocolStructAO.uniStim(numUStim+1) = protocolStructAO.uniStim(1);
-bkgdNum = protocolStruct.inputParams.gsLevel;
+% bkgdNum = protocolStruct.inputParams.gsLevel;
 protocolStructAO.uniStim(numUStim+1).matCell(:) = bkgdNum; % bkgdlevel matrix
 protocolStructAO.uniStim(numUStim+1).relInds = [0, 0, 0, 0];
 
@@ -186,11 +163,11 @@ for ii=1:2
     tempComb(tempComb(:,ii) == 0, ii) = max(tempComb(:,ii))+1;
 end
 
-for ii=1:numUStim
-    tempPatVec = convertPatternMatrix(protocolStructAO.uniStim(ii).matCell);
-    protocolStructAO.uniStim(ii).patVecMat = tempPatVec; 
-end
-fprintf('converted stimuli to serial vectors \n')
+% for ii=1:numUStim
+%     tempPatVec = convertPatternMatrix(protocolStructAO.uniStim(ii).matCell);
+%     protocolStructAO.uniStim(ii).patVecMat = tempPatVec; 
+% end
+% fprintf('converted stimuli to serial vectors \n')
 
 numComb = size(protocolStructAO.stimVecComb, 1);
 randSeq = zeros(1, protocolStruct.repeats * numComb);
@@ -238,14 +215,30 @@ end
 
 protocolStructAO.combGratingTable = allTable; 
 
+% save protocolStruct before experiment starts
+timeStamp = datestr(now, 'yyyymmdd_HH-MM');
+funcStr = func2str(funcHand);
+folderName = fullfile(pwd, [funcStr(7:end), 'AO', timeStamp]); %gets rid of the word 'create'
+[stat, mess] = mkdir(folderName);
+assert(stat==1, 'error creating folder: %s', mess)
+
+Panel_com('change_root_directory', folderName);
 
 % making panel controller files
-statPat = make_vSDpattern_image(protocolStructAO);
-statPos = make_vSDposfunction_image(protocolStructAO);
-statVec = make_vSDAO_imagewInd(protocolStructAO);
+statPat = make_vSDpattern_imageG4(protocolStructAO, folderName);
+statPos = make_vSDposfunction_imageG4(protocolStructAO, folderName);
+statVec = make_vSDAO_imageG4(protocolStructAO, folderName);
 assert(statPat == 0, 'Problem creating pattern files')
 assert(statPos == 0, 'Problem creating function files')
 assert(statVec == 0, 'Problem creating AO files')
+
+
+if ~isfolder(fullfile(folderName, 'Log Files'))
+    mkdir(fullfile(folderName, 'Log Files'))
+end
+
+
+
 
 message = sprintf('Please check that red LED is set to ON and TTL');
 uiwait(msgbox(message));
@@ -257,116 +250,105 @@ wbh = waitbar(0,'1','Name','Presenting Protocol',...
             'setappdata(gcbf,''canceling'',1)');
 setappdata(wbh,'canceling',0)
 
-% save protocolStruct before experiment starts
-timeStamp = datestr(now, 'yyyymmdd_HH-MM');
-funcStr = func2str(funcHand);
-folderName = fullfile(pwd, [funcStr(7:end), 'AO', timeStamp]); %gets rid of the word 'create'
-[stat, mess] = mkdir(folderName);
-assert(stat==1, 'error creating folder: %s', mess)
-save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
+save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO', '-v7.3')
+
 
 %% Starts the experiment
 % Config 2 block a third of the arena to speed up performance
 % Since T4s respond to middle of arena it should be avoided
 
 
-relFreq = round(protocolStruct.generalFrequency); % This function does not perform freq correction
+relFreq = protocolStruct.generalFrequency; % This function does not perform freq correction
+assert(relFreq == 500, 'general Freqency in G4 is 500Hz');
 chInBin = dec2bin(relCh, 4); % true in this context, but not always (since relCh 3 would mean activating channels 1 and 2 - which is wrong)
 
-Panel_tcp_com('set_config_id', 3) % config 3 is with cut corners (to avoid getting the Ack Error)  
 
-Panel_tcp_com('set_mode', [4, 0]);
-Panel_tcp_com('send_gain_bias', [0 0 0 0]);
-Panel_tcp_com('set_funcx_freq', relFreq);
-Panel_tcp_com('set_active_analog_channel', chInBin)
-Panel_tcp_com('reset_counter')
+Panel_com('set_control_mode', 1);
+Panel_com('reset_counter')
+
+Panel_com('set_active_ao_channel', chInBin)
+
 figH = figure('position', [1450, 50, 450, 150]);
 figH.MenuBar = 'none';
-maxValforFig = 2^(protocolStruct.inputParams.gsLevel)-1;
+maxValforFig = 2^4-1; % always gsLevel 4 for G4
 
 
 
 for ii=1:numStim
     
-    Panel_tcp_log('start') % to minimize non-recorded time loop iteration begin and end in log commands
+    Panel_com('start_log'); % to minimize non-recorded time loop iteration begin and end in log commands
+    pause(0.1)
     
-    
-    patTime = size(protocolStructAO.stim(ii).patVecMat, 2)/relFreq;
+    patTime = length(protocolStructAO.stim(ii).posFuncCell)/relFreq;
     aoVTime = protocolStructAO.stim(ii).aoVecLen/1000; % since AO channels are always @ 1KHz
     tempVecInd = protocolStructAO.stim(ii).aoVecInd; 
     
     stimTime = max(patTime, aoVTime);
     
-    Panel_tcp_com('set_pattern_id', ii)
-    Panel_tcp_com('set_position', [1 1]);
-    Panel_tcp_com('set_posfunc_id', [1,ii]);
-    Panel_tcp_com('set_analog_output_function', [relCh-1, tempVecInd])
+    Panel_com('set_pattern_id', ii)
+    Panel_com('set_pattern_func_id', ii)
+    Panel_com('set_position_x', 1);
+    Panel_com('set_ao_function_id',[relCh-1, tempVecInd]);
     
     waitbar(ii/numStim, wbh, sprintf('Presenting protocl %d of %d',ii, numStim))
-    plotMidFrame(mean(protocolStructAO.stim(ii).matCell,3), maxValforFig)
+    plotMidFrameG4(mean(protocolStructAO.stim(ii).matCell,3), maxValforFig)
     tH = title(num2str(protocolStructAO.stim(ii).combInds));
     tH.VerticalAlignment = 'top';
     
-    Panel_tcp_com('start')
+    Panel_com('start_display', stimTime + fudgeT)
     
-    pause(stimTime + fudgeT)
+    pause(stimTime)
     
-    Panel_tcp_com('stop')
-    pause(0.01)
-    tempFileName = Panel_tcp_log('stop');
-    
-    protocolStructAO.stim(ii).fileName = tempFileName;
-  
-    
+    Panel_com('stop_log');
+    pause(0.1)
+
+    logDirs = dir([folderName, '\Log Files']);
+    lgDrI = [logDirs.isdir] & cellfun(@length, {logDirs.name}) > 3; % gets rid of files or reference directories
+    logDirs = logDirs(lgDrI); % select only directories
+
+    [~,dirInd] = max([logDirs(:).datenum]);
+
+    if ~isempty(dirInd)
+        protocolStructAO.stim(ii).dirName = logDirs(dirInd).name;
+    end
+
     if getappdata(wbh,'canceling')
         break
     end
     
+    
 end
 
-totStimNum = ii;
 
 %% clean up after exp is done
 delete(wbh)
-Panel_tcp_com('set_config_id', 3)
-Panel_tcp_com('g_level_7')
+
 % closing the active channels
-Panel_tcp_com('set_active_analog_channel', '0000')
+Panel_tcp_com('set_active_ao_channel', '0000')
 
-% getting all the new file names
-% fileSt = dir(fullfile(logDir, '*.tdms'));
-% if ~isempty(newestOldFileName) % gets rid of old files in the directory
-%     oldFilesInd = find(arrayfun(@(x) strcmp(fileSt(x).name, newestOldFileName), 1:length(fileSt)));
-%     fileSt = fileSt(oldFilesInd+1:end);
-% end
-% 
-% assert(length(fileSt) == totStimNum, 'Generated TDMS files do not match number of stimuli presented')
-% 
-% [~, fileNameInd] = sort([fileSt.datenum], 'ascend');
-% 
-% 
-% for ii=1:totStimNum
-%     protocolStructAO.stim(ii).fileName = fileSt(fileNameInd(ii)).name;
-% end
+save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO', '-v7.3')
+
+for ii=1:numStim
+  if isempty(protocolStructAO.stim(ii).dirName)
+    break
+  else
+    tempStimDir = fullfile(folderName, 'Log Files', protocolStructAO.stim(ii).dirName);
+    G4_TDMS_folder2struct(tempStimDir)
+  end
+end
 
 
-
-fileNameCell = arrayfun(@(x) protocolStructAO.stim(x).fileName, 1:numStim, 'uniformoutput', 0)';
-copyLogFiletoCurrDir(fileNameCell, folderName) 
-save(fullfile(folderName, ['protocolStructAO', timeStamp]), 'protocolStructAO')
-
-
-protocolStructAO = consolidateData(folderName);
+protocolStructAO = consolidateDataG4(folderName);
 close(figH)
 
-% finding the directory in which to place file
-load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
-
-pConfig = fileread(panelContConfigFileDir);
-pConfigFormatted = textscan(pConfig, '%s');
-pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
-temp_path = pConfigFormatted{1}{pathInd};
-dos(['del /Q "' temp_path '\*.ao"']); % delete all the remaining AO files
+% % finding the directory in which to place file
+% load panelContConfigFileDir % saved in "C:\Users\gruntmane\Documents\ExpCodeandRes\MatlabFunctions\Panel_Host_Control"
+% 
+% pConfig = fileread(panelContConfigFileDir);
+% pConfigFormatted = textscan(pConfig, '%s');
+% pathInd = find(cellfun(@(x) strcmp(x, 'Output]'), pConfigFormatted{1})) + 3; % add 3 since there is 'path', and '=' in between
+% temp_path = pConfigFormatted{1}{pathInd};
+% dos(['del /Q "' temp_path '\*.ao"']); % delete all the remaining AO files
 
 
 

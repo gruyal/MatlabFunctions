@@ -17,7 +17,6 @@ fprintf('need to change position to pos in all protocols \n')
 outStruct = protStruct;
 
 arenaSize = [192,48];  % in pixels, in spatial coordinates 
-possibleOrientations = 0:7;
 baseImSize = [445, 445]; % size for original stimSeq and masks
 
 
@@ -32,6 +31,13 @@ randomDotNames = {'dotSize'; 'valON'; 'valOFF'; 'propON'; 'propOFF'; 'gsLevel'; 
 generateBarFrameByIndsNames = {'wid'; 'ori'; 'pos'; 'val'; 'sqDim'; 'gsLevel'; 'bkgdVal'; 'matSize'};
 generate2BarsFrameByIndsNames = {'fWid'; 'sWid'; 'fPos'; 'sPos'; 'fVal'; 'sVal'; 'sqDim'; 'ori'; 'gsLevel'; 'bkgdVal'; 'matSize'};
 funcStr = func2str(protStruct.funcHand);
+
+if strcmp(funcStr, 'generateGratingFrame') %only for old grating (used for more rotations)
+    possibleOrientations = 0:0.5:7.5;
+else
+    possibleOrientations = 0:7;
+end
+
 
 switch funcStr(9:11)
     case 'Con'

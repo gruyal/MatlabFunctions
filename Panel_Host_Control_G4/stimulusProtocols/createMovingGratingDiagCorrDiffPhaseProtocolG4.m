@@ -293,6 +293,7 @@ protocolStruct.maskPositions = maskPos;
  protocolStruct = createProtocolG4(protocolStruct);
 
  protocolStruct.inputParams = default;
+ protocolStruct.inputParams.gsLevel = gsLev;  
 
 
 end

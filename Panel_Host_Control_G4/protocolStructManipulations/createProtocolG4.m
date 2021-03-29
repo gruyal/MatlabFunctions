@@ -324,6 +324,7 @@ switch protocolStruct.interleave
                 tempStim = tempSeq(:,:,jj).*protocolStruct.masksMat(:,:,ii);
                 for kk=1:numOrt
                     tempStim2 = imrotate(tempStim, 45*protocolStruct.orientations(kk), 'nearest', 'crop');
+                    
                     %sets background to desired level
                     tempStim2(tempStim2 == 0) = bkgdVal;
                     rotSeqs{ii, kk}(:,:,jj) = round(tempStim2);
