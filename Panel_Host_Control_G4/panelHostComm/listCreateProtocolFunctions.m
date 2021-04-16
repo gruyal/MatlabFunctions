@@ -6,7 +6,8 @@ function funcHand = listCreateProtocolFunctions
 % provides a function handle to the desired one. It uses the protocol
 % directory and searches all the files ending with 'Protcol.m'
 
-protocolsDir = 'E:\ExpCodeandRes\MatlabFunctions\Panel_Host_Control_G4\stimulusProtocols';
+% protocolsDir = 'E:\ExpCodeandRes\MatlabFunctions\Panel_Host_Control_G4\stimulusProtocols';
+protocolsDir = 'D:\ExpCodeandRes\MatlabFunctions\Panel_Host_Control_G4\stimulusProtocols';
 
 dirRes = dir(fullfile(protocolsDir, '*ProtocolG4.m'));
 

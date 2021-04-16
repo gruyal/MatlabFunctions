@@ -661,6 +661,26 @@ else
     error('freqCorrFlag should be logical')
 end
 
+if all(totRelInds(:,1) == totRelInds(:,2)) && ... % gratingSt and maskSt are coordinated
+        all(totRelInds(:,3) == 1) && ... % orientation is handeled in the gratingSt
+        length(unique(totRelInds(:,4))) > 1 % more than 1 position 
+    
+    stimTab = table;
+    baseTab = protocolStruct.gratingTable;
+    tabH = height(baseTab);
+    for pp=1:size(protocolStruct.maskPositions,1)
+        maskPos = protocolStruct.maskPositions(pp,:);
+        maskPosInd = pp;
+        newTab = addvars(baseTab, ones(tabH, 1)*maskPosInd, repmat(maskPos, tabH,1), 'NewVariableNames', {'maskPosInd', 'maskPos'});
+        stimTab = [stimTab; newTab];
+    end
+    stimTab = addvars(stimTab, (1:height(stimTab))', 'before', 'index', 'NewVariableNames', 'stimIndex');
+else
+    stimTab = [];
+end
+    
+protocolStruct.stimTab = stimTab;
+
 stimPresEst = zeros(1, size(totRelInds, 1));
 for ii=1:size(totRelInds, 1)
     protocolStruct.stim(ii).matCell = flipud(totMats{ii}); % flipped since the G4 arena is flipped compared to G3
