@@ -30,7 +30,7 @@ relO = grtPhaseSt.inputParams.orientations;
 
 alignSBSt = generateAlignedSingleBarStwMinMaxDiffWandV(sbSt);
 relMaxExt = alignSBSt(end, end, end, end).maxExtPosVal;
-relPD = sign(alignSBSt(end, end, end, end).maxInhPosVal - relMaxExt);
+relPD = sign(alignSBSt(end, end, end, end).minInhPosVal - relMaxExt);
 
 % % because of cell 15 - not worth it since not aligned with other
 % if any(grtPC ~= sbC) 

@@ -1,4 +1,4 @@
-function [V, ge, gi] = t5_simple_wrap(params,stim_type,val_in,width_in,dur_in,pos_vect_in,time,fr,stimIdx_in)
+function [V,ge,gi] = t5_simple_wrapOld(params,stim_type,val,width,dur,pos_vect,time,fr,stimIdx)
 %{ 
 T5 Simple Model
 
@@ -13,45 +13,33 @@ Input
     stim_type:  a string defining the stimulus type
                 Options: 'spfr', 'mm', 'mov', 'edge'
     val:        Luminance of stimulus. 0 for dark relative to baseline, 1 for
-                bright. paired cell with all stim_inputs
+                bright
     width:      bar width. Expecting an integer value, typically in
-                illuminated pixels. paired cell with all stim_inputs
-    dur:        duration each step, in ms. Usually 40 or 160. paired cell with all stim_inputs
+                illuminated pixels.
+    dur:        duration each step, in ms. Usually 40 or 160
     pos_vect:   a vector indicating the Receptive Field-centered positioins
                 to stimulate, in integers, indexed from leading edge. All positions will be stimulated
                 for equal amounts of time except in moving bars. If
                 stimulus is a moving bar moving in the preferred direction
-                from position -4 to 4, pos_vet = {[-4:4]}. If ND, [4:-1:4].
+                from position -4 to 4, pos_vet = [-4:4]. If ND, [4:-1:4].
                 If minimal motion stimulus with flashes at -4 and 4,
-                {-4,4}. paired cell with all stim_inputs
+                [-4,4].
     time:       tx1 vector with entry values of time course, in ms. If the
                 to simulate 1000ms sampled with a framerate of 0.5 ms,
                 [0:0.5:1000].
     fr:         framerate, in ms.
     stimIdx:    logical of size t x 1, indexing when the next flash should
-                be. sum(stimIdx) == length(pos_vect). note that for Gruntman T5 data
-                moving bars are windowed, so sum(stimIdx) = length(pos_vect) = width-1.
-                paired cell with all stim_inputs
+                be. sum(stimIdx) == length(pos_vect). 
 %}
-stim_curr          = 0;                % initialize a counter to finish loops when all stims are done
-stim_tot           = length(val_in);   % finish repeating when we've done all stims
-ge_mat             = zeros(stim_tot,length(time));     % preallocate to store conductances to each stimulus  
-gi_mat             = zeros(stim_tot,length(time));
 
-params_to_keep = who;
-params_to_keep = who;
-while stim_curr < stim_tot
-    clearvars('-except', params_to_keep{:}) 
-stim_curr = stim_curr+1; %go through each stim cond
-
-spfr_data.val      = val_in{stim_curr};
-spfr_data.width    = width_in{stim_curr};
-spfr_data.stimDur  = dur_in{stim_curr};
-spfr_data.pos_vect = pos_vect_in{stim_curr};
+spfr_data.val      = val;
+spfr_data.width    = width;
+spfr_data.stimDur  = dur;
+spfr_data.pos_vect = pos_vect;
 spfr_data.time     = time;
 spfr_data.fr       = fr;
-spfr_data.stimIdx  = stimIdx_in{stim_curr};
-    
+spfr_data.stimIdx  = stimIdx;
+
 switch stim_type
     case 'spfr'
         spfr_data.stim_type = 1;
@@ -192,8 +180,8 @@ s_ind = s_ind';
 p.stim_time = stim_time;
 
 %populate a matrix with this dynamic for each stim
- fe = zeros(size(p.Ie,2),size(spfr_data.time,1));
- fi = zeros(size(p.Ii,2),size(spfr_data.time,1));
+fe = zeros(size(p.Ie,2),size(spfr_data.time,1));
+fi = zeros(size(p.Ii,2),size(spfr_data.time,1));
 fe2 = zeros(size(p.Ii,2),size(spfr_data.time,1));
 fi2 = zeros(size(p.Ii,2),size(spfr_data.time,1));
 
@@ -216,18 +204,18 @@ switch spfr_data.stim_type
         t_ind = t_ind-d;
         s_ind = s_ind-d;
         for i = 1:size(Ie,1)
-            fe(logical(p.Ie(i,:)),t_ind(i):(t_ind(i)+length(fe_tmp)-1))   = repmat(fe_tmp,sum(p.Ie(i,:)),1);
-            fi(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fi_tmp)-1))   = repmat(fi_tmp,sum(p.Ii(i,:)),1);
+            fe(logical(p.Ie(i,:)),t_ind(i):(t_ind(i)+length(fe_tmp)-1)) = repmat(fe_tmp,sum(p.Ie(i,:)),1);
+            fi(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fi_tmp)-1)) = repmat(fi_tmp,sum(p.Ii(i,:)),1);
             fe2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fe2_tmp,sum(p.Ii(i,:)),1);
             fi2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fi2_tmp,sum(p.Ii(i,:)),1);
         end
     case 2
         t_tot = spfr_data.time;
-        t_on  = t_ind(1);
-        t_off = s_ind(1);
+        t_on = t_ind(1);
+        t_off= s_ind(1);
 
-        fe_tmp  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
+        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
 
         fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
         fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
@@ -238,10 +226,10 @@ switch spfr_data.stim_type
         s_ind = s_ind-d;
 
         for i = 1:size(Ie,1)
-             fe(logical(p.Ie(i,:)),:)  = repmat(fe_tmp,sum(p.Ie(i,:)),1);
-             fi(logical(p.Ii(i,:)),:)  = repmat(fi_tmp,sum(p.Ii(i,:)),1);
-            fe2(logical(p.Ii(i,:)),:)  = repmat(fe2_tmp,sum(p.Ii(i,:)),1);
-            fi2(logical(p.Ii(i,:)),:)  = repmat(fi2_tmp,sum(p.Ii(i,:)),1);
+            fe(logical(p.Ie(i,:)),t_ind(i):end) = repmat(fe_tmp(1:end-t_ind(i)+1),sum(p.Ie(i,:)),1);
+            fi(logical(p.Ii(i,:)),t_ind(i):end) = repmat(fi_tmp(1:end-t_ind(i)+1),sum(p.Ii(i,:)),1);
+            fe2(logical(p.Ii(i,:)),t_ind(i):end) = repmat(fe2_tmp(1:end-t_ind(i)+1),sum(p.Ii(i,:)),1);
+            fi2(logical(p.Ii(i,:)),t_ind(i):end) = repmat(fi2_tmp(1:end-t_ind(i)+1),sum(p.Ii(i,:)),1);
         end
            
     case 3 %moving bar
@@ -304,18 +292,14 @@ switch spfr_data.stim_type
         
 end
 
-    fe  =  fe(:,1:size(spfr_data.time,1));
-    fi  =  fi(:,1:size(spfr_data.time,1));
+    fe = fe(:,1:size(spfr_data.time,1));
+    fi = fi(:,1:size(spfr_data.time,1));
     fe2 = fe2(:,1:size(spfr_data.time,1));
     fi2 = fi2(:,1:size(spfr_data.time,1));
     
     %caluclate conductances and steady state voltage
-    ge_mat(stim_curr,:)  = p.ae*fe + p.ae2*fe2;
-    gi_mat(stim_curr,:)  = p.ai*fi + p.ai2*fi2;
-end
-    
-   ge = sum(ge_mat,1);   %sum together all traces over the time course
-   gi = sum(gi_mat,1);
+    ge  = p.ae*fe + p.ae2*fe2;
+    gi  = p.ai*fi + p.ai2*fi2;
     V = ((p.Vr + ge*p.Ve + gi*p.Vi)./(1+ge+gi))';
     V = V(1:size(spfr_data.time,1));
     ge = ge(1:size(spfr_data.time,1));

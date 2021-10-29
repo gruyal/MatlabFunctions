@@ -7,7 +7,8 @@ pHand = implay(stimSeq);
 
 pHand.Visual.Axes.Position = [1 70 410 136];
 
-maxVal = 7;
+% maxVal = 7;
+maxVal = 15;
 cmap = zeros(maxVal,3);
 cmap(:,2) = linspace(0,1,maxVal);
 

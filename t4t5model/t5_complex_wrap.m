@@ -1,13 +1,13 @@
-function [V, ge, gi] = t5_simple_wrap(params,stim_type,val_in,width_in,dur_in,pos_vect_in,time,fr,stimIdx_in)
+function [V] = t5_complex_wrap(params,stim_type,val_in,width_in,dur_in,pos_vect_in,time,fr,stimIdx_in)
 %{ 
-T5 Simple Model
+T5 Complex Model
 
 Output
     V:      t x 1 vector with a simulation of T5 response to stimulus for a time
             vector t
 
 Input
-    params:     a 1 x 29 vector of parameters in order [mu, sig, A, Tr, Td, me,
+    params:     a 1 x 32 vector of parameters in order [mu, sig, A, Tr, Td, me,
                 be, bi, Ti]. Each parameter is a block fo values for [E, I, E2, I2].
                 ie) [muE, muI, muE2, muI2, sigE, sigI, ..., Ti]
     stim_type:  a string defining the stimulus type
@@ -67,24 +67,25 @@ if spfr_data.val == 0                   %all params stored in "rows" of 4,
     mu_p  = params(1:4);
     sig_p = params(5:8);
     amp_p = params(9:12);
-    tr_p  = params([13,14,13,16])*10;
-    td_p  = params([17,18,17,20])*10;
+    tr_p  = params(13:16)*10;
+    td_p  = params(17:20)*10;
     me_p  = params(23)*.01;
     mi_p  = params(24)*.01;
     be_p  = params(27);
     bi_p  = params(28);
-    ti_p  = params(29)*10;
+    ti_p  = params(29:30)*10;
+    
 else
     mu_p  = params([3:4,1:2]); %if NC, flip order of all param sets (seconds always fed into delta)
     sig_p = params([7:8,5:6]);
     amp_p = params([11:12,9:10]);
-    tr_p  = params([13,16,13,14])*10;
-    td_p  = params([17,20,17,18])*10;
+    tr_p  = params([15:16,13:14])*10;
+    td_p  = params([19:20,17:18])*10;
     me_p  = params(21)*.01;
     mi_p  = params(22)*.01;
     be_p  = params(25);
     bi_p  = params(26);
-    ti_p  = params(29)*10;
+    ti_p  = params(31:32)*10;
 end
 
 p.Vr = 0;
@@ -176,7 +177,8 @@ end
 p.be2 = max(0,effDur*me_p + be_p);
 p.bi2 = max(0,effDur*mi_p + bi_p);
 
-p.Tid = ti_p;
+p.Ti1 = ti_p(1);
+p.Ti2 = ti_p(2);
 
 % Model
 p.ae  =  Ae.*exp(-(x-mue).^2  / (2*sige^2) );
@@ -204,12 +206,11 @@ switch spfr_data.stim_type
         t_on = t_ind(1);
         t_off= s_ind(1);
 
-        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tre, p.Tde);
+        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tri, p.Tdi);
 
-        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
-
+        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tre2, p.Tde2, p.be2);
+        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tri2, p.Tdi2, p.bi2);
 
         %after solving for conductances at each time, we can now shift back
         %to non-delayed frame to fill vector
@@ -226,12 +227,12 @@ switch spfr_data.stim_type
         t_on  = t_ind(1);
         t_off = s_ind(1);
 
-        fe_tmp  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tre, p.Tde);
+        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tri, p.Tdi);
 
-        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
-        
+        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tre2, p.Tde2, p.be2);
+        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tri2, p.Tdi2, p.bi2);
+
         %after solving for conductances at each time, we can now shift back
         %to non-delayed frame to fill vector
         t_ind = t_ind-d;
@@ -251,11 +252,11 @@ switch spfr_data.stim_type
         t_on = t_ind(1);
         t_off= s_ind(1);
 
-        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tre, p.Tde);
+        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tri, p.Tdi);
 
-        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
+        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tre2, p.Tde2, p.be2);
+        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tri2, p.Tdi2, p.bi2);
 
         %after solving for conductances at each time, we can now shift back
         %to non-delayed frame to fill vector
@@ -288,10 +289,10 @@ switch spfr_data.stim_type
             t_off= s_ind(end);
             p.be2 = max(0,effDur*me_p + be_p);
             p.bi2 = max(0,effDur*mi_p + bi_p);
-            fe(i,:)  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-            fi(i,:)  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
-            fe2(i,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-            fi2(i,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
+            fe(i,:)  = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tre, p.Tde);
+            fi(i,:)  = fc_sol(t_tot, t_on, t_off, p.Ti1, p.Tri, p.Tdi);
+            fe2(i,:) = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tre2, p.Tde2, p.be2);
+            fi2(i,:) = fd_sol(t_tot, t_on, t_off, p.Ti2, p.Tri2, p.Tdi2, p.bi2);
         end
 
         dd = mean(diff(pos_vect)) > 0;
@@ -318,33 +319,34 @@ end
    gi = sum(gi_mat,1);
     V = ((p.Vr + ge*p.Ve + gi*p.Vi)./(1+ge+gi))';
     V = V(1:size(spfr_data.time,1));
-    ge = ge(1:size(spfr_data.time,1));
-    gi = gi(1:size(spfr_data.time,1));
 
 
-    function f = fc_sol(t_tot, t_on, t_off, Tr, Td)
+        function f = fc_sol(t_tot, t_on, t_off, Ti, Tr, Td)
 
-        t0 = t_tot(t_on);
-        t_tot = t_tot - t0; %shift everything so t0 is 0
-        t1 = t_tot(t_off);  %so now t1 is effDur
-
-        %solve where t0 = 0, so shift everything over
-        F1 = @(t) (Td - Tr + Tr.*exp(-t./Tr))./(Td - Tr) - (Td.*exp(-t./Td))./(Td - Tr);
-        F2 = @(t) exp(t1./Td).*exp(-t./Td).*((Td - Tr + Tr.*exp(-t1./Tr))./(Td - Tr) - (Td.*exp(-t1./Td))./(Td - Tr) + (Tr.*exp(t1./Td - t1./Tr).*exp(-t1./Td).*(exp(t1./Tr) - 1))./(Td - Tr)) - (Tr.*exp(t./Td - t./Tr).*exp(-t./Td).*(exp(t1./Tr) - 1))./(Td - Tr);
-        f = [zeros(size(t_tot(1:t_on-1)));F1(t_tot(t_on:t_off-1));F2(t_tot(t_off:end))]';
-
+    t0 = t_tot(t_on);
+    t_tot = t_tot - t0; %shift everything so t0 is 0
+    t1 = t_tot(t_off);  %so now t1 is effDur
+    
+    %solve where t0 = 0, so shift everything over
+    F1 = @(t) (exp(-t./Td).*(Td.*exp(t./Td).*(Ti - Tr) + (Td.*Ti^2.*exp(t./Td - t./Ti))./(Td - Ti) - (Td.*Tr^2.*exp(t./Td - t./Tr))./(Td - Tr)))./(Td.*Ti - Td.*Tr) + (Td^2.*exp(-t./Td))./(Td.*Ti + Td.*Tr - Ti.*Tr - Td^2);
+    F2 = @(t) (exp(-t./Td).*(Td^2 - Td^2.*exp(t1./Td)))./(Td.*Ti + Td.*Tr - Ti.*Tr - Td^2) + (exp(-t./Td).*((Td.*Ti^2.*exp(t./Td - t./Ti))./(Td - Ti) - (Td.*Tr^2.*exp(t./Td - t./Tr))./(Td - Tr) - (Td.*Ti^2.*exp(t./Td - t./Ti + t1./Ti))./(Td - Ti) + (Td.*Tr^2.*exp(t./Td - t./Tr + t1./Tr))./(Td - Tr)))./(Td.*Ti - Td.*Tr);
+    f = [zeros(size(t_tot(1:t_on-1)));F1(t_tot(t_on:t_off-1));F2(t_tot(t_off:end))]';
+    
         if any(isnan(f) | isinf(f))
             %if nans, solve the long way. t0 is 0, and t1 is effDur
-                H1 = @(t) 1 - exp(-t./Tr);
-                %F1 defined above
-                
+                I1 = @(t) 1 - exp(-t/Ti);
+                H1 = @(t) (Tr*exp(-t/Tr))/(Ti - Tr) - (Tr - Ti + Ti*exp(-t/Ti))/(Ti - Tr);
+                F1 = @(t) (exp(-t/Td)*(Td*exp(t/Td)*(Ti - Tr) + (Td*Ti^2*exp(t/Td - t/Ti))/(Td - Ti) - (Td*Tr^2*exp(t/Td - t/Tr))/(Td - Tr)))/(Td*Ti - Td*Tr) + (Td^2*exp(-t/Td))/(Td*Ti + Td*Tr - Ti*Tr - Td^2);
+
+                A = I1(t1); %find init conds for decay
                 B = H1(t1);
                 C = F1(t1);
 
                 t_tot = t_tot-t1; %shift frame where t1 is 0
                 t1 = 0;
-                H2 = @(t) B.*exp(-t./Tr);
-                F2 = @(t) exp(-t./Td).*(C + (B.*Tr)./(Td - Tr)) - (B.*Tr.*exp(-t./Tr))./(Td - Tr);
+                I2 = @(t) A.*exp(-t./Ti); %evaluate decays from this time (t1 = 0)
+                H2 = @(t) exp(-t./Tr).*(B - (A.*Ti)./(Ti - Tr)) + (A.*Ti.*exp(-t./Ti))./(Ti - Tr);
+                F2 = @(t) exp(-t./Td).*(C - ((Td.*Tr.*(A.*Ti - B.*Ti + B.*Tr))./(Td - Tr) - (A.*Td.*Ti^2)./(Td - Ti))./(Td.*Ti - Td.*Tr)) - (exp(-t./Td).*((A.*Td.*Ti^2.*exp(t./Td - t./Ti))./(Td - Ti) - (Td.*Tr.*exp(t./Td - t./Tr).*(A.*Ti - B.*Ti + B.*Tr))./(Td - Tr)))./(Td.*Ti - Td.*Tr);
 
             counter = 0;
             t_true = 0;
@@ -357,18 +359,19 @@ end
 
                 t_true = t_true + t1; %make t1 now relative to the old t1, so it is the time of integration until NaN
                 t1 = t_tot(tmp_idx) - t_true; %t1 is integration time
+                A = I2(t1); %find initial conditions at this time
                 B = H2(t1);
                 C = F2(t1);
 
-                H2 = @(t) B.*exp(-t./Tr);
-                F2 = @(t) exp(-t./Td).*(C + (B.*Tr)./(Td - Tr)) - (B.*Tr.*exp(-t./Tr))./(Td - Tr);
+                I2 = @(t) A.*exp(-t./Ti); %evaluate decays from this time
+                H2 = @(t) exp(-t./Tr).*(B - (A.*Ti)./(Ti - Tr)) + (A.*Ti.*exp(-t./Ti))./(Ti - Tr);
+                F2 = @(t) exp(-t./Td).*(C - ((Td.*Tr.*(A.*Ti - B.*Ti + B.*Tr))./(Td - Tr) - (A.*Td.*Ti^2)./(Td - Ti))./(Td.*Ti - Td.*Tr)) - (exp(-t./Td).*((A.*Td.*Ti^2.*exp(t./Td - t./Ti))./(Td - Ti) - (Td.*Tr.*exp(t./Td - t./Tr).*(A.*Ti - B.*Ti + B.*Tr))./(Td - Tr)))./(Td.*Ti - Td.*Tr);
                 f(tmp_idx+1:end) = F2(t_tot(tmp_idx+1:end) - t_tot(tmp_idx)); %add to output vector
 
             end %repeat while we have nans
-
         end
     end
-
+    
     function f = fd_sol(t_tot, t_on, t_off, Ti, Tr, Td, b)
 
         t0 = t_tot(t_on);

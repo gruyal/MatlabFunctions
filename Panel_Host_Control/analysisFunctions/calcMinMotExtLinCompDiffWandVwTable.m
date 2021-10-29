@@ -93,7 +93,7 @@ sbVal = unique(sbTab.value);
 sbWid = unique(sbTab.width);
 
 relMaxExt = singleBarSt(end, end, end, end).maxExtPosVal;
-relPD = sign(singleBarSt(end, end, end, end).maxInhPosVal - relMaxExt);
+relPD = sign(singleBarSt(end, end, end, end).minInhPosVal - relMaxExt);
 
 % alignSt = alignProtocolDataByTable(pStruct, 'sAppear'); % not compatible
 % with later functions

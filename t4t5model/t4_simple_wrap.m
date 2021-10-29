@@ -1,9 +1,9 @@
-function [V, ge, gi] = t5_simple_wrap(params,stim_type,val_in,width_in,dur_in,pos_vect_in,time,fr,stimIdx_in)
+function [V, ge, gi] = t4_simple_wrap(params,stim_type,val_in,width_in,dur_in,pos_vect_in,time,fr,stimIdx_in)
 %{ 
 T5 Simple Model
 
 Output
-    V:      t x 1 vector with a simulation of T5 response to stimulus for a time
+    V:      t x 1 vector with a simulation of T4 response to stimulus for a time
             vector t
 
 Input
@@ -63,7 +63,7 @@ switch stim_type
         spfr_data.stim_type = 4;
 end
 
-if spfr_data.val == 0                   %all params stored in "rows" of 4, 
+if spfr_data.val == 1                   %all params stored in "rows" of 4, 
     mu_p  = params(1:4);
     sig_p = params(5:8);
     amp_p = params(9:12);
@@ -102,33 +102,23 @@ stimIdx = false(size(spfr_data.stimIdx));
 stimIdx(tmp+d) = true;
 stim_time = fix(spfr_data.time(stimIdx));
 
-M = 1:(length(spfr_data.pos_vect));
-x = min(pos_vect):max(pos_vect);
+buffer = 5;
+M = 1:(length(spfr_data.pos_vect)+2*buffer);
+x = M+min(spfr_data.pos_vect)-buffer;
 
-%if moving bar or moving edge, we need to tag stims to end of pos_vect
-if spfr_data.stim_type > 2
-    dd = mean(diff(pos_vect)) > 0; %if diff >1, then it's PD, if it's less than 1 it's ND
-    if dd && width > 0
-        pos_vect = [pos_vect, pos_vect(end)+(1:(width))]; %append stim positions to PD side of pos_vect
-    elseif ~dd && width > 0
-        pos_vect = [pos_vect(1)+((width):-1:1), pos_vect];
-    end
-else %if spfr or min mot, we dont want a window
-    x =  [x(1)+(-width:-1), x];
-end
-    
 Ie = zeros(length(stim_time),length(M));
 Ii = zeros(length(stim_time),length(M));
 
-%pos_vect defines leadingedge of stimulated position. x defines valid
-%positions in window
 for i = 1:length(pos_vect)
-    idx = x <= pos_vect(i) & x >= pos_vect(i)-width;
+    pos = pos_vect(i) - min(pos_vect)+buffer;
 
-     Ie(i,idx) = 1;
-     Ii(i,idx) = 1;
+     Ie(i,pos-width:pos) = 1;
+     Ii(i,pos-width:pos) = 1;
 
 end
+
+p.Ie = Ie;
+p.Ii = Ii;
 
 if spfr_data.stim_type == 4
     Ie = cumsum(Ie,1) > 0;
@@ -192,8 +182,8 @@ s_ind = s_ind';
 p.stim_time = stim_time;
 
 %populate a matrix with this dynamic for each stim
- fe = zeros(size(p.Ie,2),size(spfr_data.time,1));
- fi = zeros(size(p.Ii,2),size(spfr_data.time,1));
+fe = zeros(size(p.Ie,2),size(spfr_data.time,1));
+fi = zeros(size(p.Ii,2),size(spfr_data.time,1));
 fe2 = zeros(size(p.Ii,2),size(spfr_data.time,1));
 fi2 = zeros(size(p.Ii,2),size(spfr_data.time,1));
 
@@ -216,18 +206,18 @@ switch spfr_data.stim_type
         t_ind = t_ind-d;
         s_ind = s_ind-d;
         for i = 1:size(Ie,1)
-            fe(logical(p.Ie(i,:)),t_ind(i):(t_ind(i)+length(fe_tmp)-1))   = repmat(fe_tmp,sum(p.Ie(i,:)),1);
-            fi(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fi_tmp)-1))   = repmat(fi_tmp,sum(p.Ii(i,:)),1);
+            fe(logical(p.Ie(i,:)),t_ind(i):(t_ind(i)+length(fe_tmp)-1)) = repmat(fe_tmp,sum(p.Ie(i,:)),1);
+            fi(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fi_tmp)-1)) = repmat(fi_tmp,sum(p.Ii(i,:)),1);
             fe2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fe2_tmp,sum(p.Ii(i,:)),1);
             fi2(logical(p.Ii(i,:)),t_ind(i):(t_ind(i)+length(fe2_tmp)-1)) = repmat(fi2_tmp,sum(p.Ii(i,:)),1);
         end
     case 2
         t_tot = spfr_data.time;
-        t_on  = t_ind(1);
-        t_off = s_ind(1);
+        t_on = t_ind(1);
+        t_off= s_ind(1);
 
-        fe_tmp  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
+        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
 
         fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
         fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
@@ -248,50 +238,77 @@ switch spfr_data.stim_type
         %subtract delay from ending index to not encroach on subsequent SPFR
         %spfr_data.time = spfr_data.time - spfr_data.time(t_ind(1)); %because our analytical solutions assume t0 = 0
         t_tot = spfr_data.time;
-        t_on = t_ind(1);
-        t_off= s_ind(1);
 
-        fe_tmp = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-        fi_tmp = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
-
-        fe2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-        fi2_tmp = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
+        t_ind = [t_ind(1)*ones(width,1);t_ind];
+        effDur = spfr_data.stimDur;
+        effDur = effDur*sum(p.Ie,1); %if moving, then also account for width 
+        fe_tmp = zeros(length(unique(effDur)),length(t_tot));
+        fi_tmp = zeros(length(unique(effDur)),length(t_tot));
+        fe2_tmp = zeros(length(unique(effDur)),length(t_tot));
+        fi2_tmp = zeros(length(unique(effDur)),length(t_tot));
 
         %after solving for conductances at each time, we can now shift back
         %to non-delayed frame to fill vector
         t_ind = t_ind-d;
         s_ind = s_ind-d;
 
-        for i = 1:size(p.Ie,2)
-            fe(i,t_ind(i):end) = fe_tmp(1:end-t_ind(i)+1);
-            fi(i,t_ind(i):end) = fi_tmp(1:end-t_ind(i)+1);
-            fe2(i,t_ind(i):end) = fe2_tmp(1:end-t_ind(i)+1);
-            fi2(i,t_ind(i):end) = fi2_tmp(1:end-t_ind(i)+1);
+        counter2 = 0;
+        for effDuri = unique(effDur)
+            counter2 = counter2+1;
+
+            be2 = max(0,effDuri*me_p + be_p); %if PC, deltas are constants.
+            bi2 = max(0,effDuri*mi_p + bi_p); 
+
+            [~,s] = min(abs(spfr_data.time - spfr_data.time(t_ind(1)) - effDuri));
+            t_on = t_ind(1);
+            t_off = s;
+            fe_tmp(1 + effDuri/p.stimDur,:)  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
+            fi_tmp(1 + effDuri/p.stimDur,:)  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+            fe2_tmp(1 + effDuri/p.stimDur,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, be2);
+            fi2_tmp(1 + effDuri/p.stimDur,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, bi2);        
         end
+
+        t_ind = t_ind - t_ind(1)+1;
+        ii = 0;
+        for i = 1:size(p.Ie,2)
+            if ~any(p.Ie(:,i),1)
+                continue
+            end
+            ii = ii+1;  
+            fe(i,t_ind(ii):end)  =  fe_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+            fi(i,t_ind(ii):end)  =  fi_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+            fe2(i,t_ind(ii):end) = fe2_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+            fi2(i,t_ind(ii):end) = fi2_tmp(1+effDur(i)/p.stimDur, 1:end-t_ind(ii)+1);
+        end
+
+        %after solving for conductances at each time, we can now shift back
+        %to non-delayed frame to fill vector
+        t_ind = t_ind-d;
+        s_ind = s_ind-d;
 
         dd = mean(diff(pos_vect)) > 0;
         if ~dd %if ND, we need to reverse order
-            fe  = flipud(fe);
-            fi  = flipud(fi);
-            fe2 = flipud(fe2);
-            fi2 = flipud(fi2);
+            fe(any(fe,2),:) = flipud(fe(any(fe,2),:));
+            fi(any(fi,2),:) = flipud(fi(any(fi,2),:));
+            fe2(any(fe2,2),:) = flipud(fe2(any(fe2,2),:));
+            fi2(any(fi2,2),:) = flipud(fi2(any(fi2,2),:));
         end
+    
     case 4 %edge
          %subtract delay from ending index to not encroach on subsequent SPFR
         %spfr_data.time = spfr_data.time - spfr_data.time(t_ind(1)); %because our analytical solutions assume t0 = 0
         t_tot = spfr_data.time;
-
-
-        for i = 1:size(p.Ie,2)
+        
+        for i = 1:length(t_ind)-1
             effDur = spfr_data.stimDur*sum(p.Ie(:,i));
-            t_on = t_ind(i);
+            t_on = t_ind(i)-1;
             t_off= s_ind(end);
             p.be2 = max(0,effDur*me_p + be_p);
             p.bi2 = max(0,effDur*mi_p + bi_p);
-            fe(i,:)  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
-            fi(i,:)  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
-            fe2(i,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
-            fi2(i,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
+            fe(i+buffer,:)  = fc_sol(t_tot, t_on, t_off, p.Tre, p.Tde);
+            fi(i+buffer,:)  = fc_sol(t_tot, t_on, t_off, p.Tri, p.Tdi);
+            fe2(i+buffer,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tre2, p.Tde2, p.be2);
+            fi2(i+buffer,:) = fd_sol(t_tot, t_on, t_off, p.Tid, p.Tri2, p.Tdi2, p.bi2);
         end
 
         dd = mean(diff(pos_vect)) > 0;
@@ -304,12 +321,12 @@ switch spfr_data.stim_type
         
 end
 
-    fe  =  fe(:,1:size(spfr_data.time,1));
-    fi  =  fi(:,1:size(spfr_data.time,1));
+    fe = fe(:,1:size(spfr_data.time,1));
+    fi = fi(:,1:size(spfr_data.time,1));
     fe2 = fe2(:,1:size(spfr_data.time,1));
     fi2 = fi2(:,1:size(spfr_data.time,1));
     
-    %caluclate conductances and steady state voltage
+     %caluclate conductances and steady state voltage
     ge_mat(stim_curr,:)  = p.ae*fe + p.ae2*fe2;
     gi_mat(stim_curr,:)  = p.ai*fi + p.ai2*fi2;
 end

@@ -13,6 +13,7 @@ function playStimByIndwImplay(pStruct, stimInd)
 
 
 temp = getStimInds(pStruct, [stimInd, nan, 1,1]);
+% temp = getStimInds(pStruct, stimInd);
 
 assert(length(temp) == 1, 'stimInd produced more than one result')
 
