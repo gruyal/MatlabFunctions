@@ -39,6 +39,8 @@ end
 
 connectHost;
 
+
+
 %% run the desired function to generate the 32X96XN matrix to be presented
 if nargin < 2
     protocolStruct = feval(funcHand);
@@ -110,7 +112,7 @@ for ii=1:numStim
     tH.VerticalAlignment = 'top';
 
     Panel_com('start_display', stimTime + fudgeT) %duration expected in 100ms units
-    pause(stimTime)
+    pause(stimTime + fudgeT)
 
     Panel_com('stop_log');
     pause(0.1)
@@ -137,15 +139,21 @@ delete(wbh)
 
 % To get file names if function crashes while trying to move files
 save(fullfile(folderName, ['protocolStruct', timeStamp]), 'protocolStruct', '-v7.3')
-
+count = 0;
 for ii=1:numStim
   if isempty(protocolStruct.stim(ii).dirName)
     break
   else
-    tempStimDir = fullfile(folderName, 'Log Files', protocolStruct.stim(ii).dirName);
-    G4_TDMS_folder2struct(tempStimDir)
+      count=count+1; % changed the loop to allow for parfor use
+      tempStimDir = fullfile(folderName, 'Log Files', protocolStruct.stim(ii).dirName);
+      tempDirCell{count} = tempStimDir;
   end
 end
+
+parfor ii=1:length(tempDirCell)
+    G4_TDMS_folder2struct(tempDirCell{ii})
+end
+
 
 protStruct = consolidateDataG4(folderName);
 close(figH)

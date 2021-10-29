@@ -88,7 +88,7 @@ baseSiz = 445; % size of single frame or mask
 arenaSize = [192,48];
 gratingFuncHand = @generateBarFrameByInds;
 
-default.barWid = [3,5];
+default.barWid = 5;
 default.barHeight = 9;
 default.barSpan = 13;
 default.switchPos = 0;

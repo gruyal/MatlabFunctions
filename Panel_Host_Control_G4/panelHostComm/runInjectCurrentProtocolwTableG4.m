@@ -49,9 +49,9 @@ default.stepDur = 500;
 default.rate = [5,10,20]; %pA per sec
 default.isi = 500;
 default.reps = 3;
-default.hypPulse = 0;
-default.hypCurr = -1;
-default.hypDur = [0,40,160,320];
+default.hypPulse = 1;
+default.hypCurr = -20;
+default.hypDur = [0, 250];
 default.arenaVal = 7;
 default.randomize = 1;
 
@@ -59,7 +59,8 @@ fixed.preStim = 250; % 250ms before each stim
 fixed.fudgeT = 0.1; % time in secs (since it is for the matlab puase function)
 fixed.relCh = 0; % AO channel by panel host definition
 fixed.sampRate = 1000;
-fixed.conversionRatio = 40/1; % 40pA/V when feedback resistor is 5GOhm
+% fixed.conversionRatio = 40/1; % 40pA/V when feedback resistor is 5GOhm
+fixed.conversionRatio = 400/1; % 400pA/V when feedback resistor is 500MOhm
 fixed.arenaSize = [48, 192];
 fixed.gsLevel = 4;
 
@@ -135,7 +136,7 @@ end
 
 %% adding prePulse if necessary
 
-prePulseMax = -5.1; % to avoid strong negative injections
+prePulseMax = -100.1; % to avoid strong negative injections (adjusted to big cells)
 gratingTable = [];
 preP = default.hypPulse;
 assert(ismember(preP, [0,1]), 'hypPulse should be a logical argument')
@@ -241,6 +242,7 @@ assert(statVec == 0, 'Problem creating AO files')
 
 emptyStruct.stim(1).matCell = ones([fixed.arenaSize, 500]) * default.arenaVal; % to generate a non empty position function
 emptyStruct.gsLevel = fixed.gsLevel;
+emptyStruct.stim(1).posFuncCell = ones(1,1000);
 
 statPat = make_vSDpattern_imageG4(emptyStruct, folderName);
 statPos = make_vSDposfunction_imageG4(emptyStruct, folderName);
@@ -286,7 +288,7 @@ for ii=1:numStim
 
     Panel_com('start_display', protocolStructAO.stim(ii).length/fixed.sampRate + fixed.fudgeT)
     pause(protocolStructAO.stim(ii).length/fixed.sampRate + fixed.fudgeT)
-    Panel_com('stop_display')
+    
     Panel_com('stop_log');
     pause(0.01)
 

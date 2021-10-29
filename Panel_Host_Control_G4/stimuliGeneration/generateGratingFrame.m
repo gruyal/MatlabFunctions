@@ -6,7 +6,7 @@ function gtFrame = generateGratingFrame(gtStruct)
 % INPUT
 % gtSeqStruct - structure with the following fields
 % .WidthON/OFF  -           width of each of the bars
-% .position -               position of the bar specified in barAtPos relative to the center.
+% .pos -                    position of the bar specified in barAtPos relative to the center.
 %                           0 mean the left edge side of the bar is centered (can be
 %                           negative)
 % .barAtPos -               logical [0,1]. Whether the bar in the center should be dark (0) or
@@ -35,7 +35,7 @@ cycWid = gtStruct.widthON + gtStruct.widthOFF;
 maxVal = 2^gsLevel - 1;
 
 if min(valsON) < max(valsOFF)
-    error('ON bar min is lower than OFF bar max')
+    warning('ON bar min is lower than OFF bar max')
 end
 
 if min([valsON, valsOFF]) < 0 || max([valsON, valsOFF]) > 1
@@ -58,7 +58,7 @@ end
 
 numCyc = ceil(matSiz/cycWid);
 baseFrame = repmat(baseCyc, 1, numCyc);
-sfFrame = circshift(baseFrame, [0, floor(matSiz/2)+gtStruct.position]);
+sfFrame = circshift(baseFrame, [0, floor(matSiz/2)+gtStruct.pos]);
 gtFrame = sfFrame(1:matSiz, 1:matSiz);
 
 

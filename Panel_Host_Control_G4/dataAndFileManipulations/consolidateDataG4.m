@@ -44,7 +44,8 @@ for ii=1:length(protocolStruct.stim)
         continue
     end
     load(fullfile(direct, 'Log Files', fname)); % loads Log variable
-    inputChDat = [Log.ADC.Time(1,:)', Log.ADC.Volts']; % since time is euqal between channels
+    % added double so that it won't zero VOlts (since Time is in uint64)
+    inputChDat = [double(Log.ADC.Time(1,:))', Log.ADC.Volts']; % since time is euqal between channels
     xPosDat = [Log.Frames.Time', Log.Frames.Position'];
     commTime = Log.Commands.Time;
     commName = Log.Commands.Name;

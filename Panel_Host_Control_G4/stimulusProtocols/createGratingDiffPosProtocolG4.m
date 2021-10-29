@@ -100,7 +100,7 @@ default.width = 'UI';
 default.gridCenter = 'UI';
 default.numCyc = 5;
 default.orientations = [0, 0.5];
-default.stepDur = 0.16;
+default.stepDur = 0.08;
 default.maskType = {'circle'};
 default.gratingMidVal = 0.49;
 default.maskRadius = 9;
@@ -242,7 +242,7 @@ for ss=1:length(stimFB)
             gtStruct(count).barAtPos = fixed.barAtPos;
             gtStruct(count).gsLevel = gsLev;
             gtStruct(count).bkgdVal = bkgdVal;
-            gtStruct(count).position = corrPhase;  
+            gtStruct(count).pos = corrPhase;  
             gtStruct(count).stepFrames = stepFrames(kk); 
 
             maskSt(count).type = maskT{1};
@@ -262,7 +262,7 @@ end
  protocolStruct.gratingTable = array2table(gratingArray, 'variablenames', tabVarNames);
  protocolStruct.gratingStruct = gtStruct;
  protocolStruct.masksStruct = maskSt;
- protocolStruct.relGtStName = 'position';
+ protocolStruct.relGtStName = 'pos';
  
  %% GRID
 

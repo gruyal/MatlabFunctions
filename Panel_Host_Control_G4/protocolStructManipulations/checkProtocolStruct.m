@@ -22,7 +22,7 @@ baseImSize = [445, 445]; % size for original stimSeq and masks
 
 
     % FIELD 1 - gratingStruct
-gratingNames = {'widthON'; 'widthOFF'; 'position'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'}; 
+gratingNames = {'widthON'; 'widthOFF'; 'pos'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'}; 
 gratingIndsNames = {'fVal'; 'sVal'; 'ori'; 'phase'; 'sqDim'; 'gsLevel'};
 gratingConcenNames = {'widthON'; 'widthOFF'; 'pos'; 'barAtPos'; 'valsONSt'; 'valsONEnd'; 'valsOFFSt'; 'valsOFFEnd'; 'type'};    
 grating4BarNames = {'width1'; 'width2'; 'width3'; 'width4';'position'; 'barAtPos'; ...

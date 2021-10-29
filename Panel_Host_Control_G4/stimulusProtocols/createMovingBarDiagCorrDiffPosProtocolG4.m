@@ -82,13 +82,14 @@ arenaSize = [192,48];
 gratingFuncHand = @generateBarFrameByInds;
 
 default.stimBar = [0,1];
-default.barWid = [3,5];
-default.barHeight = 9;
-default.barSpan = 13; 
+default.barWid = 7;
+default.barHeight = 21;
+default.barSpan = 21; 
 default.gridCenter = 'UI';
+default.maskPositions = NaN;
 default.gratingMidVal = 0.49;
 default.orientations = 'UI';
-default.stepDur = 0.08;
+default.stepDur = 0.04;
 default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
@@ -225,37 +226,52 @@ end
  protocolStruct.relGtStName = 'pos'; 
 
  %% GRID
-
- gridSt.gridSize = default.gridSize;
- assert(isvector(gridSt.gridSize), 'gridCenter should be a 1X2 vector')
- assert(length(gridSt.gridSize)==2, 'gridCenter should be a 1X2 vector')
  
- ovlp = default.gridOverlap;
- assert(length(ovlp)==1, 'gridOverlap should be a single number')
- 
- maskS = 2*minMaskR+1;
- space = maskS - maskS*ovlp;
- gridSt.spacing = [space, space];
+ if isnan(default.maskPositions)
 
- gdCen = default.gridCenter;
- assert(isvector(gdCen), 'gridCenter should be a 1X2 vector')
- assert(length(gdCen)==2, 'gridCenter should be a 1X2 vector')
+     gridSt.gridSize = default.gridSize;
+     assert(isvector(gridSt.gridSize), 'gridCenter should be a 1X2 vector')
+     assert(length(gridSt.gridSize)==2, 'gridCenter should be a 1X2 vector')
 
- stCrds = gdCen - space*(gridSt.gridSize-1)/2;
- if stCrds(1) < 1
-    warning('Grid start position in X is out of range - changed to 1')
-    stCrds(1) = 1;
+     ovlp = default.gridOverlap;
+     assert(length(ovlp)==1, 'gridOverlap should be a single number')
+
+     maskS = 2*minMaskR+1;
+     space = maskS - maskS*ovlp;
+     gridSt.spacing = [space, space];
+
+     gdCen = default.gridCenter;
+     assert(isvector(gdCen), 'gridCenter should be a 1X2 vector')
+     assert(length(gdCen)==2, 'gridCenter should be a 1X2 vector')
+
+     stCrds = gdCen - space*(gridSt.gridSize-1)/2;
+     if stCrds(1) < 1
+        warning('Grid start position in X is out of range - changed to 1')
+        stCrds(1) = 1;
+     end
+     if stCrds(2) < 1
+        warning('Grid start position in Y is out of range - changed to 1')
+        stCrds(2) = 1;
+     end
+
+     gridSt.startPos = stCrds;
+
+     maskPos = makeGrid(gridSt);
+
+     protocolStruct.maskPositions = maskPos;
+     
+ else
+     maskPos = default.maskPositions;
+     assert(size(maskPos,2) == 2, 'maskPositions should be an Nx2 matrix')
+     assert(max(maskPos(:,1)) < arenaSize(1) ...
+         && min(maskPos(:,1)) > 0, ...
+         'x index exceeds arena bounds');
+      assert(max(maskPos(:,2)) < arenaSize(2) ...
+         && min(maskPos(:,2)) > 0, ...
+         'y index exceeds arena bounds');
+     
+     protocolStruct.maskPositions = maskPos;
  end
- if stCrds(2) < 1
-    warning('Grid start position in Y is out of range - changed to 1')
-    stCrds(2) = 1;
- end
-
- gridSt.startPos = stCrds;
-
- maskPos = makeGrid(gridSt);
-
- protocolStruct.maskPositions = maskPos;
 
 
 
