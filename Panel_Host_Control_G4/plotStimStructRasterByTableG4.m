@@ -90,7 +90,13 @@ yMaskPos = length(unique(pStruct.maskPositions(:,2)));
 
 
 for ii=1:numFigs
-    tempTab = relTable(relTable{:, figName} == figIndVals(ii), :);
+    
+    if ismember(figName, {'maskPos', 'maskOrt'})
+        tempTab = relTable;
+    else
+        tempTab = relTable(relTable{:, figName} == figIndVals(ii), :);
+    end
+    
     if strcmp(axeName, 'maskPos')
         axeIndVals = unique(stimInds(:,4));
         maskPosI=2;   
@@ -117,8 +123,10 @@ for ii=1:numFigs
     plotSt.figPar(ii).relNumCol = length(colIndVals);
     if maskPosI == 2
         plotSt.figPar(ii).axesNum = [xMaskPos, yMaskPos];
+        rotPos = 1;
     else
         plotSt.figPar(ii).axesNum = [ceil(sqrt(plotSt.figPar(ii).relNumAxe)), ceil(sqrt(plotSt.figPar(ii).relNumAxe))];
+        rotPos = 0;
     end
     plotSt.figPar(ii).axesOrd = 1:length(axeIndVals);
     if plotSt.figPar(ii).relNumCol < 9 % since set1 has 9 clean colors
@@ -187,14 +195,18 @@ for ii=1:numFigs
     relOrd = plotSt.figPar(ii).axesOrd;
     relCol = plotSt.figPar(ii).cols;
     posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.02, relAxe);
+    if rotPos
+        posCell = rot90(posCell);
+    end
+    
     posInd=1;
     ortInd=1;
     if maskPosI ==1
         posInd = figIndVals(ii);
-        tempFigInd = ones(heigth(relTable), 1);
+        tempFigInd = ones(height(relTable), 1);
     elseif maskOrtI ==1
         ortInd = figIndVals(ii);
-        tempFigInd = ones(heigth(relTable), 1);
+        tempFigInd = ones(height(relTable), 1);
     else
         tempFigInd = relTable{:, figName} == figIndVals(ii);
     end

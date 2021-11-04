@@ -30,7 +30,7 @@ if sum(diffVInd) > 0 && sum(vmInd) > 0 % only correlated if there is something t
     [corr, lags] = xcorr(diffVInd, vmInd);
     [~, maxCI] = max(corr); 
     relLag = -lags(maxCI); % since the der precedes the voltage
-    if relLag <20 || relLag > 70 % determined empirically
+    if relLag <5 || relLag > 70 % determined empirically
         warning('relLag out of bounds set to 40')
         relLag = 40; 
     end

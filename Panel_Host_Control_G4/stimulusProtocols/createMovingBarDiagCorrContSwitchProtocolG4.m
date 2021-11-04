@@ -101,7 +101,7 @@ default.intFrames = nan;
 default.repeats = 3;
 default.randomize = 1;
 
-fixed.stimBar = [1,1; 0,0; 0,1; 1,0];
+fixed.stimBar = [0,0; 0,1; 1,0; 1,1];
 fixed.gsLevel = 4;
 fixed.generalFrequency = 500;
 fixed.maskType = {'rectangle'};

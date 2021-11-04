@@ -21,6 +21,7 @@ function varargout = plotStimStructByTableG4(pStruct, figName, axeName, colName,
 %
 % plotParSt -       (optional) structure with different parameters that
 %                   will affect data plotting 
+% .rmSpikes -       logical. if true median filters the voltage trace
 % .figPar -         fields within .figPar will be applied on each figure.
 %                   if only one is given same paraemters will be applied on
 %                   all figures generated. 
@@ -62,29 +63,50 @@ colTableNames = relTable.Properties.VariableNames;
 numPos = size(pStruct.maskPositions,1); 
 stimInds = vertcat(pStruct.stim.relInds);
 
-if ~all(ismember({figName, axeName, colName}, [colTableNames, {'maskPos'}])) %to add maskPos as an option
+acceptNames =  [colTableNames, {'maskPos', 'maskOrt'}];
+acpNameStr = cellfun(@(x) [x, ' '], acceptNames, 'uniformoutput', 0);
+acpNameStr = [acpNameStr{:}];
+
+if ~all(ismember({figName, axeName, colName}, acceptNames)) %to add maskPos as an option
     fprintf('relevant variable names are: \n')
     cellfun(@(x) fprintf('%s \t', x), colTableNames)
     fprintf('\n');
-    error('Given name does not match variable names in table')
+    error('Given name does not match variable names in table \nAcceptable names are: %s', acpNameStr)
 end
 assert(ismember('index', colTableNames), 'gratingTable is missing index variable')
 
 maskPosI=0;
+maskOrtI=0;
 if strcmp(figName, 'maskPos')
     figIndVals = unique(stimInds(:,4));
     maskPosI=1;
+elseif strcmp(figName, 'maskOrt')
+    figIndVals = unique(stimInds(:,3));
+    maskOrtI=1;
 else
     figIndVals = unique(relTable{:, figName});
 end
 numFigs = length(figIndVals);
 
+% to be used if maskPosI is 2
+xMaskPos = length(unique(pStruct.maskPositions(:,1)));
+yMaskPos = length(unique(pStruct.maskPositions(:,2)));
+
 
 for ii=1:numFigs
-    tempTab = relTable(relTable{:, figName} == figIndVals(ii), :);
+    
+    if ismember(figName, {'maskPos', 'maskOrt'})
+        tempTab = relTable;
+    else
+        tempTab = relTable(relTable{:, figName} == figIndVals(ii), :);
+    end
+    
     if strcmp(axeName, 'maskPos')
         axeIndVals = unique(stimInds(:,4));
         maskPosI=2;
+	elseif strcmp(axeName, 'maskOrt')
+        axeIndVals = unique(stimInds(:,3));
+        maskOrtI=2;   
     else
         axeIndVals = unique(tempTab{:, axeName});
     end
@@ -92,6 +114,9 @@ for ii=1:numFigs
     if strcmp(colName, 'maskPos')
         colIndVals = unique(stimInds(:,4));
         maskPosI=3;
+	elseif strcmp(colName, 'maskOrt')
+        colIndVals = unique(stimInds(:,3));
+        maskOrtI=3;
     else
         colIndVals = unique(tempTab{:, colName});
     end
@@ -99,7 +124,13 @@ for ii=1:numFigs
     plotSt.figPar(ii).relColVal = colIndVals;
     plotSt.figPar(ii).relNumAxe = length(axeIndVals);
     plotSt.figPar(ii).relNumCol = length(colIndVals);
-    plotSt.figPar(ii).axesNum = [ceil(sqrt(plotSt.figPar(ii).relNumAxe)), ceil(sqrt(plotSt.figPar(ii).relNumAxe))];
+    if maskPosI == 2
+        plotSt.figPar(ii).axesNum = [xMaskPos, yMaskPos];
+        rotPos = 1;
+    else
+        plotSt.figPar(ii).axesNum = [ceil(sqrt(plotSt.figPar(ii).relNumAxe)), ceil(sqrt(plotSt.figPar(ii).relNumAxe))];
+        rotPos = 0;
+    end
     plotSt.figPar(ii).axesOrd = 1:length(axeIndVals);
     plotSt.figPar(ii).cols = cbrewer('qual', 'Paired', 2*plotSt.figPar(ii).relNumCol); 
     plotSt.figPar(ii).plotMeanOrReps = 0;
@@ -107,49 +138,59 @@ end
 
 
 %% managing the plotParSt input
+
+rmSpF = 0;
+
 if nargin == 5
-    assert(isfield(plotParSt, 'figPar'), 'plotParSt is missing figPar field')
     
-    % if input structure has length one, apply parameters on all figures
-    if length(plotParSt.figPar) == 1 && numFigs > 1
-        for ii=2:numFigs
-            plotParSt.figPar(ii) = plotParSt.figPar(1);
-        end
+    if isfield(plotParSt, 'rmSpikes')
+        rmSpF = plotParSt.rmSpikes;
     end
     
-    for ii=1:numFigs
-        if isfield(plotParSt.figPar, 'axesNum')
-            if ~isempty(plotParSt.figPar(ii).axesNum)
-                tempAxeNum = plotParSt.figPar(ii).axesNum;
-                assert(length(tempAxeNum) == 2, 'axesNum input for fig %d has wrong dimension', ii)
-                assert(prod(tempAxeNum) >= plotSt.figPar(ii).relNumAxe, 'axesNum for fig %d is too small', ii)
-                plotSt.figPar(ii).axesNum = tempAxeNum;
+%     assert(isfield(plotParSt, 'figPar'), 'plotParSt is missing figPar field')
+    
+    % if input structure has length one, apply parameters on all figures
+    if isfield(plotParSt, 'figPar')
+        if length(plotParSt.figPar) == 1 && numFigs > 1
+            for ii=2:numFigs
+                plotParSt.figPar(ii) = plotParSt.figPar(1);
             end
         end
-        
-        if isfield(plotParSt.figPar, 'axesOrd')
-            if ~isempty(plotParSt.figPar(ii).axesOrd)
-                tempAxeOrd = plotParSt.figPar(ii).axesOrd;
-                assert(length(tempAxeOrd) == plotSt.figPar(ii).relNumAxe, ...
-                       'axes order for fig %d os not equal to number of axes', ii)
-                plotSt.figPar(ii).axesOrd = tempAxeOrd;
+
+        for ii=1:numFigs
+            if isfield(plotParSt.figPar, 'axesNum')
+                if ~isempty(plotParSt.figPar(ii).axesNum)
+                    tempAxeNum = plotParSt.figPar(ii).axesNum;
+                    assert(length(tempAxeNum) == 2, 'axesNum input for fig %d has wrong dimension', ii)
+                    assert(prod(tempAxeNum) >= plotSt.figPar(ii).relNumAxe, 'axesNum for fig %d is too small', ii)
+                    plotSt.figPar(ii).axesNum = tempAxeNum;
+                end
             end
-        end
-        
-        if isfield(plotParSt.figPar, 'cols')
-            if ~isempty(plotParSt.figPar(ii).cols)
-                tempCols = plotParSt.figPar(ii).cols;
-                assert(size(tempCols, 2) == 3, 'Color input should be a 3 element vector')
-                assert(size(tempCols, 1) >= plotSt.figPar(ii).relNumCol, 'Colors in fig %d exceed colors inputs', ii)
-                plotSt.figPar(ii).cols = tempCols;
+
+            if isfield(plotParSt.figPar, 'axesOrd')
+                if ~isempty(plotParSt.figPar(ii).axesOrd)
+                    tempAxeOrd = plotParSt.figPar(ii).axesOrd;
+                    assert(length(tempAxeOrd) == plotSt.figPar(ii).relNumAxe, ...
+                           'axes order for fig %d os not equal to number of axes', ii)
+                    plotSt.figPar(ii).axesOrd = tempAxeOrd;
+                end
             end
-        end
-        
-        if isfield(plotParSt.figPar, 'plotMeanOrReps')
-            if ~isempty(plotParSt.figPar(ii).plotMeanOrReps)
-                tempRepsFlag = plotParSt.figPar(ii).plotMeanOrReps;
-                assert(ismember(tempRepsFlag, [0,1,2]), 'plotMeanOrReps should be 0, 1, or 2')
-                plotSt.figPar(ii).plotMeanOrReps = tempRepsFlag;
+
+            if isfield(plotParSt.figPar, 'cols')
+                if ~isempty(plotParSt.figPar(ii).cols)
+                    tempCols = plotParSt.figPar(ii).cols;
+                    assert(size(tempCols, 2) == 3, 'Color input should be a 3 element vector')
+                    assert(size(tempCols, 1) >= plotSt.figPar(ii).relNumCol, 'Colors in fig %d exceed colors inputs', ii)
+                    plotSt.figPar(ii).cols = tempCols;
+                end
+            end
+
+            if isfield(plotParSt.figPar, 'plotMeanOrReps')
+                if ~isempty(plotParSt.figPar(ii).plotMeanOrReps)
+                    tempRepsFlag = plotParSt.figPar(ii).plotMeanOrReps;
+                    assert(ismember(tempRepsFlag, [0,1,2]), 'plotMeanOrReps should be 0, 1, or 2')
+                    plotSt.figPar(ii).plotMeanOrReps = tempRepsFlag;
+                end
             end
         end
     end
@@ -158,7 +199,6 @@ end
 %% plotting the data
 
 maxTime = 0;
-posInd = 1; % if not used (check later)
 
 for ii=1:numFigs
     
@@ -167,9 +207,18 @@ for ii=1:numFigs
     relOrd = plotSt.figPar(ii).axesOrd;
     relCol = plotSt.figPar(ii).cols;
     posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.02, relAxe);
+    if rotPos
+        posCell = rot90(posCell);
+    end
+    posInd=1;
+    ortInd=1;
+    
     if maskPosI ==1
         posInd = figIndVals(ii);
-        tempFigInd = ones(heigth(relTable), 1);
+        tempFigInd = ones(height(relTable), 1);
+    elseif maskOrtI ==1
+        ortInd = figIndVals(ii);
+        tempFigInd = ones(height(relTable), 1);
     else
         tempFigInd = relTable{:, figName} == figIndVals(ii);
     end
@@ -179,10 +228,14 @@ for ii=1:numFigs
         if maskPosI == 2
             posInd = plotSt.figPar(ii).relAxeVal(jj);
             tempAxeInd = ones(height(relTable), 1);
+        elseif maskOrtI == 2
+            ortInd = plotSt.figPar(ii).relAxeVal(jj);
+            tempAxeInd = ones(height(relTable), 1);
         else
             tempAxeInd = relTable{:, axeName} == plotSt.figPar(ii).relAxeVal(jj);
         end
         
+%         [relPosX, relPosY] = ind2sub(size(posCell), relOrd(jj));
         handles.fig(ii).axh(jj) = axes('position', posCell{relOrd(jj)});
         hold on
         
@@ -198,7 +251,10 @@ for ii=1:numFigs
             
             if maskPosI == 3
                 posInd = plotSt.figPar(ii).relColVal(kk);
-                tempColInd = ones(height(relTab), 1);
+                tempColInd = ones(height(relTable), 1);
+            elseif maskOrtI == 3
+                ortInd = plotSt.figPar(ii).relColVal(kk);
+                tempColInd = ones(height(relTable), 1);
             else
                 tempColInd = relTable{:, colName} == plotSt.figPar(ii).relColVal(kk);
             end
@@ -207,12 +263,16 @@ for ii=1:numFigs
             gratInd = relTable{logical(rowInd), 'index'};
             assert(length(gratInd) == 1, 'variable names combination does not provide unique identity in gratingTable')
             
-            plotIndsSt = getStimInds(pStruct, [gratInd, nan, nan, posInd]);
+            plotIndsSt = getStimInds(pStruct, [gratInd, nan, ortInd, posInd]);
             plotInds = [plotIndsSt(:).inds];
             [datToPlot, timeToPlot] = getStimDataByInds(pStruct, plotInds);
             
             % with the way color are processed here it will not work with
             % regular color input
+            
+            if rmSpF == 1
+                datToPlot = smoothSpikes(datToPlot);
+            end
             
             notNanInds = all(~isnan(timeToPlot), 2);
             meanTime = mean(timeToPlot(notNanInds, :),2);
@@ -229,7 +289,13 @@ for ii=1:numFigs
                     plot(meanTime, mean(datToPlot(notNanInds, :),2), 'lineWidth', 3, 'color', relCol(meanColInd(kk), :))
             end
             
-            title(num2str(jj))
+            
+            if maskPosI==2
+                title(num2str(pStruct.maskPositions(jj,:)))
+            else
+                title(num2str(jj))
+            end
+            
             if meanTime(end) > maxTime
                 maxTime =  meanTime(end);
             end
