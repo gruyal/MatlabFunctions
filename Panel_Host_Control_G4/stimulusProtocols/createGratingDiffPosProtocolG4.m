@@ -157,7 +157,7 @@ end
  % LIST TAKEN FROM GenerateBaseMask and is a result of circle that are
  % symmetrycal to rotations
  % most are not ideal for 22.5 but 7 is really bad (was ok for 45)
- relRad = [2,3,4,5,9,10,12,15,17]; 
+ relRad = [2,3,4,5,9,10,12,15,17,19,23,27,31]; 
 
 if strcmp(maskT, 'circle')
      tempI = find(relRad - maskR <= 0, 1, 'last');
