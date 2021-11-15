@@ -31,8 +31,8 @@ function protocolStruct = createMovingBarDiagCorrDiffPosProtocolG4(inputStruct)
 %
 % inputStruct -     Should have the following fields
 % .barWid -         1XW vector of width of bar in pixels
-% .barHeight -      Integer { 9 }. height of bar in pixels.
-% .barSpan -        Integer { 13 }. span along which bar will move (in
+% .barHeight -      1XH vector . height of bar in pixels.
+% .barSpan -        1XS vector. span along which bar will move (in
 %                   pixels). Will be converted into the width of the
 %                   rectangular mask (differs between diagonal and
 %                   cardinal)
@@ -126,18 +126,18 @@ end
   %% MASK (masks created with grating)
 
  maskHW = floor(default.barSpan/2); % rectangle mask input is half width
- assert(length(maskHW) == 1, 'barSpan should be a single number')
- assert(maskHW > 0, 'barSpan should be positive')
+ assert(isvector(maskHW), 'barSpan should be a 1XS vector')
+ assert(min(maskHW) > 0, 'barSpan should be positive')
  
  minMaskR = maskHW;
  
- relRegR = maskHW;
- relDiagR = round((2*relRegR+1)/sqrt(2));% was +1 (with -1 overlap with non-rotated square is too small);
- radCell = {relRegR, relDiagR};
+%  relRegR = maskHW;
+%  relDiagR = round((2*relRegR+1)/sqrt(2));% was +1 (with -1 overlap with non-rotated square is too small);
+%  radCell = {relRegR, relDiagR};
 
  maskHH = floor(default.barHeight/2);
- assert(length(maskHH) == 1, 'barHeight should be a single number');
- assert(maskHH > 0, 'barHeight should be positive')
+ assert(isvector(maskHH), 'barHeight should be a 1XH vector');
+ assert(min(maskHH) > 0, 'barHeight should be positive')
  
  maskT = fixed.maskType;
 
@@ -180,39 +180,50 @@ gratingArray = [];
 for ww=1:length(barW)
 
     for vv=1:length(stimB)
+        
+        for hh=1:length(maskHH)
+            
+            for sp=1:length(maskHW)
+                
+                relRegR = maskHW(sp);
+                relDiagR = round((2*relRegR+1)/sqrt(2));% was +1 (with -1 overlap with non-rotated square is too small);
+                radCell = {relRegR, relDiagR};
 
-        for kk=1:length(stepFrames)
 
-            for oo=1:length(newOrt)
+                for kk=1:length(stepFrames)
 
-                count = count+1;
+                    for oo=1:length(newOrt)
 
-                ortPosInd = rem(newOrt(oo),2) +1;
-                relRad = radCell{ortPosInd};
-                relPos = -relRad:relRad+barW(ww)-1;
-                barVal = stimB(vv); 
- 
-                gtStruct(count).wid = barW(ww);
-                gtStruct(count).ori = newOrt(oo);
-                gtStruct(count).val = barVal;
-                gtStruct(count).sqDim = 2*maskHW+1; % since when using divideTotSquareToCols height is not taken into account
+                        count = count+1;
 
-                gtStruct(count).pos = relPos;
-                gtStruct(count).stepFrames = stepFrames(kk);
-                gtStruct(count).gsLevel = gsLev;
-                gtStruct(count).bkgdVal = bkgdVal;
-                gtStruct(count).matSize = baseSiz;
+                        ortPosInd = rem(newOrt(oo),2) +1;
+                        relRad = radCell{ortPosInd};
+                        relPos = -relRad:relRad+barW(ww)-1;
+                        barVal = stimB(vv); 
 
-                maskSt(count).type = maskT{1};
-                maskSt(count).radius = [relRad, maskHH];
-                maskSt(count).ori = newOrt(oo);
+                        gtStruct(count).wid = barW(ww);
+                        gtStruct(count).ori = newOrt(oo);
+                        gtStruct(count).val = barVal;
+                        gtStruct(count).sqDim = 2*maskHW(sp)+1; % since when using divideTotSquareToCols height is not taken into account
 
-                gratingArray = vertcat(gratingArray, ...
-                                            [count, barVal, barW(ww), 2*maskHW+1, ...
-                                            stepFrames(kk)/fixed.generalFrequency, 2*maskHH+1, newOrt(oo)]);
+                        gtStruct(count).pos = relPos;
+                        gtStruct(count).stepFrames = stepFrames(kk);
+                        gtStruct(count).gsLevel = gsLev;
+                        gtStruct(count).bkgdVal = bkgdVal;
+                        gtStruct(count).matSize = baseSiz;
 
+                        maskSt(count).type = maskT{1};
+                        maskSt(count).radius = [relRad, maskHH(hh)];
+                        maskSt(count).ori = newOrt(oo);
+
+                        gratingArray = vertcat(gratingArray, ...
+                                                    [count, barVal, barW(ww), 2*maskHW(sp)+1, ...
+                                                    stepFrames(kk)/fixed.generalFrequency, 2*maskHH(hh)+1, newOrt(oo)]);
+
+                    end
+                end
             end
-        end
+        end 
     end
 end
 
