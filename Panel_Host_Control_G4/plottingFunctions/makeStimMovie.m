@@ -1,6 +1,6 @@
 function makeStimMovie(stimMat, fileName)
 
-maxVal = 7;
+maxVal = 15;
 close all
 
 nFrames = size(stimMat, 3);
@@ -16,7 +16,7 @@ set(gcf,'Renderer','zbuffer');
 % Create movie.
 
 for ii = 1:nFrames 
-   plotMidFrame2(fliplr(stimMat(:,:,ii)), maxVal)
+   plotMidFrameG4(fliplr(stimMat(:,:,ii)), maxVal)
    frame = getframe;
    writeVideo(writerObj,frame);
 end

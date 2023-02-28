@@ -196,7 +196,7 @@ for ii=1:numFigs
     relCol = plotSt.figPar(ii).cols;
     posCell = generatePositionCell(0.05, 0.975, 0.025, 0.95, 0.02, 0.02, relAxe);
     if rotPos
-        posCell = rot90(posCell);
+        posCell = fliplr(posCell);
     end
     
     posInd=1;
@@ -271,6 +271,7 @@ for ii=1:numFigs
             
             if maskPosI==2
                 title(num2str(pStruct.maskPositions(jj,:)))
+%                 title(num2str(jj))
             else
                 title(num2str(jj))
             end

@@ -43,9 +43,11 @@ relCh = 3; % voltage channel
 datTomV = 10; % factor to multifpy data
 timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz) 
 
-
-
-indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
+if length(gratingInd) == 1
+    indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
+elseif length(gratingInd) == 4
+    indsSt = getStimInds(pStruct, gratingInd);
+end
 
 assert(length(indsSt) == 1, 'values given in getStimIndsInput are not specific to one stimulus')
 assert(length(posVal) == 1, 'posVal should be a single number')
@@ -73,7 +75,7 @@ for ii=1:numReps
     count=count+1;
     tempPos = double(tempAll{2});
     tempDat = tempAll{1};
-    relTime = tempPos(tempPos(:,2) == posVal, 1);
+    relTime = tempPos(find(tempPos(:,2) == posVal, 1, 'first'), 1);
     timeCh = (tempDat(:, 1) - relTime) * timeToms;
     dataCh = tempDat(:, relCh) * datTomV;
     posTimeCh = (tempPos(:, 1) - relTime) * timeToms;
@@ -83,7 +85,7 @@ for ii=1:numReps
         posInDatInd(jj) = find(timeCh - posTimeCh(jj) > 0, 1, 'first');
     end
     
-    relPosInds(count) = posInDatInd(posDat == posVal);
+    relPosInds(count) = posInDatInd(find(posDat == posVal, 1, 'first'));
     postPosLen(count) = length(dataCh) - relPosInds(count);
     
     preStimInd = find(timeCh > 0, 1, 'first');

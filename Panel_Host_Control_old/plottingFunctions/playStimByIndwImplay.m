@@ -11,9 +11,11 @@ function playStimByIndwImplay(pStruct, stimInd)
 % stimInd -     Index from the corresponding gratingTable field in
 %               protocolStruct
 
-
-temp = getStimInds(pStruct, [stimInd, nan, 1,1]);
-% temp = getStimInds(pStruct, stimInd);
+if length(stimInd) == 1
+    temp = getStimInds(pStruct, [stimInd, nan, 1,1]);
+elseif length(stimInd) == 4
+    temp = getStimInds(pStruct, stimInd);
+end
 
 assert(length(temp) == 1, 'stimInd produced more than one result')
 

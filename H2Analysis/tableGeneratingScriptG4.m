@@ -23,16 +23,16 @@ for ii=1:numStim
         relSp = 2*round(relSp/sqrt(2))+1;
     end
 
-    fDis = relSp * frameFac + (wid(ii)-1) * frameFac;
-    cen = (fDis-1 + fApp) /2; %since in fDis it is already gone
+    fDis = relSp * frameFac + (wid(ii)-1) * frameFac - 1;
+    cen = floor((fDis + fApp) /2); %since in fDis it is already gone
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
     barInds(ii,3) = cen + fAppearInd;
 end
     
-protocolStruct.gratingTable.appear = barInds(:,1);
-protocolStruct.gratingTable.disappear = barInds(:,2);
-protocolStruct.gratingTable.center = barInds(:,3);
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
+protocolStruct.gratingTable.cenFN = barInds(:,3);
 
 
 clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid
@@ -55,13 +55,13 @@ barInds= zeros(numStim,2); % for appearance and disappearance of both bars
 for ii=1:numStim
     fApp = 0;    
 
-    fDis = numFr * numCyc;
+    fDis = numFr * numCyc -1;
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
 end
     
-protocolStruct.gratingTable.appear = barInds(:,1);
-protocolStruct.gratingTable.disappear = barInds(:,2);
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
 
 
 clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid
@@ -93,8 +93,8 @@ for ii=1:numStim
         relSp = 2*round(relSp/sqrt(2))+1;
     end
 
-    fDis = relSp * frameFac + (wid(ii)-1) * frameFac;
-    cen = (fDis-1 + fApp) /2; %since in fDis it is already gone
+    fDis = relSp * frameFac + (wid(ii)-1) * frameFac - 1;
+    cen = floor((fDis + fApp) /2); %since in fDis it is already gone
     swFrame = floor(relSp/2) + swPos(ii); % switchPos makes sure the switch corrects for width
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
@@ -102,10 +102,10 @@ for ii=1:numStim
     barInds(ii,4) = swFrame + fAppearInd;
 end
     
-protocolStruct.gratingTable.appear = barInds(:,1);
-protocolStruct.gratingTable.disappear = barInds(:,2);
-protocolStruct.gratingTable.center = barInds(:,3);
-protocolStruct.gratingTable.swFrame = barInds(:,4);
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
+protocolStruct.gratingTable.cenFN = barInds(:,3);
+protocolStruct.gratingTable.switchFN = barInds(:,4);
 
 
 clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid swPos swFrame
@@ -115,8 +115,9 @@ protocolStruct.gratingTable
 %% Moving bar diff edge (limited orientation to 0:2:6 so not considered
 
 
+% was frame 2 due to coding mistake (fixed for recordings after 21 Nov 18) 
 fAppearInd = 1; % since posFunc starts from zero
-
+% change back to 1
 
 relTab = protocolStruct.gratingTable;
 span = relTab.span;
@@ -129,16 +130,55 @@ barInds= zeros(numStim,3); % for appearance and disappearance of both bars
 for ii=1:numStim
     fApp = 0;    
     relSp = span(ii);
-    fDis = relSp * frameFac + (wid(ii)-1) * frameFac;
-    cen = (fDis-1 + fApp) /2; %since in fDis it is already gone
+    fDis = relSp * frameFac + (wid(ii)-1) * frameFac -1;
+    cen = (fDis + fApp) /2; %since in fDis it is already gone
     
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
     barInds(ii,3) = cen + fAppearInd;
 end
     
-protocolStruct.gratingTable.appear = barInds(:,1);
-protocolStruct.gratingTable.disappear = barInds(:,2);
-protocolStruct.gratingTable.center = barInds(:,3);
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
+protocolStruct.gratingTable.cenFN = barInds(:,3);
+
+
+clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid
+
+protocolStruct.gratingTable
+
+%% Moving edge diff pos 
+
+
+fAppearInd = 1; % since posFunc starts from zero
+
+
+relTab = protocolStruct.gratingTable;
+span = relTab.span;
+ort = relTab.orient;
+
+frameFac = 1; % since in G4 it is handled with the position function
+
+numStim = height(relTab);
+barInds= zeros(numStim,3); % for appearance and disappearance of both bars
+
+for ii=1:numStim
+    fApp = 0;    
+    
+    relSp = span(ii);
+    if rem(ort(ii),2) % to correct for diagonal movement
+        relSp = 2*round(relSp/sqrt(2))+1;
+    end
+
+    fDis = relSp * frameFac -1;
+    cen = floor((fDis + fApp) /2); %since in fDis it is already gone
+    
+    barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
+    barInds(ii,3) = cen + fAppearInd;
+end
+    
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
+protocolStruct.gratingTable.cenFN = barInds(:,3);
 
 
 clear barInds fDis fApp numStim spDiff relTab ii frameFac relSp cen fAppearInd wid
@@ -161,14 +201,60 @@ for ii=1:numStim
     barInds(ii, 1:2)  = [fApp, fDis] + fAppearInd;
 end
     
-protocolStruct.gratingTable.appear = barInds(:,1);
-protocolStruct.gratingTable.disappear = barInds(:,2);
+protocolStruct.gratingTable.firstFN = barInds(:,1);
+protocolStruct.gratingTable.lastFN = barInds(:,2);
 
 
 clear barInds fDis fApp numStim  relTab ii fAppearInd 
 
 
 protocolStruct.gratingTable
+
+%% Flickerbar 
+
+
+flickApp = 1;
+
+relTab = protocolStruct.gratingTable;
+
+totTime = protocolStruct.inputParams.flickerDur;
+flickStV = protocolStruct.inputParams.flickerStart;
+
+numStim = height(relTab);
+onInds= cell(numStim,1); 
+offInds = onInds;
+disInd = zeros(numStim, 1);
+stepsPerCyc = 2;
+
+for ii=1:numStim
+    
+    tempNumCyc = floor(totTime/relTab.cycDur(ii));
+    disInd(ii) = tempNumCyc * stepsPerCyc + flickApp -1; % since it is the last frame and not where it disappears
+    if flickStV ==0
+        offInds{ii} = flickApp:stepsPerCyc:disInd(ii)-1;
+        onInds{ii} = flickApp+1:stepsPerCyc:disInd(ii);
+    else
+        offInds{ii} = flickApp+1:stepsPerCyc:disInd(ii);
+        onInds{ii} = flickApp:stepsPerCyc:disInd(ii)-1;
+    end
+    
+    
+end
+
+
+
+protocolStruct.gratingTable.onFN = onInds;
+protocolStruct.gratingTable.offFN = offInds;
+protocolStruct.gratingTable.firstFN = ones(numStim,1)*flickApp;
+protocolStruct.gratingTable.lastFN = disInd;
+
+
+clear relTab numStim ii tempNumStep *Inds frameFac totTime *App stepDurUnit disInd
+clear stepsPerCyc flickFV tempNumCyc
+
+
+protocolStruct.gratingTable
+
 
 %% singleBar table
 
@@ -197,17 +283,17 @@ clear disFrame uValStimDur stimDur appear disappear ii
 
 %% Minimal motion 1
 
+% not correct
+
+fAppearInd = 1;
 
 
-fAppearInd = 20;
-% fAppearInd = 12;
-stepDurUnit = 0.02;
 simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
 
 
 relTab = protocolStruct.gratingTable;
 span = abs(relTab.FBPos - relTab.SBPos);
-frameFac = relTab.timeDiff/ stepDurUnit;
+frameFac = ceil(relTab.timeDiff); % in case there is a zero there (2 bars flashing together)
 
 numStim = height(relTab);
 barInds= zeros(numStim,4); % for appearance and disappearance of both bars
@@ -240,6 +326,8 @@ for ii=1:numStim
     barInds(ii, :)  = [fApp, fDis, sApp, sDis] + fAppearInd;
 end
     
+
+
 protocolStruct.gratingTable.fAppear = barInds(:,1);
 protocolStruct.gratingTable.fDisappear = barInds(:,2);
 protocolStruct.gratingTable.sAppear = barInds(:,3);
@@ -249,19 +337,22 @@ clear barInds *Dis *App numStim spDiff relTab fAppearInd stepDurUnit simFrame ii
 
 
 
-%% Minimal motion non speed corrected (dark)
+%% Minimal motion non speed corrected 
 
 
 
-fAppearInd = 20;
-% fAppearInd = 12;
-stepDurUnit = 0.02;
-simFrame = protocolStruct.inputParams.stepDur / stepDurUnit;
+assert(all(protocolStruct.gratingTable.FBStat == 0), 'table was not corrected for FBstat=1')
+
+fAppearInd = 1;
+
+simFrame = protocolStruct.inputParams.stepDur;
 
 
 relTab = protocolStruct.gratingTable;
 span = abs(relTab.FBPos - relTab.SBPos);
-frameFac = relTab.timeDiff/ stepDurUnit;
+fbV = relTab.FBVal;
+sbV = relTab.SBVal;
+frameFac = ceil(relTab.timeDiff); % in case there is zero (2 bars flashing together)
 
 numStim = height(relTab);
 barInds= zeros(numStim,4); % for appearance and disappearance of both bars
@@ -275,9 +366,13 @@ for ii=1:numStim
         sDis = simFrame;
     else
         
-        
-        fApp = 0;
-        sApp = 2 * frameFac(ii);
+        if span(ii) == 0 && fbV(ii) == sbV(ii) % since if they are different they both flash
+            fApp = frameFac(ii);
+            sApp = fApp;
+        else
+            fApp = 0;    
+            sApp = frameFac(ii);
+        end
         
         fDis = fApp + frameFac(ii);
         
@@ -289,6 +384,8 @@ for ii=1:numStim
    
     barInds(ii, :)  = [fApp, fDis, sApp, sDis] + fAppearInd;
 end
+
+
     
 protocolStruct.gratingTable.fAppear = barInds(:,1);
 protocolStruct.gratingTable.fDisappear = barInds(:,2);
@@ -296,6 +393,8 @@ protocolStruct.gratingTable.sAppear = barInds(:,3);
 protocolStruct.gratingTable.sDisappear = barInds(:,4);
 
 clear barInds *Dis *App numStim spDiff relTab fAppearInd stepDurUnit simFrame ii frameFac
+
+protocolStruct.gratingTable
 
 
 
@@ -385,45 +484,6 @@ protocolStruct.gratingTable.disappear = barInds(:,2);
 protocolStruct.gratingTable.framePerStep = barInds(:,3);
 
 clear barInds *Dis *App numStim spDiff relTab ii frameFac fAppearInd stepDurUnit
-
-%% Flickerbar 
-
-
-offApp = 20;
-%offApp = 12;
-stepDurUnit = 0.02;
-
-
-
-relTab = protocolStruct.gratingTable;
-frameFac = (relTab.cycDur/ stepDurUnit); %since it is full cycle (D & B) 
-totTime = protocolStruct.inputParams.flickerDur;
- 
-numStim = height(relTab);
-onInds= cell(numStim,1); 
-offInds = onInds;
-disInd = zeros(numStim, 1);
-
-
-for ii=1:numStim
-    
-    tempNumStep = totTime/relTab.cycDur(ii) - 1;
-    offInds{ii} = offApp:frameFac(ii):offApp+tempNumStep*frameFac(ii);
-    onInds{ii} = offApp+frameFac(ii)/2:frameFac(ii):offApp+frameFac(ii)/2+tempNumStep*frameFac(ii);
-    disInd(ii) = onInds{ii}(end)+frameFac(ii)/2;
-    
-end
-
-
-protocolStruct.gratingTable.onAppear = onInds;
-protocolStruct.gratingTable.offAppear = offInds;
-protocolStruct.gratingTable.appear = ones(numStim,1)*offApp;
-protocolStruct.gratingTable.disappear = disInd;
-
-clear relTab numStim ii tempNumStep *Inds frameFac totTime *App stepDurUnit disInd
-
-
-
 
 
 

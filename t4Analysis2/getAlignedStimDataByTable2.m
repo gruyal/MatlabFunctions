@@ -20,6 +20,9 @@ function align = getAlignedStimDataByTable2(pStruct, gratingInd, posVals)
 % INPUT
 % pStruct -             protocolStruct w/ stim field and data in it
 % gratingInd -          index variable in the gratingTable to be aligned
+%                       if a single number function assumes only
+%                       gratingTable was used. if 4 number, refers to
+%                       stim.relInds directly
 % posVals -             Changed in new version to include 3
 %                       values alaways. 
 %                       1 - posVal to align to 
@@ -36,7 +39,8 @@ function align = getAlignedStimDataByTable2(pStruct, gratingInd, posVals)
 %                       sample of second val) - used for protocols like
 %                       movingbar where to aligned var in not appear
 %
-% Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
+%
+%   Note! alignedVar colum in the table is not generated automaticcaly with the protocol. 
 % It should be enetered manually and given in the same units the controller uses (first
 % frame is 0)
 %
@@ -60,7 +64,7 @@ function align = getAlignedStimDataByTable2(pStruct, gratingInd, posVals)
 %                       are taken before posVal timing, and minimal after. 
 % .meanPos -            Position indices after they have been corrected for
 %                       the number of smaples dropped from each repeat (to generate the mean)
-
+    
 
 assert(length(posVals) == 3, 'This function requires 3 position values, align, start and end')
 assert(posVals(2) < posVals(3), 'posVal 2 must be smaller than posVal 3')
@@ -83,8 +87,13 @@ timeToms = 10^-3; % converts timing stamps to ms (clock @ 1MHz)
 
 fftRanges = [58, 62; 3680, 3720]; % empirically found to be 2 ranges for noise (don't know where the second range is coming from
 
-
-indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
+if length(gratingInd) == 1
+    indsSt = getStimInds(pStruct, [gratingInd, nan, nan, nan]);
+elseif length(gratingInd) == 4
+    indsSt = getStimInds(pStruct, gratingInd);
+else
+    error('gratingInd should be either an index to gratingTable or relInds vector')
+end
 
 assert(length(indsSt) == 1, 'values given in getStimIndsInput are not specific to one stimulus')
 
